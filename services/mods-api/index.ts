@@ -127,6 +127,25 @@ const cmdBlueprintFiles=[
   [/^Squad( 44)?$/i,["SquadGame/ServerConfig/Server.cfg","SquadGame/ServerConfig/MapRotation.cfg"]],
   [/^Insurgency: Sandstorm$/i,["Insurgency/Config/Server/Admins.txt","Insurgency/Saved/Config/WindowsServer/Game.ini"]]
 ];
+/* Nintendo compatibility is game-specific. Avoid implying public rental is operational.
+ * Official Minecraft documentation lists Nintendo Switch and Switch 2 as Bedrock clients.
+ * Connection methods for custom addresses on Switch must be verified in-game.
+ */
+const cmdNintendoBedrock={
+  platforms:["Nintendo Switch","Nintendo Switch 2"],
+  serverSoftware:"Minecraft Bedrock Dedicated Server",
+  softwareCompatibility:"documented-by-minecraft",
+  consoleConnectionStatus:"requires-test-on-switch-console",
+  customServerEntry:"may-be-restricted-on-switch-client",
+  publicRentalEnabled:false,
+  installationVerified:false,
+  nintendoDeveloperApiRequiredForServerHosting:false,
+  note:"Minecraft indique que son serveur dedie Bedrock accepte les joueurs sur Switch et Switch 2. L'acces depuis la console et l'installation doivent etre testes avant une offre de location."
+};
+function cmdNintendoForGame(game){
+  return /^Minecraft: Bedrock Edition$/i.test(String(game.name||"")) ? {...cmdNintendoBedrock} : null;
+}
+
 const cmdArkAscendedMaps=[
   ["The Island","TheIsland_WP"],["The Center","TheCenter_WP"],
   ["Scorched Earth","ScorchedEarth_WP"],["Aberration","Aberration_WP"],
@@ -191,6 +210,7 @@ function cmdBlueprintForGame(game){
    catalogId:game.id,catalogKey:game.key,gameName:name,steamAppId:game.appId??null,
    visual:{imageUrl:(typeof game.cover==="string"&&/^https:\/\/shared\.fastly\.steamstatic\.com\/store_item_assets\/steam\/apps\/[0-9]+\/header\.jpg$/i.test(game.cover))?game.cover:null,uniqueThemeKey:"game-"+game.id},
    declaredPlatforms:Array.isArray(game.platforms)?game.platforms:[],
+   ...(cmdNintendoForGame(game)?{nintendoCompatibility:cmdNintendoForGame(game)}:{}),
    originalCatalogueStatus:originalStatus,
    preproductionProfile:"prepared",publicOrderingEnabled:false,paymentRequired:false,
    machineInstallationVerified:false,readyToLaunch:false,
@@ -205,7 +225,11 @@ function cmdBlueprintForGame(game){
 async function cmdBlueprintsApi(path,query,origin){
  try{
   const all=await cmdGameCatalog();
-  if(path==="/api/preproduction/status")return answer({ok:true,catalogueCount:all.length,profileCount:all.length,preproduction:true,existingHostingUnaffected:true,allGamesProfilesPrepared:true,realInstallationsActivated:false,paymentsActivated:false},200,origin);
+  if(path==="/api/preproduction/nintendo"){
+     const compatible=all.filter(g=>cmdNintendoForGame(g));
+     return answer({platforms:["Nintendo Switch","Nintendo Switch 2"],verifiedServerCandidates:compatible.map(g=>({catalogId:g.id,gameName:g.name,compatibility:cmdNintendoForGame(g)})),otherGamesStatus:"case-by-case-verification-required",nintendoUniversalHostingApi:false,publicRentalEnabled:false,sourceDocumentation:"https://www.minecraft.net/fr-fr/download/server/bedrock",developerPortal:"https://developer.nintendo.com/"},200,origin);
+   }
+   if(path==="/api/preproduction/status")return answer({ok:true,catalogueCount:all.length,profileCount:all.length,preproduction:true,existingHostingUnaffected:true,allGamesProfilesPrepared:true,realInstallationsActivated:false,paymentsActivated:false},200,origin);
   const detail=path.match(/^\/api\/preproduction\/games\/([0-9]+)$/);
   if(detail){
     const id=Number(detail[1]);const game=all.find(g=>g.id===id);
@@ -242,7 +266,7 @@ async function handle(request) {
     return new Response(cmdUiMarkup,{status:200,headers:{"content-type":"text/html; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff","content-security-policy":"default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' https://shared.fastly.steamstatic.com https://cdn.cloudflare.steamstatic.com; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors https://cmd-hosting-web-production.up.railway.app "}});
   }
 
-  if(path==="/api/preproduction/status"||path==="/api/preproduction/games"||/^\/api\/preproduction\/games\/[0-9]+$/.test(path)){
+  if(path==="/api/preproduction/nintendo"||path==="/api/preproduction/status"||path==="/api/preproduction/games"||/^\/api\/preproduction\/games\/[0-9]+$/.test(path)){
     if(request.method!=="GET")return answer({error:"method_not_allowed"},405,origin);
     return cmdBlueprintsApi(path,query,origin);
   }
