@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+      - name: Verify provisioning path safety and profile logic
+        run: node --test provisioning/test.mjs
       - name: Fetch all available game provisioning blueprints
         run: node provisioning/sync-profiles.mjs --concurrency 4
       - name: Validate generated registry
