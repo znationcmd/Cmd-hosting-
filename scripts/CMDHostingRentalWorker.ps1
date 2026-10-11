@@ -133,7 +133,8 @@ try{
     'arma-reforger'='Arma Reforger';'7dtd'='7 Days to Die'
   }
   $key=[string]$job.gameKey;$game=$games[$key]
-  if(!$game -or $job.platform -ne 'pc' -or [string]$job.action -ne 'install_steamcmd_in_isolated_rental_directory'){
+  $pcCompatible=($job.platform -eq 'pc') -or (($job.platform -eq 'crossplay') -and @('ark-asa','ark-survival-ascended') -contains $key)
+  if(!$game -or !$pcCompatible -or [string]$job.action -ne 'install_steamcmd_in_isolated_rental_directory'){
     throw 'Cloud sent a non-allowlisted game or platform.'
   }
   $serverId=[string]$job.serverId
