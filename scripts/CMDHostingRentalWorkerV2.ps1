@@ -42,6 +42,15 @@ function Api([string]$path,[hashtable]$payload){
   return Invoke-RestMethod -Uri ($cloud+$path) -Method Post -ContentType 'application/json' -Headers @{Authorization=('Bearer '+$token)} -Body (ConvertTo-Json -InputObject $payload -Compress -Depth 10) -TimeoutSec 40
  }finally{$token=$null}
 }
+function Send-MachineHeartbeat([string]$agentId){
+ if($agentId -notmatch '^host-[a-f0-9-]{36}$'){throw 'Invalid portable worker identity.'}
+ $key=Read-Token
+ try{
+  $body=@{agentId=$agentId;role='host';version='paid-rental-worker-v2.1';serverCount=0}|ConvertTo-Json -Compress
+  $answer=Invoke-RestMethod -Method Post -Uri ($cloud+'/v1/agents/heartbeat') -Headers @{Authorization=('Bearer '+$key)} -ContentType 'application/json' -Body $body -TimeoutSec 30
+  if(!$answer.ok -or !$answer.heartbeatAccepted){throw 'Cloud refused machine heartbeat.'}
+ }finally{$key=$null}
+}
 function Get-Steam(){
  if(Test-Path -LiteralPath $modsSettings){
   $obj=Json $modsSettings
@@ -244,6 +253,7 @@ try{
  if([IO.Path]::GetFileName($steam) -ine 'steamcmd.exe' -or !(Test-Path -LiteralPath $steam -PathType Leaf)){throw 'SteamCMD missing.'}
  $ramGB=[math]::Round([double](Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB,1)
  $diskGB=[math]::Round([double](Get-PSDrive -Name $root.Substring(0,1)).Free/1GB,1)
+ Send-MachineHeartbeat ([string]$conf.agentId)
  Sync-ManagedDayZ $root $steam
  $reply=Api '/v1/provisioning/agent/claim' @{nodeId=[string]$conf.nodeId}
  if(!$reply.ok -or !$reply.job){Write-Log 'No authorized paid rental work available.';exit 0}
