@@ -14,6 +14,7 @@ on:
       - "scripts/Configure-CMDGameContent.ps1"
       - "scripts/CMDHostingRentalWorker.ps1"
       - "scripts/CMDHostingRentalWorkerV2.ps1"
+      - "tests/windows-game-content.ps1"
       - ".github/workflows/cmd-portable-machines.yml"
   pull_request:
     paths:
@@ -28,6 +29,7 @@ on:
       - "scripts/Configure-CMDGameContent.ps1"
       - "scripts/CMDHostingRentalWorker.ps1"
       - "scripts/CMDHostingRentalWorkerV2.ps1"
+      - "tests/windows-game-content.ps1"
 permissions:
   contents: read
 jobs:
@@ -73,3 +75,8 @@ jobs:
           [void][System.Management.Automation.Language.Parser]::ParseFile('scripts/CMDHostingRentalWorkerV2.ps1',[ref]$tokens,[ref]$errors)
           if ($errors -and $errors.Count) { $errors | Format-Table; exit 1 }
           Write-Host 'CMD Hosting Windows paid-rental worker V2 syntax OK'
+
+      - name: Execute isolated Windows map and mod preparation fixtures
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/windows-game-content.ps1
