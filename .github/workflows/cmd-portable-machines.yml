@@ -11,6 +11,8 @@ on:
       - "provisioning/provider-adapters.mjs"
       - "provisioning/game-content.mjs"
       - "provisioning/game-content.test.mjs"
+      - "scripts/Configure-CMDGameContent.ps1"
+      - "scripts/CMDHostingRentalWorker.ps1"
       - ".github/workflows/cmd-portable-machines.yml"
   pull_request:
     paths:
@@ -22,6 +24,8 @@ on:
       - "provisioning/provider-adapters.mjs"
       - "provisioning/game-content.mjs"
       - "provisioning/game-content.test.mjs"
+      - "scripts/Configure-CMDGameContent.ps1"
+      - "scripts/CMDHostingRentalWorker.ps1"
 permissions:
   contents: read
 jobs:
@@ -47,3 +51,13 @@ jobs:
         run: node --test provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs provisioning/game-content.test.mjs
       - name: Read-only hardware diagnostic
         run: node provisioning/portable-host-agent.mjs --diagnose
+
+      - name: Validate PowerShell content configurator syntax (Windows only)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $errors = $null
+          $tokens = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile('scripts/Configure-CMDGameContent.ps1',[ref]$tokens,[ref]$errors)
+          if ($errors -and $errors.Count) { $errors | Format-Table; exit 1 }
+          Write-Host 'CMD Hosting content parser OK'
