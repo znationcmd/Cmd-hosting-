@@ -4,10 +4,10 @@
  * Other CMD Hosting services and bots are deliberately untouched.
  */
 import { SQL } from "bun";
-import { timingSafeEqual, createHash } from "node:crypto";
+import { timingSafeEqual, createHash, randomBytes } from "node:crypto";
 
 const PORT = Number(Bun.env.PORT || 3000);
-const VERSION = "1.5.0";
+const VERSION = "1.9.2";
 const MAIN = "https://cmd-hosting-web-production.up.railway.app";
 const MODS = "https://cmd-hosting-mods-api-production.up.railway.app";
 const token = Bun.env.CMD_CLOUD_AGENT_TOKEN || "";
@@ -22,6 +22,31 @@ function auth(request) {
   const expected = "Bearer " + token;
   const left=Buffer.from(supplied); const right=Buffer.from(expected);
   return !!token && left.length===right.length && timingSafeEqual(left,right);
+}
+
+/* CMD_SCOPED_MACHINE_AUTH_V1: one-time codes, 24h validity, machine-specific monitoring credentials. */
+function bearer(req){
+ const value=req.headers.get("authorization")||"";
+ return value.startsWith("Bearer ")?value.slice(7):"";
+}
+async function machineAuth(req){
+ const key=bearer(req);
+ if(!/^[A-Za-z0-9_-]{32,128}$/.test(key))return null;
+ const hash=createHash("sha256").update(key).digest("hex");
+ try{
+  const db=await dbReady();
+  const existing=await db`SELECT agent_id FROM cmd_hosting_cloud_machine_tokens
+    WHERE token_hash=${hash} AND disabled_at IS NULL LIMIT 1`;
+  return existing[0]?.agent_id||null;
+ }catch{return null}
+}
+async function enrollmentSchema(db){
+ await db`CREATE TABLE IF NOT EXISTS cmd_hosting_cloud_enroll_codes(
+   code_hash CHAR(64) PRIMARY KEY, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+   expires_at TIMESTAMPTZ NOT NULL, used_at TIMESTAMPTZ, claimed_by VARCHAR(80))`;
+ await db`CREATE TABLE IF NOT EXISTS cmd_hosting_cloud_machine_tokens(
+   agent_id VARCHAR(80) PRIMARY KEY,token_hash CHAR(64) NOT NULL UNIQUE,
+   issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),disabled_at TIMESTAMPTZ)`;
 }
 function validId(id) { return typeof id==="string" && /^[a-zA-Z0-9][a-zA-Z0-9._-]{2,79}$/.test(id); }
 function clampInt(v,max) {return Number.isInteger(v) && v>=0 && v<=max ? v : 0;}
@@ -48,6 +73,57 @@ async function check(name,url) {
     return {service:name,online:response.ok,statusCode:response.status,latencyMs:Date.now()-started};
   }catch(e){return {service:name,online:false,statusCode:null,error:"unreachable"};}
 }
+
+/* CMD_MAP_SELECTION_V1 — game-isolated maps. No service download or game install claimed. */
+const GAME_MAPS={
+ "dayz":{platforms:["pc"],defaultMap:"chernarusplus",items:[
+  ["chernarusplus","Chernarus+","dayzOffline.chernarusplus"],
+  ["livonia","Livonia","dayzOffline.enoch"],
+  ["sakhal","Sakhal","dayzOffline.sakhal"]],modProvider:"steam-workshop"},
+ "ark-asa":{platforms:["pc","crossplay"],defaultMap:"the-island",items:[
+  ["the-island","The Island","TheIsland_WP"],
+  ["the-center","The Center","TheCenter_WP"],
+  ["scorched-earth","Scorched Earth","ScorchedEarth_WP"],
+  ["aberration","Aberration","Aberration_WP"],
+  ["extinction","Extinction","Extinction_WP"],
+  ["ragnarok","Ragnarok","Ragnarok_WP"],
+  ["valguero","Valguero","Valguero_WP"],
+  ["genesis-part-1","Genesis Part 1","Genesis_WP"],
+  ["astraeos","Astraeos","Astraeos_WP"],
+  ["lost-colony","Lost Colony","LostColony_WP"]],modProvider:"curseforge-asa"},
+ "arma-reforger":{platforms:["pc","crossplay"],defaultMap:"everon-conflict",items:[
+  ["everon-conflict","Everon Conflict","{ECC61978EDCC2B5A}Missions/23_Campaign.conf"],
+  ["everon-gm","Everon Game Master","{59AD59368755F41A}Missions/21_GM_Eden.conf"],
+  ["arland-gm","Arland Game Master","{2BBBE828037C6F4B}Missions/22_GM_Arland.conf"]],modProvider:"bohemia-workshop"},
+ "7dtd":{platforms:["pc"],defaultMap:"navezgane",items:[
+  ["navezgane","Navezgane","Navezgane"],
+  ["random-world","Random World","RWG"]],modProvider:"publisher-review"}
+};
+function normalizeGameKey(key){
+ const aliases={"ark":"ark-asa","ark-survival-ascended":"ark-asa","dayz-pc":"dayz",
+  "reforger":"arma-reforger","7-days-to-die":"7dtd"};
+ const v=String(key||"").trim().toLowerCase();
+ return aliases[v]||v;
+}
+function validRentalContent(game,platform,mapId,modIds){
+ const key=normalizeGameKey(game),profile=GAME_MAPS[key];
+ if(!profile||!profile.platforms.includes(String(platform||"pc").toLowerCase()))return null;
+ const map=profile.items.find(x=>x[0]===(mapId||profile.defaultMap));
+ if(!map||!Array.isArray(modIds)||modIds.length>100)return null;
+ const mods=[...new Set(modIds.map(x=>String(x)))];
+ for(const id of mods){
+   if(profile.modProvider==="bohemia-workshop"){
+     if(!/^[0-9A-Fa-f]{16}$/.test(id))return null;
+   }else if(profile.modProvider==="publisher-review"){
+     if(mods.length)return null;
+   }else if(!/^[1-9][0-9]{0,12}$/.test(id))return null;
+ }
+ if(map[0]==="astraeos"&&!mods.length)return null;
+ return {key,mapId:map[0],mapName:map[1],value:map[2],mods,
+   publisherDlcRequired:["sakhal","lost-colony"].includes(map[0]),
+   publisherModRequired:map[0]==="astraeos"};
+}
+
 async function route(request) {
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers:{"allow":"GET, POST, OPTIONS"}});
   const path=new URL(request.url).pathname;
@@ -80,7 +156,7 @@ async function route(request) {
   }
   if(path==="/downloads/versions.json") {
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
-    return send({cloud:"1.5.0",modsAgent:"4.1.0",modsAgentURL:
+    return send({cloud:"1.9.2",modsAgent:"4.1.0",modsAgentURL:
       "https://cmd-hosting-cloud-agents-production.up.railway.app/downloads/mods-agent-v4.1.ps1",
       windowsAutoUpdater:"1.2",mainAgent:"V5 (installed version not remotely verified)",
       offlinePCRequiresLocalStartup:true});
@@ -96,7 +172,163 @@ async function route(request) {
       return new Response(script,{status:200,headers:{"content-type":"text/plain; charset=utf-8","cache-control":"public, max-age=600","x-content-type-options":"nosniff"}});
     }catch(e){return send({error:"installer_download_unavailable"},503)}
   }
-  if(!auth(request))return send({error:"unauthorized"},401);
+
+
+  if(path==="/v1/provisioning/maps"){
+    if(request.method!=="GET")return send({error:"method_not_allowed"},405);
+    const uri=new URL(request.url);
+    const gameKey=normalizeGameKey(uri.searchParams.get("game"));
+    const platform=String(uri.searchParams.get("platform")||"pc").toLowerCase();
+    const profile=GAME_MAPS[gameKey];
+    if(!profile)return send({ok:false,error:"game_not_supported",maps:[]},404);
+    if(!profile.platforms.includes(platform))
+      return send({ok:false,error:"provider_required_for_platform",gameKey,maps:[]},422);
+    return send({ok:true,gameKey,platform,defaultMap:profile.defaultMap,
+      modProvider:profile.modProvider,
+      maps:profile.items.map(([id,name,gameValue])=>({id,name,gameValue,
+        requiresPublisherContent:id==="astraeos",
+        requiresDlc:["sakhal","lost-colony"].includes(id)})),
+      note:"Only game-specific map choices; availability depends on publisher content and the installation on the host."});
+  }
+  if(path==="/v1/agents/enroll/claim"){
+    if(request.method!=="POST")return send({error:"method_not_allowed"},405);
+    const raw=await request.text();if(raw.length>1024)return send({error:"body_too_large"},413);
+    let v;try{v=JSON.parse(raw)}catch{return send({error:"invalid_json"},400)}
+    const id=v?.agentId,code=v?.code;
+    if(!validId(id)||typeof code!=="string"||!/^[A-Za-z0-9_-]{32,128}$/.test(code))
+      return send({error:"invalid_enrollment"},400);
+    const hash=createHash("sha256").update(code).digest("hex");
+    try{
+      const db=await dbReady();
+      await enrollmentSchema(db);
+      // A one-time code cannot take over an already registered device ID.
+      const existing=await db`SELECT agent_id FROM cmd_hosting_cloud_machine_tokens
+        WHERE agent_id=${id} LIMIT 1`;
+      if(existing.length)return send({error:"machine_already_enrolled"},409);
+      const claimed=await db`UPDATE cmd_hosting_cloud_enroll_codes
+        SET used_at=NOW(),claimed_by=${id}
+        WHERE code_hash=${hash} AND used_at IS NULL AND expires_at>NOW()
+        RETURNING code_hash`;
+      if(!claimed.length)return send({error:"enrollment_code_invalid_or_used"},403);
+      const secret=randomBytes(32).toString("base64url");
+      const secretHash=createHash("sha256").update(secret).digest("hex");
+      await db`INSERT INTO cmd_hosting_cloud_machine_tokens(agent_id,token_hash)
+         VALUES(${id},${secretHash})`;
+      return send({ok:true,agentId:id,machineToken:secret,scope:"monitoring_only",
+        expiresCodeAfterClaim:true,gameInstallPermission:false,remoteShellPermission:false});
+    }catch(e){console.error("CMD_HOST_ENROLL_ERROR",String(e?.message||e).slice(0,100));return send({error:"enrollment_unavailable"},503)}
+  }
+  const master=auth(request);
+  const scoped=master?null:
+    (path==="/v1/agents/manifest"||path==="/v1/agents/heartbeat"||
+     path==="/v1/provisioning/agent/claim"||path==="/v1/provisioning/agent/report")?await machineAuth(request):null;
+  if(!master&&!scoped)return send({error:"unauthorized"},401);
+
+  if(path==="/v1/agents/enroll/create"){
+    if(!master)return send({error:"admin_only"},403);
+    if(request.method!=="POST")return send({error:"method_not_allowed"},405);
+    try{
+      const db=await dbReady();await enrollmentSchema(db);
+      const code=randomBytes(24).toString("base64url");
+      const hash=createHash("sha256").update(code).digest("hex");
+      await db`INSERT INTO cmd_hosting_cloud_enroll_codes(code_hash,expires_at)
+        VALUES(${hash},NOW()+interval '24 hours')`;
+      return send({ok:true,code,validForHours:24,singleUse:true,
+        note:"Private enrollment code. Share only with the administrator of the future rented host."});
+    }catch(e){console.error("CMD_ENROLL_CREATE_ERROR",String(e?.message||e).slice(0,100));return send({error:"enrollment_unavailable"},503)}
+  }
+  if(path==="/v1/agents/enroll/revoke"){
+    if(!master)return send({error:"admin_only"},403);
+    if(request.method!=="POST")return send({error:"method_not_allowed"},405);
+    let data;try{data=await request.json()}catch{return send({error:"invalid_json"},400)}
+    if(!validId(data?.agentId))return send({error:"invalid_agent"},400);
+    try{
+      const db=await dbReady();await enrollmentSchema(db);
+      const revoked=await db`UPDATE cmd_hosting_cloud_machine_tokens
+        SET disabled_at=NOW() WHERE agent_id=${data.agentId} AND disabled_at IS NULL
+        RETURNING agent_id`;
+      return send({ok:true,revoked:revoked.length>0});
+    }catch{return send({error:"enrollment_unavailable"},503)}
+  }
+
+  /* Set map and mods only through a trusted backend with rental ownership checks. */
+  if(path==="/v1/provisioning/content/select"){
+    if(!master)return send({error:"admin_backend_only"},403);
+    if(request.method!=="POST")return send({error:"method_not_allowed"},405);
+    const raw=await request.text();
+    if(raw.length>4096)return send({error:"body_too_large"},413);
+    let data;try{data=JSON.parse(raw)}catch{return send({error:"invalid_json"},400)}
+    const gameId=String(data.gameId||""),accountId=String(data.accountId||"");
+    if(!/^[a-zA-Z0-9._-]{1,80}$/.test(gameId)||!/^[a-zA-Z0-9._-]{1,80}$/.test(accountId))
+      return send({error:"invalid_rental_identity"},400);
+    try{
+      const db=await dbReady();
+      const owned=await db`SELECT game_key,platform FROM cmd_hosting_game_library
+        WHERE id::text=${gameId} AND account_id::text=${accountId} LIMIT 1`;
+      if(!owned.length)return send({error:"rental_not_owned"},404);
+      const platform=String(owned[0].platform||"pc").toLowerCase();
+      const normalized=validRentalContent(owned[0].game_key,platform,data.mapId,data.modIds||[]);
+      if(!normalized)return send({error:"incompatible_game_map_or_mod"},422);
+      if(normalized.publisherDlcRequired && data.publisherEntitlementApproved!==true)
+        return send({error:"publisher_entitlement_required"},422);
+      if(normalized.publisherModRequired && data.publisherModApproved!==true)
+        return send({error:"map_mod_entitlement_required"},422);
+      const tasksExist=await db`SELECT to_regclass('public.cmd_hosting_provision_tasks') AS name`;
+      if(tasksExist[0]?.name){
+        const existing=await db`SELECT id FROM cmd_hosting_provision_tasks
+          WHERE game_id=${gameId} AND account_id=${accountId}
+          AND status IN ('leased','binaries_installed','content_prepared') LIMIT 1`;
+        if(existing.length)return send({error:"server_content_updates_need_backup_workflow"},409);
+      }
+      await db`CREATE TABLE IF NOT EXISTS cmd_hosting_rental_content_prefs(
+        game_id TEXT NOT NULL, account_id TEXT NOT NULL, map_id TEXT NOT NULL,
+        mod_ids TEXT[] NOT NULL DEFAULT '{}'::text[],
+        publisher_approved BOOLEAN NOT NULL DEFAULT FALSE,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        PRIMARY KEY (game_id,account_id)
+      )`;
+      await db`INSERT INTO cmd_hosting_rental_content_prefs
+        (game_id,account_id,map_id,mod_ids,publisher_approved)
+        VALUES(${gameId},${accountId},${normalized.mapId},${normalized.mods},${data.publisherEntitlementApproved===true||data.publisherModApproved===true})
+        ON CONFLICT(game_id,account_id) DO UPDATE SET map_id=EXCLUDED.map_id,
+          mod_ids=EXCLUDED.mod_ids,publisher_approved=EXCLUDED.publisher_approved,updated_at=NOW()`;
+      return send({ok:true,gameId,gameKey:normalized.key,platform,
+        mapId:normalized.mapId,modIds:normalized.mods,installationStarted:false});
+    }catch(e){console.error("CMD_CONTENT_SELECTION_ERROR",String(e?.message||e).slice(0,140));
+      return send({error:"content_selection_unavailable"},503)}
+  }
+
+  /* Installation rights are separate from the read-only monitoring token. */
+  if(path==="/v1/provisioning/worker/authorize" || path==="/v1/provisioning/worker/revoke"){
+    if(!master)return send({error:"admin_only"},403);
+    if(request.method!=="POST")return send({error:"method_not_allowed"},405);
+    let input;try{input=await request.json()}catch{return send({error:"invalid_json"},400)}
+    const agentId=input?.agentId,nodeId=input?.nodeId;
+    if(!validId(agentId)||typeof nodeId!=="string"||!/^[-A-Za-z0-9._:]{3,110}$/.test(nodeId))
+      return send({error:"invalid_worker_mapping"},400);
+    try{
+      const db=await dbReady();
+      await enrollmentSchema(db);
+      const exists=await db`SELECT 1 FROM cmd_hosting_cloud_machine_tokens
+        WHERE agent_id=${agentId} AND disabled_at IS NULL LIMIT 1`;
+      if(!exists.length)return send({error:"machine_not_enrolled"},409);
+      const target=await db`SELECT 1 FROM cmd_hosting_pc_nodes WHERE node_id::text=${nodeId}
+         UNION SELECT 1 FROM cmd_hosting_cloud_agents
+         WHERE agent_id=${nodeId} AND agent_role='host' LIMIT 1`;
+      if(!target.length)return send({error:"target_machine_unknown"},404);
+      await db`CREATE TABLE IF NOT EXISTS cmd_hosting_provision_worker_permissions(
+        agent_id VARCHAR(80) PRIMARY KEY,node_id TEXT NOT NULL,
+        enabled BOOLEAN NOT NULL DEFAULT FALSE,updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
+      const enabled=path.endsWith("/authorize");
+      await db`INSERT INTO cmd_hosting_provision_worker_permissions(agent_id,node_id,enabled)
+        VALUES(${agentId},${nodeId},${enabled})
+        ON CONFLICT(agent_id) DO UPDATE SET node_id=EXCLUDED.node_id,
+          enabled=EXCLUDED.enabled,updated_at=NOW()`;
+      return send({ok:true,agentId,nodeId,workerAuthorized:enabled,
+        allowed:"verified_paid_pc_rentals_only",publisherLicenseStillRequired:true});
+    }catch(e){console.error("CMD_WORKER_PERMISSION_ERROR",String(e?.message||e).slice(0,100));
+      return send({error:"authorization_database_error"},503)}
+  }
   if(path==="/v1/services"){
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
     const services=await Promise.all([
@@ -111,6 +343,11 @@ async function route(request) {
       cloudHeartbeatEndpoint:"/v1/agents/heartbeat",
       mainController:MAIN,modsController:MODS,
       roles:["host","mods"],remoteShell:false,automaticGameInstall:false,
+      fleetMachineClasses:["existing-pc","generic-vps","oracle-vm","dedicated-ryzen",
+        "dedicated-epyc","supermicro-microcloud","supermicro-clouddc","other-x64"],
+      automaticAgentDiscoveryAfterEnrollment:true,
+      inventorySyncEveryHeartbeat:true,
+      gameInstallRequiresSeparateWorker:true,
       localAgentStillNeeded:true,
       documentation:"Cloud service provides coordination, not direct filesystem access to the Windows host."});
   }
@@ -123,6 +360,7 @@ async function route(request) {
     const id=data?.agentId;
     const role=data?.role;
     if(!validId(id)||!["host","mods"].includes(role))return send({error:"invalid_agent"},400);
+    if(scoped && (scoped!==id || role!=="host"))return send({error:"machine_token_node_mismatch"},403);
     const version=safeString(data?.version,80);
     const count=clampInt(data?.serverCount,10000);
     if(!version)return send({error:"invalid_version"},400);
@@ -148,8 +386,9 @@ async function route(request) {
       if(measured.chassisId!==undefined && measured.chassisId!==null &&
          (typeof measured.chassisId!=="string" || !/^[a-zA-Z0-9][a-zA-Z0-9._-]{2,79}$/.test(measured.chassisId)))
         return send({error:"invalid_chassis_id"},400);
-      if(measured.machineClass==="supermicro-microcloud" && !measured.chassisId)
-        return send({error:"microcloud_chassis_required"},400);
+      // Unknown MicroCloud chassis is permitted for monitoring only.
+      // It must NOT be grouped with another node or used for automatic placement
+      // until the owner configures CMD_CHASSIS_ID for each actual chassis.
     }
 
     try{
@@ -331,12 +570,21 @@ async function route(request) {
     let data;try{data=JSON.parse(raw)}catch{return send({error:"invalid_json"},400)}
     const nodeId=String(data?.nodeId||"");
     if(!/^[a-zA-Z0-9][a-zA-Z0-9._:-]{2,110}$/.test(nodeId))return send({error:"invalid_node"},400);
+    if(!master){
+      if(!scoped)return send({error:"worker_not_enrolled"},401);
+      try{
+        const db=await dbReady();
+        const rights=await db`SELECT 1 FROM cmd_hosting_provision_worker_permissions
+           WHERE agent_id=${scoped} AND node_id=${nodeId} AND enabled=TRUE LIMIT 1`;
+        if(!rights.length)return send({error:"worker_not_authorized_for_node"},403);
+      }catch{return send({error:"worker_permissions_unavailable"},503)}
+    }
     const allowed={
-      "dayz":{appId:"223350",minGB:25,exe:"DayZServer_x64.exe"},
-      "ark-asa":{appId:"2430930",minGB:120,exe:"ShooterGame/Binaries/Win64/ArkAscendedServer.exe"},
-      "ark-survival-ascended":{appId:"2430930",minGB:120,exe:"ShooterGame/Binaries/Win64/ArkAscendedServer.exe"},
-      "arma-reforger":{appId:"1874900",minGB:35,exe:"ArmaReforgerServer.exe"},
-      "7dtd":{appId:"294420",minGB:25,exe:"7DaysToDieServer.exe"}
+      "dayz":{appId:"223350",minGB:25,minRamGB:16,exe:"DayZServer_x64.exe"},
+      "ark-asa":{appId:"2430930",minGB:120,minRamGB:32,exe:"ShooterGame/Binaries/Win64/ArkAscendedServer.exe"},
+      "ark-survival-ascended":{appId:"2430930",minGB:120,minRamGB:32,exe:"ShooterGame/Binaries/Win64/ArkAscendedServer.exe"},
+      "arma-reforger":{appId:"1874900",minGB:35,minRamGB:16,exe:"ArmaReforgerServer.exe"},
+      "7dtd":{appId:"294420",minGB:25,minRamGB:16,exe:"7DaysToDieServer.exe"}
     };
     try {
       const db=await dbReady();
@@ -357,10 +605,10 @@ async function route(request) {
       if(path==="/v1/provisioning/agent/report"){
         const jobId=String(data?.jobId||"");
         const resultCode=String(data?.resultCode||"");
-        if(!/^[0-9a-f-]{36}$/.test(jobId)||!["binary_verified","failed","needs_attention"].includes(resultCode))
+        if(!/^[0-9a-f-]{36}$/.test(jobId)||!["binary_verified","content_prepared","failed","needs_attention"].includes(resultCode))
           return send({error:"invalid_report"},400);
         const rows=await db`UPDATE cmd_hosting_provision_tasks
-          SET status=${resultCode==="binary_verified"?"binaries_installed":"waiting_review"},
+          SET status=${resultCode==="binary_verified"?"binaries_installed":resultCode==="content_prepared"?"content_prepared":"waiting_review"},
               result_code=${resultCode},leased_until=NULL,updated_at=NOW()
           WHERE id=${jobId} AND node_id=${nodeId}
             AND status='leased' AND leased_until>NOW()
@@ -368,7 +616,10 @@ async function route(request) {
         return rows.length?send({ok:true,jobId,status:rows[0].status,gameServerStarted:false,mapVerified:false,modsVerified:false}):send({error:"job_lease_not_found"},409);
       }
       const nodeRows=await db`SELECT 1 AS valid FROM cmd_hosting_pc_nodes
-       WHERE node_id::text=${nodeId} AND last_seen>NOW()-interval '25 minutes' LIMIT 1`;
+        WHERE node_id::text=${nodeId} AND last_seen>NOW()-interval '25 minutes'
+        UNION SELECT 1 AS valid FROM cmd_hosting_cloud_agents
+        WHERE agent_id=${nodeId} AND agent_role='host'
+          AND last_seen>NOW()-interval '25 minutes' LIMIT 1`;
       if(!nodeRows.length)return send({ok:false,status:"host_offline_or_unpaired",job:null},200);
       const verified=await db`SELECT r.game_id::text AS game_id,r.account_id::text AS account_id,
         r.agent_server_id::text AS server_id,r.paid_until,
@@ -377,7 +628,7 @@ async function route(request) {
         JOIN cmd_hosting_game_library l ON l.id=r.game_id AND l.account_id=r.account_id
         WHERE r.agent_node_id::text=${nodeId}
           AND r.agent_server_id IS NOT NULL
-          AND lower(l.platform)='pc'
+          AND (lower(l.platform)='pc' OR (lower(l.platform)='crossplay' AND lower(l.game_key) IN ('ark-asa','ark-survival-ascended','arma-reforger')))
           AND r.payment_state IN ('paid','active','verified')
           AND r.paid_until>NOW()
           AND EXISTS(SELECT 1 FROM cmd_hosting_rental_receipts v
@@ -393,30 +644,63 @@ async function route(request) {
         const result=await db`INSERT INTO cmd_hosting_provision_tasks
           (id,game_id,account_id,node_id,server_id,game_key,platform,app_id,paid_until)
           VALUES(${id},${r.game_id},${r.account_id},${nodeId},${r.server_id},
-                 ${key},'pc',${spec.appId},${r.paid_until})
+                 ${key},${String(r.platform).toLowerCase()},${spec.appId},${r.paid_until})
           ON CONFLICT (game_id,account_id,paid_until) DO NOTHING RETURNING id`;
         if(result.length)inserted++;
       }
       const claimed=await db`UPDATE cmd_hosting_provision_tasks SET
-        status='leased',leased_until=NOW()+interval '40 minutes',
+        status='leased',leased_until=NOW()+interval '8 hours',
         attempts=attempts+1,updated_at=NOW()
         WHERE id=(SELECT id FROM cmd_hosting_provision_tasks
           WHERE node_id=${nodeId} AND
           (status='queued' OR (status='leased' AND leased_until<NOW()))
           AND attempts<3 ORDER BY created_at ASC
           FOR UPDATE SKIP LOCKED LIMIT 1)
-        RETURNING id,game_id,server_id,game_key,platform,app_id,attempts`;
+        RETURNING id,game_id,account_id,server_id,game_key,platform,app_id,attempts`;
       if(!claimed.length)return send({ok:true,job:null,queuedNew:inserted});
+
       const q=claimed[0],spec=allowed[q.game_key];
       if(!spec)return send({error:"job_unsupported"},409);
+      const rental=await db`SELECT slots FROM cmd_hosting_game_library
+        WHERE id::text=${q.game_id} AND account_id::text=${q.account_id} LIMIT 1`;
+      const slots=Number(rental[0]?.slots);
+      if(!Number.isInteger(slots)||slots<1||slots>200){
+        await db`UPDATE cmd_hosting_provision_tasks
+          SET status='waiting_review',result_code='invalid_slot_count',leased_until=NULL
+          WHERE id=${q.id} AND status='leased'`;
+        return send({error:"invalid_rental_slots"},409);
+      }
+      const profile=GAME_MAPS[normalizeGameKey(q.game_key)];
+      let mapPref=profile?.defaultMap||null,selectedMods=[],publisherApproved=false;
+      const existingPrefs=await db`SELECT to_regclass('public.cmd_hosting_rental_content_prefs') AS name`;
+      if(existingPrefs[0]?.name){
+        const prefs=await db`SELECT map_id,mod_ids,publisher_approved FROM cmd_hosting_rental_content_prefs
+          WHERE game_id=${q.game_id} AND account_id=${q.account_id} LIMIT 1`;
+        if(prefs.length){
+          mapPref=prefs[0].map_id;selectedMods=prefs[0].mod_ids||[];
+          publisherApproved=!!prefs[0].publisher_approved;
+        }
+      }
+      const content=validRentalContent(q.game_key,q.platform,mapPref,selectedMods);
+      if(!content || ((content.publisherDlcRequired||content.publisherModRequired)&&!publisherApproved))
+        {
+          await db`UPDATE cmd_hosting_provision_tasks SET status='waiting_review',
+            result_code='content_not_authorized',leased_until=NULL,updated_at=NOW()
+            WHERE id=${q.id} AND status='leased'`;
+          return send({error:"rental_content_not_authorized",job:null},409);
+        }
       return send({ok:true,job:{jobId:q.id,gameId:q.game_id,serverId:q.server_id,
-        gameKey:q.game_key,platform:q.platform,steamAppId:q.app_id,
-        minimumFreeGB:spec.minGB,expectedExecutable:spec.exe,
+        gameKey:q.game_key,platform:q.platform,steamAppId:q.app_id,slots,
+        minimumFreeGB:spec.minGB,minimumRamGB:spec.minRamGB,expectedExecutable:spec.exe,
         attempt:q.attempts,licenseAcceptedByWorkerRequired:true,
         action:"install_steamcmd_in_isolated_rental_directory",
+        mapId:content.mapId,mapValue:content.value,modIds:content.mods,
+        publisherEntitlementApproved:publisherApproved,
+        contentWorkflow:"prepare_map_then_download_mods_then_verify_server",
+        mapConfigurationPlanned:true,modsDownloadPending:content.mods.length>0,
         automaticMaps:false,automaticMods:false},
         queuedNew:inserted,
-        note:"Only validated PC rental and SteamCMD game. Worker must report actual file verification."});
+        note:"Host worker must independently verify game binaries and map files; mods stay pending until publisher/host confirms downloads."});
     }catch(e){
       console.error("CMD_RENTAL_QUEUE_ERROR",String(e?.message||e).slice(0,170));
       return send({error:"queue_unavailable"},503)
