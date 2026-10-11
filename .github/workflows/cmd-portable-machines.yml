@@ -14,6 +14,7 @@ on:
       - "provisioning/machine-detection.mjs"
       - "provisioning/machine-detection.test.mjs"
       - "scripts/Installer-CMDHostingPortableV2.ps1"
+      - "scripts/Installer-CMDHostingPortable-linux-v2.sh"
       - "scripts/Configure-CMDGameContent.ps1"
       - "scripts/CMDHostingRentalWorker.ps1"
       - "scripts/CMDHostingRentalWorkerV2.ps1"
@@ -32,6 +33,7 @@ on:
       - "provisioning/machine-detection.mjs"
       - "provisioning/machine-detection.test.mjs"
       - "scripts/Installer-CMDHostingPortableV2.ps1"
+      - "scripts/Installer-CMDHostingPortable-linux-v2.sh"
       - "scripts/Configure-CMDGameContent.ps1"
       - "scripts/CMDHostingRentalWorker.ps1"
       - "scripts/CMDHostingRentalWorkerV2.ps1"
@@ -88,3 +90,17 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./tests/windows-game-content.ps1
+
+      - name: Validate Windows portable V2 PowerShell installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $errors = $null
+          $tokens = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile('scripts/Installer-CMDHostingPortableV2.ps1',[ref]$tokens,[ref]$errors)
+          if ($errors -and $errors.Count) { $errors | Format-List Message,Extent; exit 1 }
+          Write-Host 'Portable V2 PowerShell syntax OK'
+      - name: Validate portable Linux setup syntax
+        if: runner.os == 'Linux'
+        shell: bash
+        run: bash -n scripts/Installer-CMDHostingPortable-linux-v2.sh
