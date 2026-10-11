@@ -1,0 +1,37 @@
+name: CMD Hosting - Portable machine compatibility
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "provisioning/host-capability.mjs"
+      - "provisioning/host-capability.test.mjs"
+      - "provisioning/portable-host-agent.mjs"
+      - ".github/workflows/cmd-portable-machines.yml"
+  pull_request:
+    paths:
+      - "provisioning/host-capability.mjs"
+      - "provisioning/host-capability.test.mjs"
+      - "provisioning/portable-host-agent.mjs"
+permissions:
+  contents: read
+jobs:
+  cross-platform:
+    name: "Node 22 on ${{ matrix.os }}"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check portable agent syntax
+        run: node --check provisioning/portable-host-agent.mjs
+      - name: Check hardware detector syntax
+        run: node --check provisioning/host-capability.mjs
+      - name: Run cross-platform compatibility tests
+        run: node --test provisioning/host-capability.test.mjs
+      - name: Read-only hardware diagnostic
+        run: node provisioning/portable-host-agent.mjs --diagnose
