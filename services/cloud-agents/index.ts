@@ -7,7 +7,7 @@ import { SQL } from "bun";
 import { timingSafeEqual, createHash, randomBytes } from "node:crypto";
 
 const PORT = Number(Bun.env.PORT || 3000);
-const VERSION = "1.9.2";
+const VERSION = "2.0.6";
 const MAIN = "https://cmd-hosting-web-production.up.railway.app";
 const MODS = "https://cmd-hosting-mods-api-production.up.railway.app";
 const token = Bun.env.CMD_CLOUD_AGENT_TOKEN || "";
@@ -124,6 +124,65 @@ function validRentalContent(game,platform,mapId,modIds){
    publisherModRequired:map[0]==="astraeos"};
 }
 
+
+/* CMD_LONG_LIFE_TOKEN_V1 — multi-year, hashed, account-scoped API tokens.
+   Only trusted backend may issue/revoke/rotate. No secrets in logs/listings.
+   No token is authorized to change game servers, payments, mods or files.
+*/
+const LONG_LIFE_SCOPES=["account:read","services:read","rentals:read"];
+const LONG_LIFE_YEARS=[1,3,5,10];
+async function longLifeDb(){
+ const db=await dbReady();
+ await db`CREATE TABLE IF NOT EXISTS cmd_hosting_long_life_tokens (
+  id TEXT PRIMARY KEY,
+  account_id VARCHAR(100) NOT NULL,
+  label VARCHAR(80) NOT NULL,
+  token_hash CHAR(64) NOT NULL UNIQUE,
+  token_prefix VARCHAR(24) NOT NULL,
+  scopes TEXT[] NOT NULL,
+  service_id VARCHAR(100),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ NOT NULL,
+  last_used_at TIMESTAMPTZ,
+  revoked_at TIMESTAMPTZ
+ )`;
+ return db;
+}
+function longLifeMeta(x){
+ return {id:x.id,accountId:x.account_id,label:x.label,
+   scopes:x.scopes,serviceId:x.service_id,createdAt:x.created_at,
+   expiresAt:x.expires_at,lastUsedAt:x.last_used_at||null,
+   revoked:x.revoked_at!==null,prefix:x.token_prefix};
+}
+function validateLongLifeInput(v){
+ if(!v||typeof v!=="object"||Array.isArray(v))return null;
+ const accountId=typeof v.accountId==="string"?v.accountId.trim():"";
+ const label=typeof v.label==="string"?v.label.trim():"";
+ const years=v.years,scopes=v.scopes;
+ const serviceId=v.serviceId===null||v.serviceId===undefined?null:String(v.serviceId);
+ if(!/^[a-zA-Z0-9._-]{1,100}$/.test(accountId)
+   ||label.length<1||label.length>80||/[\u0000-\u001F\u007F]/.test(label)
+   ||!LONG_LIFE_YEARS.includes(years)
+   ||!Array.isArray(scopes)||!scopes.length||scopes.length>LONG_LIFE_SCOPES.length
+   ||!scopes.every(x=>LONG_LIFE_SCOPES.includes(x))
+   ||new Set(scopes).size!==scopes.length
+   ||(serviceId!==null&&!/^[a-zA-Z0-9._-]{1,100}$/.test(serviceId)))return null;
+ return {accountId,label,years,scopes,serviceId};
+}
+async function getLongLife(request){
+ const presented=bearer(request);
+ if(!/^cmd_llt_[A-Za-z0-9_-]{48}$/.test(presented))return null;
+ const hashed=createHash("sha256").update(presented).digest("hex");
+ try{
+  const db=await longLifeDb();
+  const rows=await db`SELECT id,account_id,label,token_prefix,scopes,service_id,
+    created_at,expires_at,last_used_at,revoked_at
+    FROM cmd_hosting_long_life_tokens
+    WHERE token_hash=${hashed} AND revoked_at IS NULL AND expires_at>NOW() LIMIT 1`;
+  return rows[0]||null;
+ }catch(e){console.error("CMD_LONG_LIFE_AUTH_UNAVAILABLE");return null}
+}
+
 async function route(request) {
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers:{"allow":"GET, POST, OPTIONS"}});
   const path=new URL(request.url).pathname;
@@ -156,7 +215,7 @@ async function route(request) {
   }
   if(path==="/downloads/versions.json") {
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
-    return send({cloud:"1.9.2",modsAgent:"4.1.0",modsAgentURL:
+    return send({cloud:"2.0.6",modsAgent:"4.1.0",modsAgentURL:
       "https://cmd-hosting-cloud-agents-production.up.railway.app/downloads/mods-agent-v4.1.ps1",
       windowsAutoUpdater:"1.2",mainAgent:"V5 (installed version not remotely verified)",
       offlinePCRequiresLocalStartup:true});
@@ -218,11 +277,135 @@ async function route(request) {
         expiresCodeAfterClaim:true,gameInstallPermission:false,remoteShellPermission:false});
     }catch(e){console.error("CMD_HOST_ENROLL_ERROR",String(e?.message||e).slice(0,100));return send({error:"enrollment_unavailable"},503)}
   }
+
+  /* Long-life token introspection and scoped rentals are authenticated by their
+     own API secret, never by the cloud agent's master or Windows pairing token. */
+  if(["/v1/tokens/me","/v1/tokens/account","/v1/tokens/services",
+      "/v1/tokens/rentals"].includes(path)){
+    if(request.method!=="GET")return send({error:"method_not_allowed"},405);
+    const owner=await getLongLife(request);
+    if(!owner)return send({error:"invalid_or_expired_api_token"},401);
+    if(path==="/v1/tokens/me")return send({ok:true,token:longLifeMeta(owner),tokenSecretVisible:false});
+    const required=path==="/v1/tokens/rentals"?"rentals:read":
+      path==="/v1/tokens/services"?"services:read":"account:read";
+    if(!owner.scopes.includes(required))return send({error:"insufficient_token_scope"},403);
+    try{
+      const db=await dbReady();
+      if(path==="/v1/tokens/account"){
+        return send({ok:true,accountId:owner.account_id,scope:required,
+          serviceId:owner.service_id,access:"read_only"});
+      }
+      if(path==="/v1/tokens/services"){
+        const services=await db`SELECT l.id::text AS game_id,l.game_key,l.platform,l.slots
+          FROM cmd_hosting_game_library l
+          WHERE l.account_id::text=${owner.account_id}
+            AND (${owner.service_id}::text IS NULL OR l.id::text=${owner.service_id})
+          ORDER BY l.id DESC LIMIT 100`;
+        return send({ok:true,accountId:owner.account_id,scope:required,services,
+          note:"Catalogue et configurations du compte; ne prouve pas que les serveurs sont démarrés."});
+      }
+      const rentals=await db`SELECT r.game_id::text AS game_id,
+        l.game_key,l.platform,r.payment_state,r.paid_until
+        FROM cmd_hosting_rentals r
+        JOIN cmd_hosting_game_library l
+          ON l.id=r.game_id AND l.account_id=r.account_id
+        WHERE r.account_id::text=${owner.account_id}
+          AND (${owner.service_id}::text IS NULL OR r.game_id::text=${owner.service_id})
+        ORDER BY r.updated_at DESC LIMIT 50`;
+      void db`UPDATE cmd_hosting_long_life_tokens SET last_used_at=NOW()
+        WHERE id=${owner.id} AND revoked_at IS NULL`.catch(()=>{});
+      return send({ok:true,accountId:owner.account_id,
+        serviceId:owner.service_id,scope:required,rentals});
+    }catch(e){console.error("CMD_LONG_LIFE_SCOPED_READ_ERROR");
+      return send({error:"account_data_unavailable"},503)}
+  }
   const master=auth(request);
   const scoped=master?null:
     (path==="/v1/agents/manifest"||path==="/v1/agents/heartbeat"||
      path==="/v1/provisioning/agent/claim"||path==="/v1/provisioning/agent/report")?await machineAuth(request):null;
   if(!master&&!scoped)return send({error:"unauthorized"},401);
+
+
+  /* Admin backend issues keys; site must proxy requests after authenticating
+     the real user and checking account ownership. Not a public signup endpoint. */
+  if(path==="/v1/tokens/long-life" ||
+     path==="/v1/tokens/long-life/revoke" ||
+     path==="/v1/tokens/long-life/rotate"){
+    if(!master)return send({error:"admin_backend_only"},403);
+    if(path==="/v1/tokens/long-life" && request.method==="GET"){
+      const url=new URL(request.url),accountId=url.searchParams.get("accountId")||"";
+      if(!/^[A-Za-z0-9._-]{1,100}$/.test(accountId))return send({error:"invalid_account_id"},400);
+      try{
+        const db=await longLifeDb();
+        const rows=await db`SELECT id,account_id,label,token_prefix,scopes,
+          service_id,created_at,expires_at,last_used_at,revoked_at
+          FROM cmd_hosting_long_life_tokens WHERE account_id=${accountId}
+          ORDER BY created_at DESC LIMIT 50`;
+        return send({ok:true,accountId,tokens:rows.map(longLifeMeta)});
+      }catch(e){console.error("CMD_LONG_LIFE_LIST_ERROR");return send({error:"token_store_unavailable"},503)}
+    }
+    if(request.method!=="POST")return send({error:"method_not_allowed"},405);
+    const body=await request.text();
+    if(body.length>2048)return send({error:"body_too_large"},413);
+    let input;try{input=JSON.parse(body)}catch{return send({error:"invalid_json"},400)}
+    try{
+      const db=await longLifeDb();
+      if(path==="/v1/tokens/long-life"){
+        const v=validateLongLifeInput(input);
+        if(!v)return send({error:"invalid_token_request"},400);
+        const accountExists=await db`SELECT 1 FROM cmd_hosting_game_library
+          WHERE account_id::text=${v.accountId} LIMIT 1`;
+        if(!accountExists.length)return send({error:"account_has_no_known_services"},404);
+        if(v.serviceId){
+          const owned=await db`SELECT 1 FROM cmd_hosting_game_library
+             WHERE account_id::text=${v.accountId} AND id::text=${v.serviceId} LIMIT 1`;
+          if(!owned.length)return send({error:"service_not_owned"},404);
+        }
+        const active=await db`SELECT COUNT(*)::int AS count FROM cmd_hosting_long_life_tokens
+          WHERE account_id=${v.accountId} AND revoked_at IS NULL AND expires_at>NOW()`;
+        if(Number(active[0]?.count)>=20)return send({error:"active_token_limit"},429);
+        const raw="cmd_llt_"+randomBytes(36).toString("base64url");
+        const hash=createHash("sha256").update(raw).digest("hex");
+        const prefix=raw.slice(0,18);
+        const id=crypto.randomUUID();
+        const safeScopes="{"+v.scopes.join(",")+"}";
+        const created=await db`INSERT INTO cmd_hosting_long_life_tokens
+          (id,account_id,label,token_hash,token_prefix,scopes,service_id,expires_at)
+          VALUES(${id},${v.accountId},${v.label},${hash},${prefix},${safeScopes},
+             ${v.serviceId},NOW()+make_interval(years=>${v.years}))
+          RETURNING id,account_id,label,token_prefix,scopes,service_id,
+            created_at,expires_at,last_used_at,revoked_at`;
+        return send({ok:true,token:longLifeMeta(created[0]),
+          accessToken:raw,showOnlyOnce:true,notice:"Conserver cette clé en lieu sûr. Impossible de la réafficher."},201);
+      }
+      const accountId=String(input?.accountId||""),id=String(input?.id||"");
+      if(!/^[a-zA-Z0-9._-]{1,100}$/.test(accountId) ||
+         !/^[0-9a-f-]{36}$/.test(id))return send({error:"invalid_token_id"},400);
+      if(path.endsWith("/revoke")){
+        const done=await db`UPDATE cmd_hosting_long_life_tokens
+          SET revoked_at=NOW()
+          WHERE id=${id} AND account_id=${accountId} AND revoked_at IS NULL
+          RETURNING id`;
+        return done.length?send({ok:true,revoked:true,id}):
+          send({error:"token_not_active"},404);
+      }
+      // Rotation preserves account, scopes, expiry and service restriction;
+      // old token stops working immediately after the atomic UPDATE.
+      const raw="cmd_llt_"+randomBytes(36).toString("base64url");
+      const hashed=createHash("sha256").update(raw).digest("hex");
+      const prefix=raw.slice(0,18);
+      const changed=await db`UPDATE cmd_hosting_long_life_tokens
+        SET token_hash=${hashed},token_prefix=${prefix},last_used_at=NULL
+        WHERE id=${id} AND account_id=${accountId}
+          AND revoked_at IS NULL AND expires_at>NOW()
+        RETURNING id,account_id,label,token_prefix,scopes,service_id,
+           created_at,expires_at,last_used_at,revoked_at`;
+      return changed.length?send({ok:true,token:longLifeMeta(changed[0]),
+        accessToken:raw,showOnlyOnce:true,previousKeyInvalidated:true}):
+        send({error:"token_not_active"},404);
+    }catch(e){console.error("CMD_LONG_LIFE_STORE_ERROR",String(e?.message||"unavailable").slice(0,80));
+      return send({error:"token_store_unavailable"},503)}
+  }
 
   if(path==="/v1/agents/enroll/create"){
     if(!master)return send({error:"admin_only"},403);
@@ -782,6 +965,91 @@ void(async()=>{
  console.log("CMD_RENTAL_QUEUE_TEST "+JSON.stringify({pass:x.every(q=>q.pass),checks:x}));
 })().catch(e=>console.log("CMD_RENTAL_QUEUE_TEST_ERROR "+String(e?.message||e).slice(0,160)));
 
+
+
+/* CMD_LONG_LIFE_REAL_SELFTEST — an isolated synthetic account (never a customer).
+ * Uses a short-lived test token (60sec), revoked and deleted in finally.
+ * Logs only HTTP statuses, never secrets. No game files/payments modified.
+ */
+if(Bun.env.CMD_LONG_LIFE_SELFTEST==="1") void(async()=>{
+ const checks=[],fakeAccount="cmd_llt_test_"+randomBytes(6).toString("hex");
+ const id=crypto.randomUUID();
+ let inserted=false;
+ const secret="cmd_llt_"+randomBytes(36).toString("base64url");
+ const keyHash=createHash("sha256").update(secret).digest("hex");
+ const authHeaders={authorization:"Bearer "+secret};
+ try{
+  const denied=await route(new Request("http://localhost/v1/tokens/me"));
+  checks.push({name:"anonymous_token_rejected",pass:denied.status===401});
+  const deniedAdmin=await route(new Request("http://localhost/v1/tokens/long-life",{
+    method:"POST",headers:{"content-type":"application/json"},
+    body:JSON.stringify({accountId:fakeAccount,label:"test",years:5,scopes:["rentals:read"]})}));
+  checks.push({name:"public_creation_rejected",pass:deniedAdmin.status===401});
+  const db=await longLifeDb();
+  const tested=validateLongLifeInput({accountId:fakeAccount,label:"Test temporaire",
+    years:5,scopes:["account:read","services:read","rentals:read"],serviceId:null});
+  checks.push({name:"scope_and_duration_validated",pass:!!tested&&
+    !validateLongLifeInput({accountId:fakeAccount,label:"danger",
+      years:100,scopes:["servers:control"]})});
+  await db`INSERT INTO cmd_hosting_long_life_tokens
+    (id,account_id,label,token_hash,token_prefix,scopes,expires_at)
+    VALUES(${id},${fakeAccount},'Test temporaire',${keyHash},'cmd_llt_test',
+      ${"{account:read,services:read,rentals:read}"},NOW()+interval '1 minute')`;
+  inserted=true;
+  const self=await route(new Request("http://localhost/v1/tokens/me",{headers:authHeaders}));
+  const view=await self.json();
+  checks.push({name:"valid_opaque_token_accepted",pass:self.status===200&&
+    view?.token?.accountId===fakeAccount&&!JSON.stringify(view).includes(secret)});
+  const acc=await route(new Request("http://localhost/v1/tokens/account",{headers:authHeaders}));
+  checks.push({name:"account_scope",pass:acc.status===200});
+  const svc=await route(new Request("http://localhost/v1/tokens/services",{headers:authHeaders}));
+  const sd=await svc.json();
+  checks.push({name:"synthetic_account_isolated",pass:svc.status===200&&
+     Array.isArray(sd.services)&&sd.services.length===0});
+  const rents=await route(new Request("http://localhost/v1/tokens/rentals",{headers:authHeaders}));
+  const rd=await rents.json();
+  checks.push({name:"synthetic_rentals_isolated",pass:rents.status===200&&
+     Array.isArray(rd.rentals)&&rd.rentals.length===0});
+  const adminHeaders={authorization:"Bearer "+token,"content-type":"application/json"};
+  const listed=await route(new Request("http://localhost/v1/tokens/long-life?accountId="+fakeAccount,
+    {headers:adminHeaders}));
+  const listBody=await listed.json();
+  checks.push({name:"admin_can_list_without_secrets",pass:listed.status===200&&
+    listBody?.tokens?.length===1&&!JSON.stringify(listBody).includes(secret)&&
+    !JSON.stringify(listBody).includes(keyHash)});
+  const invalidCreate=await route(new Request("http://localhost/v1/tokens/long-life",{
+    method:"POST",headers:adminHeaders,
+    body:JSON.stringify({accountId:fakeAccount,label:"unsafe",years:10,scopes:["servers:control"]})}));
+  checks.push({name:"dangerous_creation_scope_rejected",pass:invalidCreate.status===400});
+  const rotated=await route(new Request("http://localhost/v1/tokens/long-life/rotate",{
+    method:"POST",headers:adminHeaders,body:JSON.stringify({accountId:fakeAccount,id})}));
+  const rotatedData=await rotated.json();
+  const newSecret=rotatedData?.accessToken||"";
+  checks.push({name:"admin_can_rotate",pass:rotated.status===200&&
+    /^cmd_llt_[A-Za-z0-9_-]{48}$/.test(newSecret)&&newSecret!==secret&&rotatedData.previousKeyInvalidated===true});
+  const old=await route(new Request("http://localhost/v1/tokens/me",{headers:authHeaders}));
+  const newToken=await route(new Request("http://localhost/v1/tokens/me",{
+    headers:{authorization:"Bearer "+newSecret}}));
+  checks.push({name:"rotation_invalidates_old_secret",pass:old.status===401&&newToken.status===200});
+  const revokedResponse=await route(new Request("http://localhost/v1/tokens/long-life/revoke",{
+    method:"POST",headers:adminHeaders,body:JSON.stringify({accountId:fakeAccount,id})}));
+  const revokedData=await revokedResponse.json();
+  const after=await route(new Request("http://localhost/v1/tokens/me",{
+    headers:{authorization:"Bearer "+newSecret}}));
+  checks.push({name:"admin_can_revoke",pass:revokedResponse.status===200&&
+    revokedData.revoked===true&&after.status===401});
+ }catch(err){
+  checks.push({name:"integration_error",pass:false,
+    error:String(err?.message||err).slice(0,110)});
+ }finally{
+  if(inserted)try{
+    const db=await longLifeDb();
+    await db`DELETE FROM cmd_hosting_long_life_tokens WHERE id=${id} AND account_id=${fakeAccount}`;
+  }catch(err){checks.push({name:"fixture_cleanup",pass:false})}
+  console.log("CMD_LONG_LIFE_REAL_SELFTEST "+JSON.stringify({
+    pass:checks.length>0&&checks.every(x=>x.pass),checks}));
+ }
+})();
 
 /* CMD_CONTENT_FLOW_SELFTEST — all tests read-only, never create a paid rental or install anything. */
 void(async()=>{
