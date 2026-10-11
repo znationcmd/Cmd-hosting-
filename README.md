@@ -44,3 +44,27 @@ CMD Hosting is a French game-server management platform project. This repository
 Les cartes moddées nécessitent une source vérifiée et des dépendances compatibles. Pour Arma Reforger, `game.scenarioId` et `game.mods` sont gérés par le serveur/Workshop Bohemia ; pour Arma 3, ce sont les missions `.pbo` et les dossiers `@mod` autorisés. Les serveurs consoles peuvent imposer un prestataire spécifique et ne sont pas installés avec SteamCMD PC.
 
 Tests à exécuter sur un ordinateur Node.js compatible : `node --experimental-strip-types --test tests/provisioning.test.mjs`.
+
+
+## Reprise Agent Mods V4 — 11 octobre 2026
+
+L'agent Windows enrichi est enregistré dans GitHub, indépendamment du runtime Railway.
+
+- scripts/cmd-hosting-mods-agent-v4.ps1 : conserve les parcours DayZ PC et ARK ASA ; prépare les GUIDs Bohemia Workshop d'Arma Reforger dans le fichier config.json sauvegardé et ajoute le téléchargement SteamCMD pour Arma 3 (Workshop app 107410, @CMD_ID et .bikey).
+- scripts/Update-CMDModsAgentV4.ps1 : mise à jour non destructive de l'agent déjà appairé ; sauvegarde le script précédent et préserve settings.json, son jeton chiffré et servers.json.
+- scripts/Installer-Agent-Mods-V4.cmd : lanceur Windows de l'outil de mise à jour.
+
+Les fichiers doivent être exécutés sur le PC Windows déjà appairé, pas sur Railway. L'outil ne stocke pas le mot de passe Steam.
+
+### Limites connues
+
+- Pas de connexion récente de l'agent principal PC confirmée lors de cette reprise. Aucune installation sur le PC n'a été réalisée ici.
+- La V4 reste sur GitHub. Le script embarqué dans la fonction principale Railway dépassait les limites de démarrage ; la version précédente a été restaurée, et le déploiement Railway est revenu au statut SUCCESS.
+- Arma Reforger : les GUIDs présents dans game.mods seront téléchargés par le serveur au prochain démarrage. Pour le scénario, un scénarioId exact et approuvé doit être renseigné dans l'entrée du serveur ; confirmer les téléchargements dans les logs.
+- Arma 3 : SteamCMD peut exiger un compte Steam et les droits d'utilisation. Les missions .pbo exigent une source officielle ou autorisée et ne sont pas installées par cette V4.
+- Les fiches de tous les jeux du catalogue sont préparées, pas automatiquement installées. Les consoles ne peuvent pas être gérées par un SteamCMD Windows universel.
+- L'installation automatique déclenchée par une location requiert encore un backend de commandes authentifiées par loueur et serveur, une file de provisionnement et un hôte en ligne ; ne pas afficher un succès fictif.
+
+### Validation restante
+
+Tests statiques réussis (parcours présents, structure équilibrée). Un test PowerShell Windows est indispensable : effectuer le diagnostic sur le PC et vérifier ensuite une synchronisation des mods et un démarrage réel du serveur.
