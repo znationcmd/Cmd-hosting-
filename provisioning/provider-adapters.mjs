@@ -8,13 +8,16 @@ export const PROVIDERS=Object.freeze({
   oracle:{id:"oracle",type:"vm",auth:"explicit-host-enrollment",access:"host-agent",softwareInstall:"by-authorized-host-worker",games:"per-os-adapter"},
   nitrado:{id:"nitrado",type:"managed-gameserver",auth:"nitrado-api-token",access:"official-provider-api",softwareInstall:"provider-controlled",games:"per-service-entitlements"},
   genericVps:{id:"generic-vps",type:"vm",auth:"explicit-host-enrollment",access:"host-agent",softwareInstall:"by-authorized-host-worker",games:"per-os-adapter"},
+  dedicatedHost:{id:"dedicated-host",type:"machine",auth:"explicit-host-enrollment",access:"host-agent",softwareInstall:"by-authorized-host-worker",games:"per-os-adapter"},
   genericManaged:{id:"managed-gameserver",type:"managed-gameserver",auth:"specific-provider-credentials",access:"provider-adapter-required",softwareInstall:"provider-controlled",games:"per-service-entitlements"}
 });
 const aliases=new Map([
   ["local","local"],["home","local"],["lenovo","local"],["pc","local"],
   ["oci","oracle"],["oracle","oracle"],["oracle-cloud","oracle"],["oracle cloud infrastructure","oracle"],
   ["nitrado","nitrado"],["nitrado.net","nitrado"],
-  ["vps","genericVps"],["vds","genericVps"],["dedicated","genericVps"],
+  ["vps","genericVps"],["vds","genericVps"],["dedicated","dedicatedHost"],
+  ["supermicro","dedicatedHost"],["supermicro-microcloud","dedicatedHost"],["supermicro-clouddc","dedicatedHost"],
+  ["amd-ryzen","dedicatedHost"],["amd-epyc","dedicatedHost"],["bare-metal","dedicatedHost"],
   ["gportal","genericManaged"],["g-portal","genericManaged"],["shockbyte","genericManaged"],["other-provider","genericManaged"]
 ]);
 export function resolveProvider(value){
