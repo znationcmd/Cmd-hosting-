@@ -781,3 +781,24 @@ void(async()=>{
  }
  console.log("CMD_RENTAL_QUEUE_TEST "+JSON.stringify({pass:x.every(q=>q.pass),checks:x}));
 })().catch(e=>console.log("CMD_RENTAL_QUEUE_TEST_ERROR "+String(e?.message||e).slice(0,160)));
+
+
+/* CMD_CONTENT_FLOW_SELFTEST — all tests read-only, never create a paid rental or install anything. */
+void(async()=>{
+ const checks=[];
+ const x=await route(new Request("http://localhost/v1/provisioning/maps?game=dayz&platform=pc"));
+ const dayz=await x.json();
+ checks.push({name:"dayz_pc_maps",pass:x.status===200&&dayz.gameKey==="dayz"&&
+   dayz.maps.some(m=>m.id==="chernarusplus")&&!dayz.maps.some(m=>m.id==="the-island")});
+ const y=await route(new Request("http://localhost/v1/provisioning/maps?game=ark-asa&platform=crossplay"));
+ const ark=await y.json();
+ checks.push({name:"ark_asa_crossplay_maps",pass:y.status===200&&ark.maps.some(m=>m.id==="the-island")&&
+   !ark.maps.some(m=>m.id==="chernarusplus")});
+ const n=await route(new Request("http://localhost/v1/provisioning/maps?game=dayz&platform=ps5"));
+ checks.push({name:"console_provider_required",pass:n.status===422});
+ const z=await route(new Request("http://localhost/v1/provisioning/content/select",{
+   method:"POST",headers:{"content-type":"application/json"},
+   body:JSON.stringify({gameId:"not-a-real-rental",accountId:"nobody",mapId:"the-island"})}));
+ checks.push({name:"unauthenticated_map_change_blocked",pass:z.status===401});
+ console.log("CMD_CONTENT_FLOW_SELFTEST "+JSON.stringify({pass:checks.every(t=>t.pass),checks}));
+})().catch(e=>console.error("CMD_CONTENT_FLOW_SELFTEST_ERROR",String(e?.message||e).slice(0,150)));
