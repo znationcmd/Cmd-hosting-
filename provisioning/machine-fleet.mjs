@@ -17,10 +17,10 @@ export const MACHINE_CLASSES=Object.freeze({
 const ALIASES=new Map([
  ["lenovo","existing-pc"],["ideapad","existing-pc"],["existing-pc","existing-pc"],
  ["vps","generic-vps"],["generic-vps","generic-vps"],["oracle","oracle-vm"],["oracle-vm","oracle-vm"],
- ["ryzen","dedicated-ryzen"],["amd-ryzen","dedicated-ryzen"],["dedicated-ryzen","dedicated-ryzen"],
- ["epyc","dedicated-epyc"],["amd-epyc","dedicated-epyc"],["dedicated-epyc","dedicated-epyc"],
- ["microcloud","supermicro-microcloud"],["supermicro-microcloud","supermicro-microcloud"],
- ["clouddc","supermicro-clouddc"],["supermicro-clouddc","supermicro-clouddc"],
+ ["ryzen","dedicated-ryzen"],["amd-ryzen","dedicated-ryzen"],["amd ryzen","dedicated-ryzen"],["dedicated-ryzen","dedicated-ryzen"],
+ ["epyc","dedicated-epyc"],["amd-epyc","dedicated-epyc"],["amd epyc","dedicated-epyc"],["dedicated-epyc","dedicated-epyc"],
+ ["microcloud","supermicro-microcloud"],["supermicro-microcloud","supermicro-microcloud"],["supermicro microcloud","supermicro-microcloud"],
+ ["clouddc","supermicro-clouddc"],["supermicro-clouddc","supermicro-clouddc"],["supermicro clouddc","supermicro-clouddc"],
  ["other-x64","other-x64"]
 ]);
 export function machineClass(name){
