@@ -9,6 +9,8 @@ on:
       - "provisioning/machine-fleet.mjs"
       - "provisioning/machine-fleet.test.mjs"
       - "provisioning/provider-adapters.mjs"
+      - "provisioning/long-life-tokens.mjs"
+      - "provisioning/long-life-tokens.test.mjs"
       - "provisioning/game-content.mjs"
       - "provisioning/game-content.test.mjs"
       - "provisioning/machine-detection.mjs"
@@ -29,6 +31,8 @@ on:
       - "provisioning/machine-fleet.mjs"
       - "provisioning/machine-fleet.test.mjs"
       - "provisioning/provider-adapters.mjs"
+      - "provisioning/long-life-tokens.mjs"
+      - "provisioning/long-life-tokens.test.mjs"
       - "provisioning/game-content.mjs"
       - "provisioning/game-content.test.mjs"
       - "provisioning/machine-detection.mjs"
@@ -64,7 +68,7 @@ jobs:
       - name: Verify Supermicro and AMD fleet planner syntax
         run: node --check provisioning/machine-fleet.mjs
       - name: Run cross-platform and multi-node placement tests
-        run: node --test provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs provisioning/game-content.test.mjs provisioning/machine-detection.test.mjs
+        run: node --test provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs provisioning/game-content.test.mjs provisioning/long-life-tokens.test.mjs provisioning/machine-detection.test.mjs
       - name: Read-only hardware diagnostic
         run: node provisioning/portable-host-agent.mjs --diagnose
 
