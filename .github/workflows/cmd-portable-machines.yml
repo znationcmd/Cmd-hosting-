@@ -6,12 +6,18 @@ on:
       - "provisioning/host-capability.mjs"
       - "provisioning/host-capability.test.mjs"
       - "provisioning/portable-host-agent.mjs"
+      - "provisioning/machine-fleet.mjs"
+      - "provisioning/machine-fleet.test.mjs"
+      - "provisioning/provider-adapters.mjs"
       - ".github/workflows/cmd-portable-machines.yml"
   pull_request:
     paths:
       - "provisioning/host-capability.mjs"
       - "provisioning/host-capability.test.mjs"
       - "provisioning/portable-host-agent.mjs"
+      - "provisioning/machine-fleet.mjs"
+      - "provisioning/machine-fleet.test.mjs"
+      - "provisioning/provider-adapters.mjs"
 permissions:
   contents: read
 jobs:
@@ -31,7 +37,9 @@ jobs:
         run: node --check provisioning/portable-host-agent.mjs
       - name: Check hardware detector syntax
         run: node --check provisioning/host-capability.mjs
-      - name: Run cross-platform compatibility tests
-        run: node --test provisioning/host-capability.test.mjs
+      - name: Verify Supermicro and AMD fleet planner syntax
+        run: node --check provisioning/machine-fleet.mjs
+      - name: Run cross-platform and multi-node placement tests
+        run: node --test provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs
       - name: Read-only hardware diagnostic
         run: node provisioning/portable-host-agent.mjs --diagnose
