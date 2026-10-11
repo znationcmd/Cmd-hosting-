@@ -61,7 +61,7 @@ if($Once){
  if(!(Test-Path -LiteralPath $agent -PathType Leaf)){throw 'Portable agent files not installed.'}
  $node=NodePath
  $env:CMD_HOST_STATE_DIR=$state
- $env:CMD_CLOUD_AGENT_TOKEN=GetToken
+ $env:CMD_CLOUD_AGENT_TOKEN=(GetToken)
  try{
   & $node $agent --once
   if($LASTEXITCODE -ne 0){throw 'Heartbeat / cloud manifest synchronization failed.'}
@@ -83,7 +83,7 @@ $node=NodePath
 New-Item -ItemType Directory -Path $dir -Force|Out-Null
 foreach($file in @('host-capability.mjs','machine-detection.mjs','portable-host-agent.mjs')){
  $target=Join-Path $dir $file
- $tmp=$target+'.download'
+ $tmp=$target+'.download.mjs'
  Invoke-WebRequest -UseBasicParsing -Uri ($origin+$file) -OutFile $tmp -TimeoutSec 50
  if((Get-Item $tmp).Length -lt 2800){throw 'Unexpected or incomplete agent script.'}
  & $node --check $tmp
