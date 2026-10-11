@@ -166,6 +166,35 @@ $api=([string]$config.apiUrl).TrimEnd('/')
 $headers=@{Authorization='Bearer '+$apiKey}
 $apiKey=$null
 
+# Cloud heartbeat — uses the existing DPAPI-protected Mods API token.
+# Does not expose machine name, Steam credentials, game paths, or secrets.
+# This is monitoring only. Installation still runs locally on the paired Windows host.
+try {
+    $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $scope = [string]$env:COMPUTERNAME + '|' + [string]$identity.User.Value
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    try {
+        $digest = $sha256.ComputeHash([Text.Encoding]::UTF8.GetBytes($scope))
+        $agentId = 'mods-' + [BitConverter]::ToString($digest).Replace('-','').Substring(0,32).ToLowerInvariant()
+    } finally { $sha256.Dispose() }
+    $serverCount = 0
+    try {
+        $existing = LoadJson ([string]$config.serversFile) $null
+        if ($existing -and $existing.servers) { $serverCount = @($existing.servers).Count }
+    } catch { Log ('Cloud heartbeat: impossible de compter les serveurs. ' + $_.Exception.Message) }
+    $heartbeat = @{
+        agentId = $agentId
+        role = 'mods'
+        version = '4.1.0'
+        serverCount = $serverCount
+    } | ConvertTo-Json -Compress
+    Invoke-RestMethod -Method Post -Uri 'https://cmd-hosting-cloud-agents-production.up.railway.app/v1/agents/heartbeat' -Headers $headers -ContentType 'application/json' -Body $heartbeat -TimeoutSec 8 | Out-Null
+    Log 'Connexion cloud CMD Hosting : heartbeat accepte.'
+} catch {
+    # Never prevent mod synchronization if the cloud monitor is temporarily unavailable.
+    Log ('Connexion cloud differee : ' + $_.Exception.Message)
+}
+
 function ReportResult($mod,$status) {
     try {
         $payload=@{modId=[string]$mod.modId;state=[string]$status} | ConvertTo-Json -Compress
