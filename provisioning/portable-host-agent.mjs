@@ -40,7 +40,7 @@ async function beat(){
  const id=await stableId();
  const res=await fetch(API+"/v1/agents/heartbeat",{
   method:"POST",headers:{authorization:"Bearer "+token,"content-type":"application/json"},
-  body:JSON.stringify({agentId:id,role:"host",version:"portable-1.0",serverCount:0}),
+  body:JSON.stringify({agentId:id,role:"host",version:"portable-1.0",serverCount:0,capabilities:nonSecretReport()}),
   signal:AbortSignal.timeout(15000)
  });
  if(!res.ok)throw Error("CMD Hosting connection refused: HTTP "+res.status);
