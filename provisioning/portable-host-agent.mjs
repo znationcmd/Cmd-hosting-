@@ -30,8 +30,24 @@ async function stableId(){
 }
 function nonSecretReport(){
  const profile=detect({root:process.env.CMD_GAME_INSTALL_ROOT||process.cwd()});
+ // Chassis model cannot be reliably discovered from Node.js. The operator
+ // declares the machine family during future host enrollment; never guess.
+ const available=new Set(["existing-pc","generic-vps","oracle-vm","dedicated-ryzen",
+   "dedicated-epyc","supermicro-microcloud","supermicro-clouddc","other-x64"]);
+ const requested=(process.env.CMD_MACHINE_CLASS||"other-x64").trim().toLowerCase();
+ if(!available.has(requested))throw Error("Unsupported CMD_MACHINE_CLASS");
+ const chassis=(process.env.CMD_CHASSIS_ID||"").trim();
+ if(chassis && !/^[A-Za-z0-9][A-Za-z0-9._-]{2,79}$/.test(chassis))
+   throw Error("Invalid CMD_CHASSIS_ID; use a non-secret group label.");
+ if(requested==="supermicro-microcloud" && !chassis)
+   throw Error("Every MicroCloud node needs CMD_CHASSIS_ID to group independent nodes.");
+ const cpuModel=String(os.cpus()?.[0]?.model||"");
+ const cpuFamily=/AMD.*EPYC/i.test(cpuModel)?"amd-epyc":
+   /AMD.*Ryzen/i.test(cpuModel)?"amd-ryzen":
+   /Intel/i.test(cpuModel)?"intel":"other";
  return {os:profile.platform,architecture:profile.arch,
          logicalCpus:profile.cpuCount,ramGB:profile.ramGB,freeGB:profile.freeGB,
+         machineClass:requested,chassisId:chassis||null,cpuFamily,
          candidateGames:profile.games.filter(g=>g.status==="hardware_candidate_only").map(g=>g.game)};
 }
 async function beat(){
