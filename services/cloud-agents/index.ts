@@ -7,7 +7,7 @@ import { SQL } from "bun";
 import { timingSafeEqual, createHash } from "node:crypto";
 
 const PORT = Number(Bun.env.PORT || 3000);
-const VERSION = "1.2.0";
+const VERSION = "1.3.0";
 const MAIN = "https://cmd-hosting-web-production.up.railway.app";
 const MODS = "https://cmd-hosting-mods-api-production.up.railway.app";
 const token = Bun.env.CMD_CLOUD_AGENT_TOKEN || "";
@@ -80,7 +80,7 @@ async function route(request) {
   }
   if(path==="/downloads/versions.json") {
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
-    return send({cloud:"1.2.0",modsAgent:"4.1.0",modsAgentURL:
+    return send({cloud:"1.3.0",modsAgent:"4.1.0",modsAgentURL:
       "https://cmd-hosting-cloud-agents-production.up.railway.app/downloads/mods-agent-v4.1.ps1",
       windowsAutoUpdater:"1.2",mainAgent:"V5 (installed version not remotely verified)",
       offlinePCRequiresLocalStartup:true});
@@ -227,6 +227,109 @@ async function route(request) {
       note:"Paid receipt and live Windows host are required. Existing V5 cannot yet execute an install-game job; no job or files were changed."});
     }catch(e){console.error("CMD_PROVISIONING_READINESS_ERROR",String(e?.message||e).slice(0,180));return send({error:"provisioning_database_unavailable"},503)}
   }
+
+  /* CMD_RENTAL_QUEUE_V2 - authenticated idempotent paid-rental install queue.
+   * No arbitrary shell commands. Only verified PC game IDs/SteamCMD apps.
+   * A separate paired Windows worker must perform actual installation.
+   */
+  if(path==="/v1/provisioning/agent/claim" || path==="/v1/provisioning/agent/report"){
+    if(request.method!=="POST")return send({error:"method_not_allowed"},405);
+    if(Number(request.headers.get("content-length")||0)>2048)return send({error:"body_too_large"},413);
+    const raw=await request.text();if(raw.length>2048)return send({error:"body_too_large"},413);
+    let data;try{data=JSON.parse(raw)}catch{return send({error:"invalid_json"},400)}
+    const nodeId=String(data?.nodeId||"");
+    if(!/^[a-zA-Z0-9][a-zA-Z0-9._:-]{2,110}$/.test(nodeId))return send({error:"invalid_node"},400);
+    const allowed={
+      "dayz":{appId:"223350",minGB:25,exe:"DayZServer_x64.exe"},
+      "ark-asa":{appId:"2430930",minGB:120,exe:"ShooterGame/Binaries/Win64/ArkAscendedServer.exe"},
+      "ark-survival-ascended":{appId:"2430930",minGB:120,exe:"ShooterGame/Binaries/Win64/ArkAscendedServer.exe"},
+      "arma-reforger":{appId:"1874900",minGB:35,exe:"ArmaReforgerServer.exe"},
+      "7dtd":{appId:"294420",minGB:25,exe:"7DaysToDieServer.exe"}
+    };
+    try {
+      const db=await dbReady();
+      await db`CREATE TABLE IF NOT EXISTS cmd_hosting_provision_tasks(
+        id TEXT PRIMARY KEY,
+        game_id TEXT NOT NULL,account_id TEXT NOT NULL,
+        node_id TEXT NOT NULL,server_id TEXT NOT NULL,
+        game_key TEXT NOT NULL,platform TEXT NOT NULL,app_id TEXT NOT NULL,
+        paid_until TIMESTAMPTZ NOT NULL,
+        status TEXT NOT NULL DEFAULT 'queued',
+        attempts INTEGER NOT NULL DEFAULT 0,
+        leased_until TIMESTAMPTZ,
+        result_code TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        UNIQUE(game_id,account_id,paid_until)
+      )`;
+      if(path==="/v1/provisioning/agent/report"){
+        const jobId=String(data?.jobId||"");
+        const resultCode=String(data?.resultCode||"");
+        if(!/^[0-9a-f-]{36}$/.test(jobId)||!["binary_verified","failed","needs_attention"].includes(resultCode))
+          return send({error:"invalid_report"},400);
+        const rows=await db`UPDATE cmd_hosting_provision_tasks
+          SET status=${resultCode==="binary_verified"?"binaries_installed":"waiting_review"},
+              result_code=${resultCode},leased_until=NULL,updated_at=NOW()
+          WHERE id=${jobId} AND node_id=${nodeId}
+            AND status='leased' AND leased_until>NOW()
+          RETURNING id,status`;
+        return rows.length?send({ok:true,jobId,status:rows[0].status,gameServerStarted:false,mapVerified:false,modsVerified:false}):send({error:"job_lease_not_found"},409);
+      }
+      const nodeRows=await db`SELECT 1 AS valid FROM cmd_hosting_pc_nodes
+       WHERE node_id::text=${nodeId} AND last_seen>NOW()-interval '25 minutes' LIMIT 1`;
+      if(!nodeRows.length)return send({ok:false,status:"host_offline_or_unpaired",job:null},200);
+      const verified=await db`SELECT r.game_id::text AS game_id,r.account_id::text AS account_id,
+        r.agent_server_id::text AS server_id,r.paid_until,
+        l.game_key,l.platform
+        FROM cmd_hosting_rentals r
+        JOIN cmd_hosting_game_library l ON l.id=r.game_id AND l.account_id=r.account_id
+        WHERE r.agent_node_id::text=${nodeId}
+          AND r.agent_server_id IS NOT NULL
+          AND lower(l.platform)='pc'
+          AND r.payment_state IN ('paid','active','verified')
+          AND r.paid_until>NOW()
+          AND EXISTS(SELECT 1 FROM cmd_hosting_rental_receipts v
+             WHERE v.game_id=r.game_id AND v.account_id=r.account_id
+             AND v.verified_at IS NOT NULL AND v.provider_event_id IS NOT NULL)
+        ORDER BY r.updated_at DESC LIMIT 50`;
+      let inserted=0;
+      for(const r of verified){
+        const key=String(r.game_key||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+        const spec=allowed[key];
+        if(!spec||!r.server_id||!r.game_id||!r.account_id)continue;
+        const id=crypto.randomUUID();
+        const result=await db`INSERT INTO cmd_hosting_provision_tasks
+          (id,game_id,account_id,node_id,server_id,game_key,platform,app_id,paid_until)
+          VALUES(${id},${r.game_id},${r.account_id},${nodeId},${r.server_id},
+                 ${key},'pc',${spec.appId},${r.paid_until})
+          ON CONFLICT (game_id,account_id,paid_until) DO NOTHING RETURNING id`;
+        if(result.length)inserted++;
+      }
+      const claimed=await db`UPDATE cmd_hosting_provision_tasks SET
+        status='leased',leased_until=NOW()+interval '40 minutes',
+        attempts=attempts+1,updated_at=NOW()
+        WHERE id=(SELECT id FROM cmd_hosting_provision_tasks
+          WHERE node_id=${nodeId} AND
+          (status='queued' OR (status='leased' AND leased_until<NOW()))
+          AND attempts<3 ORDER BY created_at ASC
+          FOR UPDATE SKIP LOCKED LIMIT 1)
+        RETURNING id,game_id,server_id,game_key,platform,app_id,attempts`;
+      if(!claimed.length)return send({ok:true,job:null,queuedNew:inserted});
+      const q=claimed[0],spec=allowed[q.game_key];
+      if(!spec)return send({error:"job_unsupported"},409);
+      return send({ok:true,job:{jobId:q.id,gameId:q.game_id,serverId:q.server_id,
+        gameKey:q.game_key,platform:q.platform,steamAppId:q.app_id,
+        minimumFreeGB:spec.minGB,expectedExecutable:spec.exe,
+        attempt:q.attempts,licenseAcceptedByWorkerRequired:true,
+        action:"install_steamcmd_in_isolated_rental_directory",
+        automaticMaps:false,automaticMods:false},
+        queuedNew:inserted,
+        note:"Only validated PC rental and SteamCMD game. Worker must report actual file verification."});
+    }catch(e){
+      console.error("CMD_RENTAL_QUEUE_ERROR",String(e?.message||e).slice(0,170));
+      return send({error:"queue_unavailable"},503)
+    }
+  }
   return send({error:"not_found"},404);
 }
 Bun.serve({port:PORT,fetch:async req=>{
@@ -284,3 +387,21 @@ void(async()=>{
  x.push({name:"official_steamcmd_installer",status:dl.status,pass:dl.status===200&&script.includes("AcceptPublisherTerms")&&script.includes("steamcmd.exe"),bytes:script.length});
  console.log("CMD_PROVISIONING_V1_SELFTEST "+JSON.stringify({pass:x.every(t=>t.pass),checks:x}));
 })().catch(e=>console.error("CMD_PROVISIONING_V1_SELFTEST_EXCEPTION",String(e?.message||e).slice(0,160)));
+
+
+/* CMD_RENTAL_QUEUE_TEST - non-destructive integration tests; NO installs. */
+void(async()=>{
+ const x=[],h={authorization:"Bearer "+token,"content-type":"application/json"};
+ const bad=await route(new Request("http://localhost/v1/provisioning/agent/claim",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({nodeId:"UNPAIRED-TEST-NODE-0001"})}));
+ x.push({name:"unauthenticated_blocked",status:bad.status,pass:bad.status===401});
+ if(token){
+  const invalid=await route(new Request("http://localhost/v1/provisioning/agent/claim",{method:"POST",headers:h,body:JSON.stringify({nodeId:"invalid!"})}));
+  x.push({name:"invalid_node_rejected",status:invalid.status,pass:invalid.status===400});
+  const offline=await route(new Request("http://localhost/v1/provisioning/agent/claim",{method:"POST",headers:h,body:JSON.stringify({nodeId:"UNPAIRED-TEST-NODE-0001"})}));
+  const o=await offline.json();
+  x.push({name:"unpaired_machine_blocked",status:offline.status,pass:offline.status===200&&!o.job&&o.status==="host_offline_or_unpaired",code:o.error||null});
+  const fake=await route(new Request("http://localhost/v1/provisioning/agent/report",{method:"POST",headers:h,body:JSON.stringify({nodeId:"UNPAIRED-TEST-NODE-0001",jobId:"aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa",resultCode:"binary_verified"})}));
+  x.push({name:"unclaimed_install_not_accepted",status:fake.status,pass:fake.status===409});
+ }
+ console.log("CMD_RENTAL_QUEUE_TEST "+JSON.stringify({pass:x.every(q=>q.pass),checks:x}));
+})().catch(e=>console.log("CMD_RENTAL_QUEUE_TEST_ERROR "+String(e?.message||e).slice(0,160)));
