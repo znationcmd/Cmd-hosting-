@@ -1,6 +1,6 @@
 # CMD Hosting — Jetons API longue durée
 
-État du développement : API Cloud Agents v2.0.5, tests PostgreSQL réels du 11 octobre 2026 (émission avec contrôle des services à valider via le futur tableau de bord utilisateur).
+État du développement : API Cloud Agents v2.0.6, tests PostgreSQL réels du 11 octobre 2026 (émission avec contrôle des services à valider via le futur tableau de bord utilisateur).
 
 ## Fonctionnement
 
