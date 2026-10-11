@@ -207,44 +207,7 @@ try{
  if(!$names.ContainsKey($key)){throw 'Game not allowed on Windows rental worker.'}
  if($job.platform -notin @('pc','crossplay') -or [string]$job.action -ne 'install_steamcmd_in_isolated_rental_directory'){throw 'Invalid job platform or command.'}
  $serverId=[string]$job.serverId
- if($serverId -notmatch '^[A-Za-z0-9][A-Za-z0-9_-]{2,63}'ark-asa'='ark-asa';'ark-survival-ascended'='ark-asa';'arma-reforger'='arma-reforger';'7dtd'='7dtd'}[$key]
- $folder=Join-Path (Join-Path $root $serverId) $slug
- if((Test-Path -LiteralPath $folder) -and @(Get-ChildItem -LiteralPath $folder -Force).Count){throw 'Files already present; refusing to overwrite a rental.'}
- $installScript=Download-Official 'Install-CMDGameServer.ps1' ($cloud+'/downloads/game-installer.ps1') 'AcceptPublisherTerms'
- & $installScript -Game $names[$key] -ServerId $serverId -InstallRoot $root -SteamCmdPath $steam -Install -AcceptPublisherTerms
- if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'Official installer returned an error.'}
- $exe=Join-Path $folder ([string]$job.expectedExecutable).Replace('/','\')
- if(!(Test-Path -LiteralPath $exe -PathType Leaf)){throw 'Binary verification failed.'}
- $canon=if($key -eq 'ark-survival-ascended'){'ark-asa'}else{$key}
- Json-New (Join-Path $folder '.cmdhosting-initial-install.json') @{
-  serverId=$serverId;gameKey=$canon;binaryVerified=$true;contentPrepared=$false;jobId=[string]$job.jobId}
- $contentScript=Download-Official 'Configure-CMDGameContent.ps1' 'https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/4bbcf85e21abcf3c2b0720037c9cce6edf9407ca/scripts/Configure-CMDGameContent.ps1' 'cmdhosting-content-pending'
- $mapId=[string]$job.mapId
- if(!$mapId){throw 'Cloud returned no validated game map.'}
- $ids=@($job.modIds|Where-Object {$_})
- $approved=($job.publisherEntitlementApproved -eq $true)
- & $contentScript -GameKey $canon -ServerId $serverId -ServerRoot $folder -MapId $mapId -ModIds $ids -Slots $slots -Apply -PublisherEntitlementApproved:$approved
- $initial=Json (Join-Path $folder '.cmdhosting-initial-install.json')
- if($initial.contentPrepared -ne $true){throw 'Map content was not prepared.'}
- $args=''
- if($canon -eq 'dayz' -and $ids.Count){$args=Install-DayZMods $folder $ids $steam $exe}
- if($canon -eq 'ark-asa'){
-  $data=Json (Join-Path $folder 'cmdhosting-launch.json')
-  $args=@($data.arguments) -join ' '
- }
- $registered=Register-NewRental $folder $canon $serverId $args
- Write-Log ('New server registry status: '+$registered)
- $report=Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='content_prepared'}
- if(!$report.ok){throw 'Cloud did not confirm game/map content preparation.'}
- Write-Log ('Binaries and initial map prepared for '+$canon+'. Server startup and external connectivity not yet verified.')
-}catch{
- Write-Log ('Rental requires attention: '+$_.Exception.Message)
- if($job -and $job.jobId -and $conf){
-  try{[void](Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='needs_attention'})}catch{}
- }
- exit 1
-}finally{if($lock){$lock.Dispose()}}
-){throw 'Invalid server identifier.'}
+ if($serverId -notmatch '^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$'){throw 'Invalid server identifier.'}
  $slots=[int]$job.slots
  if($slots -lt 1 -or $slots -gt 200){throw 'Invalid rental slot count.'}
  if($ramGB -lt [double]$job.minimumRamGB){throw 'Not enough RAM for this game. Future dedicated server required.'}
@@ -265,7 +228,7 @@ try{
  if(!$mapId){throw 'Cloud returned no validated game map.'}
  $ids=@($job.modIds|Where-Object {$_})
  $approved=($job.publisherEntitlementApproved -eq $true)
- & $contentScript -GameKey $canon -ServerId $serverId -ServerRoot $folder -MapId $mapId -ModIds $ids -Slots 10 -Apply -PublisherEntitlementApproved:$approved
+ & $contentScript -GameKey $canon -ServerId $serverId -ServerRoot $folder -MapId $mapId -ModIds $ids -Slots $slots -Apply -PublisherEntitlementApproved:$approved
  $initial=Json (Join-Path $folder '.cmdhosting-initial-install.json')
  if($initial.contentPrepared -ne $true){throw 'Map content was not prepared.'}
  $args=''
