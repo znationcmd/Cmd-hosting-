@@ -32,3 +32,15 @@ Les clés et identifiants sont fournis uniquement dans les variables d’environ
 ## English — Project overview
 
 CMD Hosting is a French game-server management platform project. This repository currently contains the source of its separate mods gateway for Steam Workshop and CurseForge-related integration, plus non-secret configuration documentation. The main hosting web panel is **not** included here yet. CurseForge integration depends on approved API access and compliance with content creators' permissions and the CurseForge terms of use.
+
+## Préparation des futures machines (11 octobre 2026)
+
+- `services/provisioning/game-installers.ts` : registre de préparation. `buildProvisioningRegistry(catalogue)` produit un profil pour **chaque jeu du catalogue courant**, sans inventer de serveur dédié pour les jeux non vérifiés. Les versions PC, console et les systèmes d'exploitation sont distingués.
+- `scripts/Install-CMDGameServer.ps1` : préparateur Windows. **Simulation par défaut** ; téléchargement officiel SteamCMD pour huit serveurs connus seulement lorsque l'administrateur de la future machine fournit explicitement `-Install -AcceptPublisherTerms`, un identifiant de serveur, un répertoire isolé et le chemin de SteamCMD.
+- `tests/provisioning.test.mjs` : tests des identifiants Steam, des restrictions de plateformes, des jeux inconnus et des protections de fichiers.
+
+**État réel :** profils et script enregistrés sur GitHub, **aucune installation lancée sur le PC actuel**, pas de liaison automatique entre commande client et machine de location. Le site et l'API Railway de production demeurent distincts de ce dépôt : ces fichiers ne sont pas encore déployés dans le flux de location. La future connexion devra authentifier le loueur, vérifier les droits du serveur, l'éditeur, l'espace disque et les licences, puis appeler l'agent Windows sous un compte dédié.
+
+Les cartes moddées nécessitent une source vérifiée et des dépendances compatibles. Pour Arma Reforger, `game.scenarioId` et `game.mods` sont gérés par le serveur/Workshop Bohemia ; pour Arma 3, ce sont les missions `.pbo` et les dossiers `@mod` autorisés. Les serveurs consoles peuvent imposer un prestataire spécifique et ne sont pas installés avec SteamCMD PC.
+
+Tests à exécuter sur un ordinateur Node.js compatible : `node --experimental-strip-types --test tests/provisioning.test.mjs`.
