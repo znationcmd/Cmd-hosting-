@@ -150,6 +150,51 @@ function Install-DayZMods([string]$gameRoot,[string[]]$ids,[string]$steamExe,[st
  }
  return (' -mod="'+($loaded -join ';')+'"')
 }
+
+# Periodic DayZ Workshop updates for new, isolated rentals only.
+# Never changes maps, saves, passwords or other machines.
+function Sync-ManagedDayZ([string]$installationRoot,[string]$steamExe){
+ if(!(Test-Path -LiteralPath $installationRoot -PathType Container)){return}
+ if(Get-Process -Name 'DayZServer_x64' -ErrorAction SilentlyContinue){return}
+ $rentals=@(Get-ChildItem -LiteralPath $installationRoot -Directory -ErrorAction SilentlyContinue | Select-Object -First 60)
+ foreach($rental in $rentals){
+  $folder=Join-Path $rental.FullName 'dayz'
+  $marker=Join-Path $folder '.cmdhosting-initial-install.json'
+  $pending=Join-Path $folder 'cmdhosting-content-pending.json'
+  if(!(Test-Path -LiteralPath $marker -PathType Leaf) -or !(Test-Path -LiteralPath $pending -PathType Leaf)){continue}
+  if(((Get-Item -LiteralPath $folder -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0){continue}
+  $id=Join-Path $folder 'DayZServer_x64.exe'
+  if(!(Test-Path -LiteralPath $id -PathType Leaf)){continue}
+  try{
+   $m=Json $marker
+   $p=Json $pending
+   if($m.contentPrepared -ne $true -or $m.gameKey -ne 'dayz' -or [string]$m.serverId -cne $rental.Name){continue}
+   if($p.gameKey -ne 'dayz' -or [string]$p.serverId -cne $rental.Name){continue}
+   $mods=@($p.modIds|Where-Object {$_})
+   if(!$mods.Count){continue}
+   if($mods.Count -gt 100 -or @($mods|Where-Object {$_ -notmatch '^[1-9][0-9]{0,12}$'}).Count){continue}
+   $stateFile=Join-Path $folder '.cmdhosting-modsync-state.json'
+   if(Test-Path -LiteralPath $stateFile){
+    $state=Json $stateFile
+    if($state.lastAttempt){
+     $age=((Get-Date).ToUniversalTime()-[datetime]$state.lastAttempt).TotalMinutes
+     if($age -lt 180){continue}
+    }
+   }
+   [void](Install-DayZMods $folder $mods $steamExe $id)
+   $new=@{lastAttempt=(Get-Date).ToUniversalTime().ToString('o');state='downloaded_on_disk';
+     modIds=@($mods);nextCheckMinutes=180;serverRestarted=$false;runtimeVerified=$false}
+   $temp=$stateFile+'.tmp'
+   [IO.File]::WriteAllText($temp,(ConvertTo-Json -InputObject $new)+[Environment]::NewLine,([Text.UTF8Encoding]::new($false)))
+   Move-Item -LiteralPath $temp -Destination $stateFile -Force
+   Write-Log ('Workshop updated for a managed DayZ rental '+$rental.Name+' (server restart remains subject to maintenance).')
+  }catch{
+   Write-Log ('Managed DayZ Workshop update deferred for '+$rental.Name+': '+$_.Exception.Message)
+  }
+  return # Bound the SteamCMD workload to one rental per 10-minute tick.
+ }
+}
+
 if($Diagnose){
  Write-Host 'CMD Hosting Rental Worker V2 — lecture seule'
  Write-Host ('Tache Windows : '+$(if(Get-ScheduledTask -TaskName $task -ErrorAction SilentlyContinue){'existante'}else{'absente'}))
@@ -199,6 +244,7 @@ try{
  if([IO.Path]::GetFileName($steam) -ine 'steamcmd.exe' -or !(Test-Path -LiteralPath $steam -PathType Leaf)){throw 'SteamCMD missing.'}
  $ramGB=[math]::Round([double](Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB,1)
  $diskGB=[math]::Round([double](Get-PSDrive -Name $root.Substring(0,1)).Free/1GB,1)
+ Sync-ManagedDayZ $root $steam
  $reply=Api '/v1/provisioning/agent/claim' @{nodeId=[string]$conf.nodeId}
  if(!$reply.ok -or !$reply.job){Write-Log 'No authorized paid rental work available.';exit 0}
  $job=$reply.job
