@@ -13,6 +13,7 @@ on:
       - "provisioning/game-content.test.mjs"
       - "scripts/Configure-CMDGameContent.ps1"
       - "scripts/CMDHostingRentalWorker.ps1"
+      - "scripts/CMDHostingRentalWorkerV2.ps1"
       - ".github/workflows/cmd-portable-machines.yml"
   pull_request:
     paths:
@@ -26,6 +27,7 @@ on:
       - "provisioning/game-content.test.mjs"
       - "scripts/Configure-CMDGameContent.ps1"
       - "scripts/CMDHostingRentalWorker.ps1"
+      - "scripts/CMDHostingRentalWorkerV2.ps1"
 permissions:
   contents: read
 jobs:
@@ -61,3 +63,13 @@ jobs:
           [void][System.Management.Automation.Language.Parser]::ParseFile('scripts/Configure-CMDGameContent.ps1',[ref]$tokens,[ref]$errors)
           if ($errors -and $errors.Count) { $errors | Format-Table; exit 1 }
           Write-Host 'CMD Hosting content parser OK'
+
+      - name: Validate Windows rental worker v2 PowerShell source
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $errors = $null
+          $tokens = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile('scripts/CMDHostingRentalWorkerV2.ps1',[ref]$tokens,[ref]$errors)
+          if ($errors -and $errors.Count) { $errors | Format-Table; exit 1 }
+          Write-Host 'CMD Hosting Windows paid-rental worker V2 syntax OK'
