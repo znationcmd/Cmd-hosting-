@@ -14,7 +14,7 @@ echo.
 if not exist "%WORKER%" (
  echo Telechargement securise de l'agent depuis CMD Hosting Railway...
  set "WORKER=%TEMP%\\CMDHostingRentalWorker.ps1"
- powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 40 -Uri 'https://cmd-hosting-cloud-agents-production.up.railway.app/downloads/rental-worker.ps1' -OutFile '%TEMP%\\CMDHostingRentalWorker.ps1'; exit 0 } catch { exit 1 }"
+ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 40 -Uri 'https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/cf9c0c90612ad0d5586ba488674cd44c4787b032/scripts/CMDHostingRentalWorker.ps1' -OutFile '%TEMP%\\CMDHostingRentalWorker.ps1'; exit 0 } catch { exit 1 }"
  if errorlevel 1 (
   echo ERREUR : impossible de telecharger l'agent.
   pause
