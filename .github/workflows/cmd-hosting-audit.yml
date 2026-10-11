@@ -1,0 +1,27 @@
+name: CMD Hosting - Public UI/API audit
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/cmd-hosting-audit.mjs"
+      - ".github/workflows/cmd-hosting-audit.yml"
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Read-only checks on CMD Hosting production
+        run: node scripts/cmd-hosting-audit.mjs
+      - name: Save audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cmd-hosting-public-audit
+          path: cmd-hosting-audit-results.json
+          if-no-files-found: warn
