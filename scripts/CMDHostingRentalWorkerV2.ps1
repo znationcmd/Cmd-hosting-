@@ -14,6 +14,8 @@ $cloud='https://cmd-hosting-cloud-agents-production.up.railway.app'
 $task='CMDHostingRentalWorkerV2'
 $modsSettings=Join-Path $env:LOCALAPPDATA 'CMDHosting\ModsAgent\settings.json'
 $legacyAuth=Join-Path $env:APPDATA 'CMDHostingAgent\auth.json'
+$portableId=Join-Path (Join-Path $env:USERPROFILE '.cmdhosting') 'host-id.json'
+$portableToken=Join-Path $env:LOCALAPPDATA 'CMDHosting\PortableAgentV2\machine-token.dpapi'
 New-Item -Path $home -ItemType Directory -Force | Out-Null
 
 function Write-Log([string]$line){
@@ -30,8 +32,10 @@ function Json-New([string]$path,[object]$item){
  [IO.File]::WriteAllText($path,(ConvertTo-Json -InputObject $item -Depth 30)+[Environment]::NewLine,([Text.UTF8Encoding]::new($false)))
 }
 function Read-Token(){
- if(!(Test-Path -LiteralPath $secretFile -PathType Leaf)){throw 'Machine has not been paired with CMD Hosting cloud.'}
- $safe=(Get-Content -LiteralPath $secretFile -Raw -Encoding UTF8).Trim()|ConvertTo-SecureString
+ $candidate=$secretFile
+ if(!(Test-Path -LiteralPath $candidate -PathType Leaf) -and (Test-Path -LiteralPath $portableToken -PathType Leaf)){$candidate=$portableToken}
+ if(!(Test-Path -LiteralPath $candidate -PathType Leaf)){throw 'Machine has not been paired with CMD Hosting cloud.'}
+ $safe=(Get-Content -LiteralPath $candidate -Raw -Encoding UTF8).Trim()|ConvertTo-SecureString
  $ptr=[Runtime.InteropServices.Marshal]::SecureStringToBSTR($safe)
  try{return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)}
  finally{[Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)}
@@ -89,6 +93,10 @@ function Existing-Node(){
  return ''
 }
 function New-AgentId(){
+ if((Test-Path -LiteralPath $portableId -PathType Leaf) -and (Test-Path -LiteralPath $portableToken -PathType Leaf)){
+  $portable=Json $portableId
+  if([string]$portable.id -match '^host-[0-9a-f-]{36}$'){return [string]$portable.id}
+ }
  $id=Join-Path $home 'agent-id.json'
  if(Test-Path -LiteralPath $id){return [string](Json $id).agentId}
  $v='host-'+[guid]::NewGuid().ToString()
@@ -97,6 +105,7 @@ function New-AgentId(){
 }
 function One-Time-Pair(){
  if(Test-Path -LiteralPath $secretFile){return}
+ if((Test-Path -LiteralPath $portableToken -PathType Leaf) -and (Test-Path -LiteralPath $portableId -PathType Leaf)){return}
  $id=New-AgentId
  Write-Host 'Code temporaire CMD Hosting (fourni une seule fois par le proprietaire).'
  $code=Read-Host 'Code association'
@@ -255,6 +264,9 @@ try{
  $diskGB=[math]::Round([double](Get-PSDrive -Name $root.Substring(0,1)).Free/1GB,1)
  Send-MachineHeartbeat ([string]$conf.agentId)
  Sync-ManagedDayZ $root $steam
+ $heart=Api '/v1/agents/heartbeat' @{
+   agentId=[string]$conf.agentId;role='host';version='rental-worker-v2';serverCount=0}
+ if(!$heart.heartbeatAccepted){throw 'CMD Hosting cloud did not acknowledge this authorized machine.'}
  $reply=Api '/v1/provisioning/agent/claim' @{nodeId=[string]$conf.nodeId}
  if(!$reply.ok -or !$reply.job){Write-Log 'No authorized paid rental work available.';exit 0}
  $job=$reply.job
