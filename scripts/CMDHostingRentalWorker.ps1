@@ -111,6 +111,9 @@ if($Install){
   exit 0
 }
 if(!$Once){throw 'Run with -Install, -Diagnose or -Once; never as an interactive shell.'}
+$job=$null
+$node=''
+$lock=$null
 $lockFile=Join-Path $home 'worker.lock'
 try { $lock=[IO.File]::Open($lockFile,'OpenOrCreate','ReadWrite','None') }
 catch { Write-Log 'Worker already running; skipping duplicate.';exit 0 }
