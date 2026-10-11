@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {machineRegistry,machineClass,fleetInventory,planPlacement,sanitizeNode} from "./machine-fleet.mjs";
+import {resolveProvider,providerPlan} from "./provider-adapters.mjs";
 
 const lenovo={
  nodeId:"lenovo-existing-001",machineClass:"existing-pc",os:"win32",arch:"x64",
@@ -104,4 +105,17 @@ test("rejects duplicated machine IDs and arbitrary commands",()=>{
  assert.throws(()=>fleetInventory([ryzen,ryzen]),/Duplicate/);
  assert.throws(()=>sanitizeNode({nodeId:"../evil"}),/Invalid nodeId/);
  assert.equal(planPlacement({gameKey:"unknown-game",nodes:[ryzen]}).status,"unsupported_game");
+});
+
+test("Supermicro is an enrolled host, not a Nitrado-style managed account",()=>{
+ const bare=resolveProvider("supermicro-microcloud");
+ assert.equal(bare.type,"machine");
+ assert.equal(bare.access,"host-agent");
+ const planned=providerPlan({provider:"supermicro-clouddc",platform:"pc",gameKey:"dayz-pc",vmEnrolled:false});
+ assert.equal(planned.status,"requires_machine_enrollment");
+ assert.equal(planned.commandsAllowed,false);
+ assert.equal(planned.gameInstalled,false);
+ const nitrado=providerPlan({provider:"nitrado",platform:"ps5",gameKey:"dayz",accountConnected:false});
+ assert.equal(nitrado.status,"requires_nitrado_service_authorization");
+ assert.equal(nitrado.localWorkerAllowed,false);
 });
