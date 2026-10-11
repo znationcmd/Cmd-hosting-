@@ -19,6 +19,7 @@ on:
       - "scripts/CMDHostingRentalWorker.ps1"
       - "scripts/CMDHostingRentalWorkerV2.ps1"
       - "tests/windows-game-content.ps1"
+      - "tests/windows-steamcmd-contract.ps1"
       - ".github/workflows/cmd-portable-machines.yml"
   pull_request:
     paths:
@@ -38,6 +39,7 @@ on:
       - "scripts/CMDHostingRentalWorker.ps1"
       - "scripts/CMDHostingRentalWorkerV2.ps1"
       - "tests/windows-game-content.ps1"
+      - "tests/windows-steamcmd-contract.ps1"
 permissions:
   contents: read
 jobs:
@@ -104,3 +106,8 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: bash -n scripts/Installer-CMDHostingPortable-linux-v2.sh
+
+      - name: Test real SteamCMD installer script with isolated stubbed game binaries
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./tests/windows-steamcmd-contract.ps1
