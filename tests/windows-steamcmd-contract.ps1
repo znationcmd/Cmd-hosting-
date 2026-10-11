@@ -34,18 +34,34 @@ public static class Program {
    if(app=="223350"){
       Directory.CreateDirectory(Path.Combine(folder,"mpmissions","dayzOffline.chernarusplus"));
       File.WriteAllText(Path.Combine(folder,"serverDZ.cfg"),
-         "class Missions {class DayZ {template = \\"dayzOffline.chernarusplus\\";};};");
+         "class Missions {class DayZ {template = \"dayzOffline.chernarusplus\";};};");
    }
    if(app=="294420"){
       File.WriteAllText(Path.Combine(folder,"serverconfig.xml"),
-          "<ServerSettings><property name=\\"GameWorld\\" value=\\"Navezgane\\"/></ServerSettings>");
+          "<ServerSettings><property name=\"GameWorld\" value=\"Navezgane\"/></ServerSettings>");
    }
    Console.WriteLine("CI stub wrote a fake executable for app "+app);
    return 0;
  }
 }
 '@
- Add-Type -TypeDefinition $src -OutputAssembly $exe -OutputType ConsoleApplication -ErrorAction Stop
+ $projectDir=Join-Path $root 'mock-src'
+ New-Item -ItemType Directory -Path $projectDir -Force|Out-Null
+ $project=Join-Path $projectDir 'steamcmd.csproj'
+ $projectXml=@'
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>steamcmd</AssemblyName>
+    <UseAppHost>true</UseAppHost>
+  </PropertyGroup>
+</Project>
+'@
+ [IO.File]::WriteAllText($project,$projectXml)
+ [IO.File]::WriteAllText((Join-Path $projectDir 'Program.cs'),$src)
+ & dotnet build $project -c Release --nologo -o $mockDir
+ if($LASTEXITCODE -ne 0){throw 'Failed to compile isolated SteamCMD CLI stub.'}
  Check (Test-Path -LiteralPath $exe -PathType Leaf) 'SteamCMD stub did not compile'
  $id='smokeDayZ01'
  & $installer -Game 'DayZ' -ServerId $id -InstallRoot $rootGames -SteamCmdPath $exe -Install -AcceptPublisherTerms|Out-Null
