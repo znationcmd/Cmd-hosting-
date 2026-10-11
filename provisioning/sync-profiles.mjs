@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // CMD Hosting — sync the full Railway staging catalogue to durable machine-readable plans.
 // Node.js >=20. No credentials, no production server modifications, no imaginary config files.
-import {mkdir,writeFile,rename,rm} from "node:fs/promises";
+import {mkdir,writeFile,rename,rm,readFile} from "node:fs/promises";
+import {createHash} from "node:crypto";
 import {resolve,join} from "node:path";
 import {fileURLToPath} from "node:url";
 
@@ -49,7 +50,10 @@ async function worker(){
 await Promise.all(Array.from({length:concurrency},worker));
 if(failures.length)throw Error("Incomplete provisioning plans (nothing published): "+JSON.stringify(failures.slice(0,10)));
 plans.sort((a,b)=>a.gameId-b.gameId);
-const stamp=new Date().toISOString();
+const catalogHash=createHash("sha256").update(JSON.stringify(plans)).digest("hex");
+let previous=null;
+try{previous=JSON.parse(await readFile(join(output,"index.json"),"utf8"))}catch(e){if(e.code!=="ENOENT")console.warn("Previous registry ignored:",e.message)}
+const stamp=previous?.catalogHash===catalogHash&&previous.updatedAt?previous.updatedAt:new Date().toISOString();
 const temp=output+".tmp-"+process.pid;
 await rm(temp,{recursive:true,force:true});
 await mkdir(join(temp,"games"),{recursive:true});
@@ -58,7 +62,7 @@ for(const plan of plans){
 }
 const idx={
  schema:"cmd-hosting/synchronized-provisioning-index-v1",
- updatedAt:stamp,source:api+"/api/preproduction/provisioning/registry",
+ updatedAt:stamp,catalogHash,source:api+"/api/preproduction/provisioning/registry",
  total:registry.total,
  knownConfigProfiles:registry.knownConfigProfiles,
  targetRequirement:"an authorized hosting node that is online",
