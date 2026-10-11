@@ -7,7 +7,7 @@ import { SQL } from "bun";
 import { timingSafeEqual, createHash } from "node:crypto";
 
 const PORT = Number(Bun.env.PORT || 3000);
-const VERSION = "1.4.0";
+const VERSION = "1.5.0";
 const MAIN = "https://cmd-hosting-web-production.up.railway.app";
 const MODS = "https://cmd-hosting-mods-api-production.up.railway.app";
 const token = Bun.env.CMD_CLOUD_AGENT_TOKEN || "";
@@ -80,7 +80,7 @@ async function route(request) {
   }
   if(path==="/downloads/versions.json") {
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
-    return send({cloud:"1.4.0",modsAgent:"4.1.0",modsAgentURL:
+    return send({cloud:"1.5.0",modsAgent:"4.1.0",modsAgentURL:
       "https://cmd-hosting-cloud-agents-production.up.railway.app/downloads/mods-agent-v4.1.ps1",
       windowsAutoUpdater:"1.2",mainAgent:"V5 (installed version not remotely verified)",
       offlinePCRequiresLocalStartup:true});
@@ -138,6 +138,18 @@ async function route(request) {
         || !Array.isArray(measured.candidateGames) || measured.candidateGames.length>30
         || !measured.candidateGames.every(x=>typeof x==="string" && /^[a-z0-9-]{2,48}$/.test(x)))
         return send({error:"invalid_machine_capabilities"},400);
+      /* CMD_SUPERMICRO_FLEET_V1: all optional metadata is advisory; never an install grant. */
+      const known=["existing-pc","generic-vps","oracle-vm","dedicated-ryzen",
+        "dedicated-epyc","supermicro-microcloud","supermicro-clouddc","other-x64"];
+      if(measured.machineClass!==undefined && !known.includes(measured.machineClass))
+        return send({error:"invalid_machine_class"},400);
+      if(measured.cpuFamily!==undefined && !["amd-ryzen","amd-epyc","intel","other","unknown"].includes(measured.cpuFamily))
+        return send({error:"invalid_cpu_family"},400);
+      if(measured.chassisId!==undefined && measured.chassisId!==null &&
+         (typeof measured.chassisId!=="string" || !/^[a-zA-Z0-9][a-zA-Z0-9._-]{2,79}$/.test(measured.chassisId)))
+        return send({error:"invalid_chassis_id"},400);
+      if(measured.machineClass==="supermicro-microcloud" && !measured.chassisId)
+        return send({error:"microcloud_chassis_required"},400);
     }
 
     try{
@@ -162,6 +174,20 @@ async function route(request) {
             logical_cpus=EXCLUDED.logical_cpus,ram_gb=EXCLUDED.ram_gb,
             free_gb=EXCLUDED.free_gb,candidate_games=EXCLUDED.candidate_games,
             updated_at=NOW()`;
+        if(measured.machineClass!==undefined){
+          await db`CREATE TABLE IF NOT EXISTS cmd_hosting_cloud_machine_inventory(
+            agent_id VARCHAR(80) PRIMARY KEY,
+            machine_class VARCHAR(40) NOT NULL,
+            chassis_id VARCHAR(80),
+            cpu_family VARCHAR(20) NOT NULL DEFAULT 'unknown',
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+          )`;
+          await db`INSERT INTO cmd_hosting_cloud_machine_inventory
+            (agent_id,machine_class,chassis_id,cpu_family)
+            VALUES(${id},${measured.machineClass},${measured.chassisId??null},${measured.cpuFamily||"unknown"})
+            ON CONFLICT(agent_id) DO UPDATE SET machine_class=EXCLUDED.machine_class,
+              chassis_id=EXCLUDED.chassis_id,cpu_family=EXCLUDED.cpu_family,updated_at=NOW()`;
+        }
       }
       return send({ok:true,agentId:id,heartbeatAccepted:true,nextHeartbeatSeconds:600});
     }catch(e){console.error("CLOUD_AGENTS_DB_ERROR",String(e?.message||e).slice(0,160));return send({error:"database_unavailable"},503)}
@@ -216,6 +242,24 @@ async function route(request) {
           }
         }
       }catch(e){console.error("CMD_PORTABLE_CAPABILITIES_READ_ERROR",String(e?.message||e).slice(0,100))}
+      /* Read-only model & chassis display. Legacy agents have no fleet classification. */
+      try{
+        const table=await db`SELECT to_regclass('public.cmd_hosting_cloud_machine_inventory') AS name`;
+        if(table[0]?.name){
+          const inventory=await db`SELECT agent_id,machine_class,chassis_id,cpu_family,updated_at
+            FROM cmd_hosting_cloud_machine_inventory ORDER BY updated_at DESC LIMIT 100`;
+          const byId=new Map(inventory.map(x=>[x.agent_id,x]));
+          for(const agent of agents){
+            const hw=byId.get(agent.id);
+            if(hw){
+              agent.fleet={machineClass:hw.machine_class,chassisId:hw.chassis_id,
+                cpuFamily:hw.cpu_family,lastReportedAt:hw.updated_at,
+                nodesIndependent:true,automaticInstall:false,
+                note:"Chassis labels are owner-supplied; dedicated compatibility must be verified on the host."};
+            }
+          }
+        }
+      }catch(e){console.error("CMD_FLEET_READ_ERROR",String(e?.message||e).slice(0,110))}
       const all=[...agents,...legacy];
       return send({ok:true,checkedAt:new Date().toISOString(),
         total:all.length,online:all.filter(x=>x.online).length,
