@@ -7,7 +7,7 @@ import { SQL } from "bun";
 import { timingSafeEqual, createHash } from "node:crypto";
 
 const PORT = Number(Bun.env.PORT || 3000);
-const VERSION = "1.3.0";
+const VERSION = "1.4.0";
 const MAIN = "https://cmd-hosting-web-production.up.railway.app";
 const MODS = "https://cmd-hosting-mods-api-production.up.railway.app";
 const token = Bun.env.CMD_CLOUD_AGENT_TOKEN || "";
@@ -80,7 +80,7 @@ async function route(request) {
   }
   if(path==="/downloads/versions.json") {
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
-    return send({cloud:"1.3.0",modsAgent:"4.1.0",modsAgentURL:
+    return send({cloud:"1.4.0",modsAgent:"4.1.0",modsAgentURL:
       "https://cmd-hosting-cloud-agents-production.up.railway.app/downloads/mods-agent-v4.1.ps1",
       windowsAutoUpdater:"1.2",mainAgent:"V5 (installed version not remotely verified)",
       offlinePCRequiresLocalStartup:true});
@@ -126,12 +126,43 @@ async function route(request) {
     const version=safeString(data?.version,80);
     const count=clampInt(data?.serverCount,10000);
     if(!version)return send({error:"invalid_version"},400);
+    /* CMD_PORTABLE_CAPABILITIES_V1: sanitize telemetry; not an installation permission. */
+    const measured=data?.capabilities;
+    if(measured!==undefined){
+      if(role!=="host" || !measured || typeof measured!=="object" || Array.isArray(measured)
+        || !["win32","linux","darwin"].includes(measured.os)
+        || !["x64","arm64"].includes(measured.architecture)
+        || !Number.isInteger(measured.logicalCpus) || measured.logicalCpus<1 || measured.logicalCpus>2048
+        || typeof measured.ramGB!=="number" || !Number.isFinite(measured.ramGB) || measured.ramGB<0 || measured.ramGB>100000
+        || (measured.freeGB!==null && (typeof measured.freeGB!=="number" || !Number.isFinite(measured.freeGB) || measured.freeGB<0 || measured.freeGB>1000000))
+        || !Array.isArray(measured.candidateGames) || measured.candidateGames.length>30
+        || !measured.candidateGames.every(x=>typeof x==="string" && /^[a-z0-9-]{2,48}$/.test(x)))
+        return send({error:"invalid_machine_capabilities"},400);
+    }
+
     try{
       const db=await dbReady();
       await db`INSERT INTO cmd_hosting_cloud_agents(agent_id,agent_role,agent_version,server_count,last_seen)
       VALUES(${id},${role},${version},${count},NOW())
       ON CONFLICT(agent_id) DO UPDATE SET agent_role=EXCLUDED.agent_role,
         agent_version=EXCLUDED.agent_version,server_count=EXCLUDED.server_count,last_seen=NOW()`;
+
+      if(measured!==undefined){
+        await db`CREATE TABLE IF NOT EXISTS cmd_hosting_cloud_host_capabilities (
+          agent_id VARCHAR(80) PRIMARY KEY,host_os VARCHAR(20) NOT NULL,
+          architecture VARCHAR(20) NOT NULL,logical_cpus INTEGER NOT NULL,
+          ram_gb REAL NOT NULL,free_gb REAL,
+          candidate_games TEXT[] NOT NULL DEFAULT '{}'::text[],
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW())`;
+        await db`INSERT INTO cmd_hosting_cloud_host_capabilities
+          (agent_id,host_os,architecture,logical_cpus,ram_gb,free_gb,candidate_games)
+          VALUES(${id},${measured.os},${measured.architecture},${measured.logicalCpus},${measured.ramGB},${measured.freeGB},${measured.candidateGames})
+          ON CONFLICT(agent_id) DO UPDATE SET
+            host_os=EXCLUDED.host_os,architecture=EXCLUDED.architecture,
+            logical_cpus=EXCLUDED.logical_cpus,ram_gb=EXCLUDED.ram_gb,
+            free_gb=EXCLUDED.free_gb,candidate_games=EXCLUDED.candidate_games,
+            updated_at=NOW()`;
+      }
       return send({ok:true,agentId:id,heartbeatAccepted:true,nextHeartbeatSeconds:600});
     }catch(e){console.error("CLOUD_AGENTS_DB_ERROR",String(e?.message||e).slice(0,160));return send({error:"database_unavailable"},503)}
   }
@@ -168,6 +199,23 @@ async function route(request) {
         version:x.agent_version,serverCount:x.server_count,
         lastSeen:x.last_seen,online:!!x.online
       }));
+
+      /* Optional host profiles. Legacy V5 nodes keep working without this table. */
+      try{
+        const exists=await db`SELECT to_regclass('public.cmd_hosting_cloud_host_capabilities') AS name`;
+        if(exists[0]?.name){
+          const caps=await db`SELECT agent_id,host_os,architecture,logical_cpus,ram_gb,free_gb,candidate_games,updated_at
+            FROM cmd_hosting_cloud_host_capabilities ORDER BY updated_at DESC LIMIT 100`;
+          const byId=new Map(caps.map(x=>[x.agent_id,x]));
+          for(const agent of agents){
+            const p=byId.get(agent.id);
+            if(p)agent.hardware={os:p.host_os,architecture:p.architecture,logicalCpus:Number(p.logical_cpus)||0,
+              ramGB:Number(p.ram_gb)||0,freeGB:p.free_gb===null?null:Number(p.free_gb),
+              candidateGames:p.candidate_games||[],lastChecked:p.updated_at,
+              note:"Reported by agent, not a benchmark or installation guarantee."};
+          }
+        }
+      }catch(e){console.error("CMD_PORTABLE_CAPABILITIES_READ_ERROR",String(e?.message||e).slice(0,100))}
       const all=[...agents,...legacy];
       return send({ok:true,checkedAt:new Date().toISOString(),
         total:all.length,online:all.filter(x=>x.online).length,
