@@ -11,6 +11,9 @@ on:
       - "provisioning/provider-adapters.mjs"
       - "provisioning/game-content.mjs"
       - "provisioning/game-content.test.mjs"
+      - "provisioning/machine-detection.mjs"
+      - "provisioning/machine-detection.test.mjs"
+      - "scripts/Installer-CMDHostingPortableV2.ps1"
       - "scripts/Configure-CMDGameContent.ps1"
       - "scripts/CMDHostingRentalWorker.ps1"
       - "scripts/CMDHostingRentalWorkerV2.ps1"
@@ -26,6 +29,9 @@ on:
       - "provisioning/provider-adapters.mjs"
       - "provisioning/game-content.mjs"
       - "provisioning/game-content.test.mjs"
+      - "provisioning/machine-detection.mjs"
+      - "provisioning/machine-detection.test.mjs"
+      - "scripts/Installer-CMDHostingPortableV2.ps1"
       - "scripts/Configure-CMDGameContent.ps1"
       - "scripts/CMDHostingRentalWorker.ps1"
       - "scripts/CMDHostingRentalWorkerV2.ps1"
@@ -49,10 +55,12 @@ jobs:
         run: node --check provisioning/portable-host-agent.mjs
       - name: Check hardware detector syntax
         run: node --check provisioning/host-capability.mjs
+      - name: Check real hardware detector syntax
+        run: node --check provisioning/machine-detection.mjs
       - name: Verify Supermicro and AMD fleet planner syntax
         run: node --check provisioning/machine-fleet.mjs
       - name: Run cross-platform and multi-node placement tests
-        run: node --test provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs provisioning/game-content.test.mjs
+        run: node --test provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs provisioning/game-content.test.mjs provisioning/machine-detection.test.mjs
       - name: Read-only hardware diagnostic
         run: node provisioning/portable-host-agent.mjs --diagnose
 
