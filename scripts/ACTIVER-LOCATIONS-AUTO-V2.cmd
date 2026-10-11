@@ -10,7 +10,7 @@ echo Ce nouvel agent se connecte avec son propre acces, jamais le jeton principa
 echo Il ne fonctionnera qu'apres une association a usage unique et autorisation proprietaire.
 echo.
 set "WORKER=%TEMP%\CMDHostingRentalWorkerV2.ps1"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 60 -Uri 'https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/e2447637625b2dc7616acc0400c679a08886ee83/scripts/CMDHostingRentalWorkerV2.ps1' -OutFile '%TEMP%\CMDHostingRentalWorkerV2.ps1'; exit 0 } catch { exit 1 }"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 60 -Uri 'https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/f93bd83b329aa1451289b6aab26a5904d4f59f41/scripts/CMDHostingRentalWorkerV2.ps1' -OutFile '%TEMP%\CMDHostingRentalWorkerV2.ps1'; exit 0 } catch { exit 1 }"
 if errorlevel 1 (
  echo Le programme officiel ne peut pas etre telecharge. Aucune tache ajoutee.
  pause
