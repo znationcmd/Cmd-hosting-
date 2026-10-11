@@ -7,6 +7,7 @@
 import os from "node:os";
 import fs from "node:fs";
 import path from "node:path";
+import {fileURLToPath} from "node:url";
 
 const SUPPORTED_GAMES=Object.freeze([
   {key:"dayz-pc",name:"DayZ PC",systems:["win32"],arch:["x64"],ramGB:16,diskGB:35,cpus:4,adapter:"steamcmd-windows"},
@@ -58,7 +59,7 @@ export function detect({root=process.cwd()}={}){
   return profile;
 }
 function arg(name,fall){const i=process.argv.indexOf(name);return i>=0?process.argv[i+1]:fall;}
-if(process.argv[1]&&path.resolve(process.argv[1])===path.resolve(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:\/)/,"$1"))){
+if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const root=arg("--root",process.cwd());
   const report=detect({root});
   if(process.argv.includes("--json"))console.log(JSON.stringify(report,null,2));
