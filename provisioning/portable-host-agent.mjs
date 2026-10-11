@@ -1,20 +1,22 @@
 #!/usr/bin/env node
 /**
- * CMD Hosting portable host monitor 1.0 — Windows, Linux, macOS.
- * Safe adjunct to existing V5 and mods agents: no shell, rentals, installs or file edits.
- * A new host needs CMD_CLOUD_AGENT_TOKEN supplied securely by the owner before heartbeat.
- * --diagnose = read-only; --once = single registered heartbeat; --loop = every 10 minutes.
+ * CMD Hosting portable host monitor 1.1 — Windows, Linux and macOS.
+ * Detects Supermicro / AMD when the hardware exposes reliable data.
+ * After explicit enrollment it synchronizes a cloud manifest every heartbeat.
+ * NEVER installs games/mods, executes remote commands or replaces V5/Mods.
  */
 import {mkdir,readFile,writeFile,rename} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {randomUUID} from "node:crypto";
 import {detect} from "./host-capability.mjs";
+import {machineHardware} from "./machine-detection.mjs";
 
 const API="https://cmd-hosting-cloud-agents-production.up.railway.app";
 const args=new Set(process.argv.slice(2));
 const dir=process.env.CMD_HOST_STATE_DIR?path.resolve(process.env.CMD_HOST_STATE_DIR):path.join(os.homedir(),".cmdhosting");
 const file=path.join(dir,"host-id.json");
+const manifestFile=path.join(dir,"last-cloud-sync.json");
 
 async function stableId(){
  await mkdir(dir,{recursive:true,mode:0o700});
@@ -28,46 +30,64 @@ async function stableId(){
  await rename(tmp,file);
  return id;
 }
-function nonSecretReport(){
+export function nonSecretReport(){
  const profile=detect({root:process.env.CMD_GAME_INSTALL_ROOT||process.cwd()});
- // Chassis model cannot be reliably discovered from Node.js. The operator
- // declares the machine family during future host enrollment; never guess.
- const available=new Set(["existing-pc","generic-vps","oracle-vm","dedicated-ryzen",
-   "dedicated-epyc","supermicro-microcloud","supermicro-clouddc","other-x64"]);
- const requested=(process.env.CMD_MACHINE_CLASS||"other-x64").trim().toLowerCase();
- if(!available.has(requested))throw Error("Unsupported CMD_MACHINE_CLASS");
- const chassis=(process.env.CMD_CHASSIS_ID||"").trim();
- if(chassis && !/^[A-Za-z0-9][A-Za-z0-9._-]{2,79}$/.test(chassis))
-   throw Error("Invalid CMD_CHASSIS_ID; use a non-secret group label.");
- if(requested==="supermicro-microcloud" && !chassis)
-   throw Error("Every MicroCloud node needs CMD_CHASSIS_ID to group independent nodes.");
- const cpuModel=String(os.cpus()?.[0]?.model||"");
- const cpuFamily=/AMD.*EPYC/i.test(cpuModel)?"amd-epyc":
-   /AMD.*Ryzen/i.test(cpuModel)?"amd-ryzen":
-   /Intel/i.test(cpuModel)?"intel":"other";
+ const hw=machineHardware();
  return {os:profile.platform,architecture:profile.arch,
-         logicalCpus:profile.cpuCount,ramGB:profile.ramGB,freeGB:profile.freeGB,
-         machineClass:requested,chassisId:chassis||null,cpuFamily,
-         candidateGames:profile.games.filter(g=>g.status==="hardware_candidate_only").map(g=>g.game)};
+   logicalCpus:profile.cpuCount,ramGB:profile.ramGB,freeGB:profile.freeGB,
+   machineClass:hw.machineClass,cpuFamily:hw.cpuFamily,chassisId:hw.chassisId,
+   candidateGames:profile.games.filter(g=>g.status==="hardware_candidate_only").map(g=>g.game)};
+}
+async function syncManifest(token) {
+ const res=await fetch(API+"/v1/agents/manifest",{
+  method:"GET",headers:{authorization:"Bearer "+token,accept:"application/json"},
+  signal:AbortSignal.timeout(15000)
+ });
+ if(!res.ok)throw Error("Cloud manifest HTTP "+res.status);
+ const data=await res.json();
+ if(!data||typeof data.version!=="string"||data.version.length>40
+   ||!Number.isInteger(data.heartbeatIntervalSeconds)||data.heartbeatIntervalSeconds<300||data.heartbeatIntervalSeconds>3600)
+    throw Error("Invalid cloud synchronization manifest");
+ const families=Array.isArray(data.fleetMachineClasses)?data.fleetMachineClasses:[];
+ if(families.length>32 || !families.every(v=>typeof v==="string"&&/^[a-z0-9-]{2,48}$/.test(v)))
+   throw Error("Unsafe cloud machine catalogue");
+ const doc={schema:"cmd-hosting/sync-manifest-v1",cloudVersion:data.version,
+   heartbeatIntervalSeconds:data.heartbeatIntervalSeconds,
+   machineClasses:families,autoGameInstallEnabled:false,remoteShell:false};
+ await mkdir(dir,{recursive:true,mode:0o700});
+ const body=JSON.stringify(doc,null,2)+"\n";
+ let previous=null;try{previous=await readFile(manifestFile,"utf8")}catch(e){if(e.code!=="ENOENT")throw e}
+ if(previous!==body){
+  const tmp=manifestFile+"."+process.pid+".tmp";
+  await writeFile(tmp,body,{mode:0o600,flag:"wx"});
+  await rename(tmp,manifestFile);
+ }
+ return doc.heartbeatIntervalSeconds;
 }
 async function beat(){
  const token=process.env.CMD_CLOUD_AGENT_TOKEN;
- if(!token||token.length<12)throw Error("New host is not enrolled: set CMD_CLOUD_AGENT_TOKEN securely.");
+ if(!token||token.length<12)throw Error("New host must be enrolled with CMD_CLOUD_AGENT_TOKEN.");
  const id=await stableId();
+ const capabilities=nonSecretReport();
+ let interval=600;
+ try{interval=await syncManifest(token)}catch(e){
+  console.error("Cloud sync pending (heartbeat still attempted):",e.message);
+ }
  const res=await fetch(API+"/v1/agents/heartbeat",{
   method:"POST",headers:{authorization:"Bearer "+token,"content-type":"application/json"},
-  body:JSON.stringify({agentId:id,role:"host",version:"portable-1.0",serverCount:0,capabilities:nonSecretReport()}),
+  body:JSON.stringify({agentId:id,role:"host",version:"portable-1.1",serverCount:0,capabilities}),
   signal:AbortSignal.timeout(15000)
  });
- if(!res.ok)throw Error("CMD Hosting connection refused: HTTP "+res.status);
+ if(!res.ok)throw Error("CMD Hosting heartbeat refused HTTP "+res.status);
  const result=await res.json();
  if(!result.ok||!result.heartbeatAccepted)throw Error("Cloud did not confirm host heartbeat.");
- console.log("CMD Hosting portable host heartbeat accepted; agent:",id);
+ console.log("CMD Hosting portable host synchronized:",id,capabilities.machineClass,capabilities.cpuFamily);
+ return Math.max(300,Math.min(3600,interval))*1000;
 }
 async function run(){
  if(args.has("--diagnose")){
   console.log(JSON.stringify({schema:"cmd-hosting/portable-diagnostic-v1",...nonSecretReport(),
-    status:"read-only; no software installed or agents changed"},null,2));
+    status:"read-only; no agent, mod, map, rental or game change"},null,2));
   return;
  }
  if(!(args.has("--once")||args.has("--loop")))throw Error("Choose --diagnose, --once or --loop.");
@@ -76,8 +96,10 @@ async function run(){
  process.once("SIGINT",()=>{stopped=true});
  process.once("SIGTERM",()=>{stopped=true});
  while(!stopped){
-  try{await beat()}catch(err){console.error("CMD Hosting portable monitoring warning:",err.message)}
-  await new Promise(resolve=>setTimeout(resolve,600000));
+  let interval=600000;
+  try{interval=await beat()}catch(err){console.error("CMD Hosting portable heartbeat warning:",err.message)}
+  if(stopped)break;
+  await new Promise(resolve=>setTimeout(resolve,interval));
  }
 }
 run().catch(err=>{console.error("CMD Hosting portable agent:",err.message);process.exitCode=1});
