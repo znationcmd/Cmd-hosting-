@@ -9,6 +9,8 @@ on:
       - "provisioning/machine-fleet.mjs"
       - "provisioning/machine-fleet.test.mjs"
       - "provisioning/provider-adapters.mjs"
+      - "provisioning/game-content.mjs"
+      - "provisioning/game-content.test.mjs"
       - ".github/workflows/cmd-portable-machines.yml"
   pull_request:
     paths:
@@ -18,6 +20,8 @@ on:
       - "provisioning/machine-fleet.mjs"
       - "provisioning/machine-fleet.test.mjs"
       - "provisioning/provider-adapters.mjs"
+      - "provisioning/game-content.mjs"
+      - "provisioning/game-content.test.mjs"
 permissions:
   contents: read
 jobs:
@@ -40,6 +44,6 @@ jobs:
       - name: Verify Supermicro and AMD fleet planner syntax
         run: node --check provisioning/machine-fleet.mjs
       - name: Run cross-platform and multi-node placement tests
-        run: node --test provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs
+        run: node --test provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs provisioning/game-content.test.mjs
       - name: Read-only hardware diagnostic
         run: node provisioning/portable-host-agent.mjs --diagnose
