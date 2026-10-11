@@ -1,0 +1,48 @@
+name: CMD Hosting - Sync game provisioning profiles
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly; independent from the owner's Windows PC.
+    - cron: "31 3 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cmd-hosting-provisioning-profiles
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Fetch all available game provisioning blueprints
+        run: node provisioning/sync-profiles.mjs --concurrency 4
+      - name: Validate generated registry
+        run: |
+          node --input-type=module <<'JS'
+          import {readFile} from 'node:fs/promises';
+          const p=JSON.parse(await readFile('provisioning/generated/index.json','utf8'));
+          if(!Number.isInteger(p.total)||p.total<150||p.profiles.length!==p.total)throw Error('Incomplete provisioning registry; abort commit');
+          if(!p.profiles.every(x=>x.state==='awaiting-authorized-online-host'))throw Error('Plan unexpectedly claims installed servers');
+          console.log('Validated '+p.total+' registered games; zero installations claimed.');
+          JS
+      - name: Commit only when manifests changed
+        run: |
+          git add provisioning/generated/
+          if git diff --cached --quiet; then
+            echo "Catalogue unchanged"
+          else
+            git config user.name "cmd-hosting-provisioner[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(provisioning): refresh game provisioning plans"
+            git push
+          fi
