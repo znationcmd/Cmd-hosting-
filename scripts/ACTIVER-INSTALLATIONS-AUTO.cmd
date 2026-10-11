@@ -12,9 +12,14 @@ echo Cette activation ne concerne que les locations PC payees et verifiees.
 echo Une approbation des conditions des editeurs sera demandee une seule fois.
 echo.
 if not exist "%WORKER%" (
- echo ERREUR : placer ce fichier a cote de CMDHostingRentalWorker.ps1.
- pause
- exit /b 1
+ echo Telechargement securise de l'agent depuis CMD Hosting Railway...
+ set "WORKER=%TEMP%\\CMDHostingRentalWorker.ps1"
+ powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 40 -Uri 'https://cmd-hosting-cloud-agents-production.up.railway.app/downloads/rental-worker.ps1' -OutFile '%TEMP%\\CMDHostingRentalWorker.ps1'; exit 0 } catch { exit 1 }"
+ if errorlevel 1 (
+  echo ERREUR : impossible de telecharger l'agent.
+  pause
+  exit /b 1
+ )
 )
 powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%WORKER%" -Install
 if errorlevel 1 (
