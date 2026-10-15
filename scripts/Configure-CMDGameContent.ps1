@@ -28,7 +28,7 @@ foreach($part in @($root,(Split-Path -Parent $root),(Split-Path -Parent (Split-P
  if(((Get-Item -LiteralPath $part -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) -ne 0){throw 'Symlink or junction in rental path.'}
 }
 $maps=@{
- dayz=@{chernarusplus='dayzOffline.chernarusplus';livonia='dayzOffline.enoch';sakhal='dayzOffline.sakhal'}
+ dayz=@{chernarusplus='dayzOffline.chernarusplus';livonia='dayzOffline.enoch';sakhal='dayzOffline.sakhal';nasdara='dayzOffline.nasdara'}
  'ark-asa'=@{'the-island'='TheIsland_WP';'the-center'='TheCenter_WP';'scorched-earth'='ScorchedEarth_WP';
   aberration='Aberration_WP';extinction='Extinction_WP';ragnarok='Ragnarok_WP';
   valguero='Valguero_WP';'genesis-part-1'='Genesis_WP';astraeos='Astraeos_WP';'lost-colony'='LostColony_WP'}
@@ -42,7 +42,7 @@ $defaults=@{dayz='chernarusplus';'ark-asa'='the-island';'arma-reforger'='everon-
 if(!$MapId){$MapId=$defaults[$GameKey]}
 if(!$maps[$GameKey].ContainsKey($MapId)){throw 'Wrong map for selected game.'}
 $mapValue=[string]$maps[$GameKey][$MapId]
-if(@('sakhal','lost-colony') -contains $MapId -and !$PublisherEntitlementApproved){throw 'Publisher map entitlement not confirmed.'}
+if(@('sakhal','nasdara','lost-colony') -contains $MapId -and !$PublisherEntitlementApproved){throw 'Publisher map entitlement not confirmed.'}
 $mods=@($ModIds|Where-Object {$null -ne $_}|Select-Object -Unique)
 if($mods.Count -gt 100){throw 'Too many mods.'}
 foreach($id in $mods){
