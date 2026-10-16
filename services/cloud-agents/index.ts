@@ -241,7 +241,7 @@ async function route(request) {
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
     const file=path.endsWith("game-content.ps1")?"Configure-CMDGameContent.ps1":"CMDHostingRentalWorkerV2.ps1";
     try{
-      const result=await fetch("https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/910be354147d650c831b007d1a7e6457b925f931/scripts/"+file,{signal:AbortSignal.timeout(12000)});
+      const result=await fetch("https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/7e06435c1029e25363333f2dca9dc1b62e016a98/scripts/"+file,{signal:AbortSignal.timeout(12000)});
       if(!result.ok)throw Error("download_unavailable");
       const body=await result.text();
       if(body.length<1000||body.length>60000||!body.includes("#requires -version 5.1"))throw Error("invalid_script");
@@ -251,7 +251,7 @@ async function route(request) {
   if(path==="/downloads/game-installer.ps1") {
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
     try {
-      const upstream=await fetch("https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/910be354147d650c831b007d1a7e6457b925f931/scripts/Install-CMDGameServer.ps1",
+      const upstream=await fetch("https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/7e06435c1029e25363333f2dca9dc1b62e016a98/scripts/Install-CMDGameServer.ps1",
        {signal:AbortSignal.timeout(12000)});
       if(!upstream.ok)throw new Error("upstream");
       const script=await upstream.text();
