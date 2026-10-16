@@ -68,3 +68,15 @@ Les fichiers doivent être exécutés sur le PC Windows déjà appairé, pas sur
 ### Validation restante
 
 Tests statiques réussis (parcours présents, structure équilibrée). Un test PowerShell Windows est indispensable : effectuer le diagnostic sur le PC et vérifier ensuite une synchronisation des mods et un démarrage réel du serveur.
+
+
+## Migration GitHub et thème Premium (16 octobre 2026)
+
+Le **panneau principal** CMD Hosting fonctionne encore depuis une fonction Railway et sa source originale n'est pas récupérable par le connecteur actuel. La migration complète vers GitHub **n'est pas terminée** ; aucun déploiement du web à partir du dépôt n'a été effectué.
+
+- [État et étapes de migration](docs/MIGRATION_RAILWAY_GITHUB_20261016.md)
+- [Feuille de style Premium vectorielle 16K-ready](ui/premium-16k.css)
+- [Chargeur d'icônes SVG et de thème](ui/premium-16k.js)
+- [Tests de non-régression du thème](tests/premium-ui.test.mjs)
+
+Les sources des services Mods API et Cloud Agents présentes dans ce dépôt correspondent au code actuellement déployé sur Railway au 16 octobre 2026. Les variantes **staged** sur Railway ne sont pas encore appliquées. Le dépôt est actuellement **public** ; ne jamais y enregistrer des secrets.
