@@ -274,7 +274,7 @@ async function route(request) {
       modProvider:profile.modProvider,
       maps:profile.items.map(([id,name,gameValue])=>({id,name,gameValue,
         requiresPublisherContent:id==="astraeos",
-        requiresDlc:["sakhal","lost-colony"].includes(id)})),
+        requiresDlc:["sakhal","nasdara","lost-colony"].includes(id)})),
       note:"Only game-specific map choices; availability depends on publisher content and the installation on the host."});
   }
   if(path==="/v1/agents/enroll/claim"){
@@ -1094,6 +1094,7 @@ void(async()=>{
  const dayz=await x.json();
  checks.push({name:"dayz_pc_maps",pass:x.status===200&&dayz.gameKey==="dayz"&&
    dayz.maps.some(m=>m.id==="chernarusplus")&&!dayz.maps.some(m=>m.id==="the-island")});
+ checks.push({name:"nasdara_dlc_metadata",pass:dayz.maps.some(m=>m.id==="nasdara"&&m.requiresDlc===true&&m.gameValue==="dayzOffline.nasdara")});
  const y=await route(new Request("http://localhost/v1/provisioning/maps?game=ark-asa&platform=crossplay"));
  const ark=await y.json();
  checks.push({name:"ark_asa_crossplay_maps",pass:y.status===200&&ark.maps.some(m=>m.id==="the-island")&&
