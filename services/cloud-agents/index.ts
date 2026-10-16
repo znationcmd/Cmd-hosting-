@@ -7,7 +7,7 @@ import { SQL } from "bun";
 import { timingSafeEqual, createHash, randomBytes } from "node:crypto";
 
 const PORT = Number(Bun.env.PORT || 3000);
-const VERSION = "2.0.6";
+const VERSION = "2.1.0";
 const MAIN = "https://cmd-hosting-web-production.up.railway.app";
 const MODS = "https://cmd-hosting-mods-api-production.up.railway.app";
 const token = Bun.env.CMD_CLOUD_AGENT_TOKEN || "";
@@ -79,7 +79,8 @@ const GAME_MAPS={
  "dayz":{platforms:["pc"],defaultMap:"chernarusplus",items:[
   ["chernarusplus","Chernarus+","dayzOffline.chernarusplus"],
   ["livonia","Livonia","dayzOffline.enoch"],
-  ["sakhal","Sakhal","dayzOffline.sakhal"]],modProvider:"steam-workshop"},
+  ["sakhal","Sakhal","dayzOffline.sakhal"],
+  ["nasdara","Nasdara — Badlands","dayzOffline.nasdara"]],modProvider:"steam-workshop"},
  "ark-asa":{platforms:["pc","crossplay"],defaultMap:"the-island",items:[
   ["the-island","The Island","TheIsland_WP"],
   ["the-center","The Center","TheCenter_WP"],
@@ -120,7 +121,7 @@ function validRentalContent(game,platform,mapId,modIds){
  }
  if(map[0]==="astraeos"&&!mods.length)return null;
  return {key,mapId:map[0],mapName:map[1],value:map[2],mods,
-   publisherDlcRequired:["sakhal","lost-colony"].includes(map[0]),
+   publisherDlcRequired:["sakhal","nasdara","lost-colony"].includes(map[0]),
    publisherModRequired:map[0]==="astraeos"};
 }
 
@@ -183,6 +184,22 @@ async function getLongLife(request){
  }catch(e){console.error("CMD_LONG_LIFE_AUTH_UNAVAILABLE");return null}
 }
 
+
+/* FILE_VERIFICATION_V1 — only an authenticated host reports a completed official validation. */
+function fileVerificationReason(value,appId,now=Date.now()){
+ if(!value||value.schema!=="cmd-hosting/steam-validation-v1")return "missing_validation_receipt";
+ if(value.appId!==appId)return "wrong_game_manifest";
+ if(value.steamValidated!==true||value.manifestStateFlags!==4)return "steam_validation_incomplete";
+ if(typeof value.buildId!=="string"||!/^[1-9][0-9]*$/.test(value.buildId))return "invalid_build";
+ if(typeof value.manifestSha256!=="string"||!/^[0-9a-f]{64}$/i.test(value.manifestSha256))return "missing_manifest_digest";
+ if(!Number.isSafeInteger(value.fileCount)||value.fileCount<2||!Number.isSafeInteger(value.totalBytes)||value.totalBytes<=0)return "empty_installation";
+ const timestamp=Date.parse(value.validatedAt);
+ if(!Number.isFinite(timestamp)||timestamp>now+300000||timestamp<now-3600000)return "stale_validation";
+ if(value.serverReady!==false||value.gameStarted!==false)return "runtime_not_verified";
+ return null;
+}
+/* END_FILE_VERIFICATION_V1 */
+
 async function route(request) {
   if(request.method==="OPTIONS")return new Response(null,{status:204,headers:{"allow":"GET, POST, OPTIONS"}});
   const path=new URL(request.url).pathname;
@@ -215,15 +232,26 @@ async function route(request) {
   }
   if(path==="/downloads/versions.json") {
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
-    return send({cloud:"2.0.6",modsAgent:"4.1.0",modsAgentURL:
+    return send({cloud:"2.1.0",rentalWorker:"2.1.0",fileValidationRequired:true,rentalWorkerURL:"https://cmd-hosting-cloud-agents-production.up.railway.app/downloads/rental-worker-v2.ps1",modsAgent:"4.1.0",modsAgentURL:
       "https://cmd-hosting-cloud-agents-production.up.railway.app/downloads/mods-agent-v4.1.ps1",
       windowsAutoUpdater:"1.2",mainAgent:"V5 (installed version not remotely verified)",
       offlinePCRequiresLocalStartup:true});
   }
+  if(path==="/downloads/game-content.ps1"||path==="/downloads/rental-worker-v2.ps1"){
+    if(request.method!=="GET")return send({error:"method_not_allowed"},405);
+    const file=path.endsWith("game-content.ps1")?"Configure-CMDGameContent.ps1":"CMDHostingRentalWorkerV2.ps1";
+    try{
+      const result=await fetch("https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/910be354147d650c831b007d1a7e6457b925f931/scripts/"+file,{signal:AbortSignal.timeout(12000)});
+      if(!result.ok)throw Error("download_unavailable");
+      const body=await result.text();
+      if(body.length<1000||body.length>60000||!body.includes("#requires -version 5.1"))throw Error("invalid_script");
+      return new Response(body,{headers:{"content-type":"text/plain; charset=utf-8","cache-control":"public, max-age=600","x-content-type-options":"nosniff"}});
+    }catch{return send({error:"verified_script_unavailable"},503)}
+  }
   if(path==="/downloads/game-installer.ps1") {
     if(request.method!=="GET")return send({error:"method_not_allowed"},405);
     try {
-      const upstream=await fetch("https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/37f079bb842aaf208cb7d8ce0c390a62aa6cb502/scripts/Install-CMDGameServer.ps1",
+      const upstream=await fetch("https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/910be354147d650c831b007d1a7e6457b925f931/scripts/Install-CMDGameServer.ps1",
        {signal:AbortSignal.timeout(12000)});
       if(!upstream.ok)throw new Error("upstream");
       const script=await upstream.text();
@@ -785,18 +813,26 @@ async function route(request) {
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         UNIQUE(game_id,account_id,paid_until)
       )`;
+      await db`ALTER TABLE cmd_hosting_provision_tasks ADD COLUMN IF NOT EXISTS file_verification JSONB`;
       if(path==="/v1/provisioning/agent/report"){
         const jobId=String(data?.jobId||"");
         const resultCode=String(data?.resultCode||"");
         if(!/^[0-9a-f-]{36}$/.test(jobId)||!["binary_verified","content_prepared","failed","needs_attention"].includes(resultCode))
           return send({error:"invalid_report"},400);
+        if(resultCode==="content_prepared"){
+          const task=await db`SELECT app_id FROM cmd_hosting_provision_tasks WHERE id=${jobId} AND node_id=${nodeId} AND status='leased' AND leased_until>NOW() LIMIT 1`;
+          if(!task.length)return send({error:"job_lease_not_found"},409);
+          const reason=fileVerificationReason(data.fileVerification,String(task[0].app_id));
+          if(reason)return send({error:"game_files_not_verified",reason,serverReady:false},409);
+        }
         const rows=await db`UPDATE cmd_hosting_provision_tasks
-          SET status=${resultCode==="binary_verified"?"binaries_installed":resultCode==="content_prepared"?"content_prepared":"waiting_review"},
+          SET file_verification=${resultCode==="content_prepared"?JSON.stringify(data.fileVerification):null}::jsonb,
+              status=${resultCode==="binary_verified"?"binaries_installed":resultCode==="content_prepared"?"content_prepared":"waiting_review"},
               result_code=${resultCode},leased_until=NULL,updated_at=NOW()
           WHERE id=${jobId} AND node_id=${nodeId}
             AND status='leased' AND leased_until>NOW()
           RETURNING id,status`;
-        return rows.length?send({ok:true,jobId,status:rows[0].status,gameServerStarted:false,mapVerified:false,modsVerified:false}):send({error:"job_lease_not_found"},409);
+        return rows.length?send({ok:true,jobId,status:rows[0].status,filesVerified:resultCode==="content_prepared",gameServerStarted:false,mapVerified:false,modsVerified:false}):send({error:"job_lease_not_found"},409);
       }
       const nodeRows=await db`SELECT 1 AS valid FROM cmd_hosting_pc_nodes
         WHERE node_id::text=${nodeId} AND last_seen>NOW()-interval '25 minutes'

@@ -13,6 +13,9 @@ on:
       - "provisioning/long-life-tokens.test.mjs"
       - "provisioning/game-content.mjs"
       - "provisioning/game-content.test.mjs"
+      - "provisioning/file-verification.test.mjs"
+      - "services/cloud-agents/index.ts"
+      - "scripts/Install-CMDGameServer.ps1"
       - "provisioning/machine-detection.mjs"
       - "provisioning/machine-detection.test.mjs"
       - "scripts/Installer-CMDHostingPortableV2.ps1"
@@ -35,6 +38,9 @@ on:
       - "provisioning/long-life-tokens.test.mjs"
       - "provisioning/game-content.mjs"
       - "provisioning/game-content.test.mjs"
+      - "provisioning/file-verification.test.mjs"
+      - "services/cloud-agents/index.ts"
+      - "scripts/Install-CMDGameServer.ps1"
       - "provisioning/machine-detection.mjs"
       - "provisioning/machine-detection.test.mjs"
       - "scripts/Installer-CMDHostingPortableV2.ps1"
@@ -68,7 +74,7 @@ jobs:
       - name: Verify Supermicro and AMD fleet planner syntax
         run: node --check provisioning/machine-fleet.mjs
       - name: Run cross-platform and multi-node placement tests
-        run: node --test provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs provisioning/game-content.test.mjs provisioning/long-life-tokens.test.mjs provisioning/machine-detection.test.mjs
+        run: node --test provisioning/file-verification.test.mjs provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs provisioning/game-content.test.mjs provisioning/long-life-tokens.test.mjs provisioning/machine-detection.test.mjs
       - name: Read-only hardware diagnostic
         run: node provisioning/portable-host-agent.mjs --diagnose
 

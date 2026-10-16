@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+const source=readFileSync(new URL('../services/cloud-agents/index.ts',import.meta.url),'utf8');
+const part=source.slice(source.indexOf('function fileVerificationReason('),source.indexOf('/* END_FILE_VERIFICATION_V1 */'));
+const validate=runInNewContext(part+'\nfileVerificationReason');
+const now=Date.now();
+const receipt={schema:'cmd-hosting/steam-validation-v1',appId:'223350',steamValidated:true,manifestStateFlags:4,buildId:'12345',manifestSha256:'a'.repeat(64),fileCount:1234,totalBytes:4000000000,validatedAt:new Date(now).toISOString(),serverReady:false,gameStarted:false};
+test('accept complete, recent evidence for the exact dedicated game',()=>assert.equal(validate(receipt,'223350',now),null));
+test('an executable without official validation is not sufficient',()=>{assert.equal(validate(null,'223350',now),'missing_validation_receipt');assert.equal(validate({...receipt,steamValidated:false},'223350',now),'steam_validation_incomplete')});
+test('do not reuse evidence from a different game or partial manifest',()=>{assert.equal(validate(receipt,'2430930',now),'wrong_game_manifest');assert.equal(validate({...receipt,manifestStateFlags:1026},'223350',now),'steam_validation_incomplete')});
+test('reject empty and unauditable downloads',()=>{for(const patch of [{fileCount:0},{totalBytes:0},{manifestSha256:''},{buildId:'0'}])assert.ok(validate({...receipt,...patch},'223350',now))});
+test('do not accept stale evidence or mistake file completion for server startup',()=>{assert.equal(validate({...receipt,validatedAt:new Date(now-7200000).toISOString()},'223350',now),'stale_validation');assert.equal(validate({...receipt,serverReady:true},'223350',now),'runtime_not_verified')});
