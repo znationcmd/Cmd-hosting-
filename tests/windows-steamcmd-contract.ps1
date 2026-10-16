@@ -48,6 +48,7 @@ public static class Program {
    string flags=Environment.GetEnvironmentVariable("CMD_TEST_INCOMPLETE_STEAM")=="1"?"1026":"4";
    File.WriteAllText(Path.Combine(folder,"steamapps","appmanifest_"+app+".acf"),
        "\"appid\" \""+app+"\"\n\"StateFlags\" \""+flags+"\"\n\"buildid\" \"12345\"");
+   Console.Error.WriteLine("Harmless SteamCMD test diagnostic");
    Console.WriteLine("Success! App '"+app+"' fully installed.");
    return 0;
  }

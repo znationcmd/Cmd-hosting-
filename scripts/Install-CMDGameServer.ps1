@@ -73,8 +73,12 @@ foreach($path in @($root,(Join-Path $root $ServerId))){
 }
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 Write-Host "Starting authorized SteamCMD download into isolated directory $dest"
-$steamOutput=@(& $steam '+@ShutdownOnFailedCommand' '1' '+@NoPromptForPassword' '1' '+force_install_dir' $dest '+login' 'anonymous' '+app_update' $item.app 'validate' '+quit' 2>&1)
-$steamExit=$LASTEXITCODE
+$nativePreference=$ErrorActionPreference
+try{
+ $ErrorActionPreference='Continue'
+ $steamOutput=@(& $steam '+@ShutdownOnFailedCommand' '1' '+@NoPromptForPassword' '1' '+force_install_dir' $dest '+login' 'anonymous' '+app_update' $item.app 'validate' '+quit' 2>&1)
+ $steamExit=$LASTEXITCODE
+}finally{$ErrorActionPreference=$nativePreference}
 $steamOutput | ForEach-Object {Write-Host ([string]$_)}
 if($steamExit -ne 0){
  throw "SteamCMD did not complete successfully; if a Steam account is required, stop and follow official login instructions. Existing files are not deleted."

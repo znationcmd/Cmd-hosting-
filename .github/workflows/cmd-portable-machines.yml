@@ -121,3 +121,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: ./tests/windows-steamcmd-contract.ps1
+
+      - name: Verify SteamCMD stderr handling on Windows PowerShell 5.1
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./tests/windows-steamcmd-contract.ps1
