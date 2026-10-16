@@ -72,6 +72,11 @@ if(!$Apply){$plan|ConvertTo-Json -Depth 12;return}
 if($GameKey -eq 'dayz'){
  $mission=Join-Path (Join-Path $root 'mpmissions') $mapValue
  if(!(Test-Path -LiteralPath $mission -PathType Container)){throw 'Mission missing; install authorized map/DLC first.'}
+ foreach($relative in @('init.c','db\types.xml')){
+  $required=Join-Path $mission $relative
+  if(!(Test-Path -LiteralPath $required -PathType Leaf) -or (Get-Item -LiteralPath $required).Length -le 0){throw ('Incomplete DayZ map: missing '+$relative)}
+ }
+ try{[xml]$loot=Get-Content -LiteralPath (Join-Path $mission 'db\types.xml') -Raw -Encoding UTF8;if(!$loot.DocumentElement){throw 'Empty loot XML'}}catch{throw 'DayZ types.xml invalid.'}
  $cfg=Join-Path $root 'serverDZ.cfg'
  if(!(Test-Path -LiteralPath $cfg -PathType Leaf)){throw 'DayZ serverDZ.cfg missing.'}
  $body=Get-Content -LiteralPath $cfg -Raw -Encoding UTF8

@@ -20,6 +20,10 @@ try{
  # DayZ Chernarus vanilla mission.
  $dayz=New-FakeRental 'dayzunit001' 'dayz' 'DayZServer_x64.exe'
  New-Item -ItemType Directory -Force -Path (Join-Path $dayz 'mpmissions\dayzOffline.chernarusplus')|Out-Null
+ $mission=Join-Path $dayz 'mpmissions\dayzOffline.chernarusplus'
+ New-Item -ItemType Directory -Force -Path (Join-Path $mission 'db')|Out-Null
+ [IO.File]::WriteAllText((Join-Path $mission 'init.c'),'void main() {}')
+ [IO.File]::WriteAllText((Join-Path $mission 'db\types.xml'),'<types/>')
  $cfg=Join-Path $dayz 'serverDZ.cfg'
  [IO.File]::WriteAllText($cfg,'class Missions {class DayZ { template = "dayzOffline.enoch"; };};')
  & $script -GameKey 'dayz' -ServerId 'dayzunit001' -ServerRoot $dayz -MapId 'chernarusplus' -Apply|Out-Null
@@ -30,6 +34,13 @@ try{
  $repeated=$false
  try{& $script -GameKey 'dayz' -ServerId 'dayzunit001' -ServerRoot $dayz -MapId 'chernarusplus' -Apply|Out-Null}catch{$repeated=$true}
  Assert $repeated 'Existing world may not be edited again'
+ # An empty mission folder must never be accepted as a complete DayZ map.
+ $partial=New-FakeRental 'dayzpartial01' 'dayz' 'DayZServer_x64.exe'
+ New-Item -ItemType Directory -Force -Path (Join-Path $partial 'mpmissions\dayzOffline.chernarusplus')|Out-Null
+ [IO.File]::WriteAllText((Join-Path $partial 'serverDZ.cfg'),'class Missions {class DayZ {template="dayzOffline.chernarusplus";};};')
+ $partialBlocked=$false
+ try{& $script -GameKey 'dayz' -ServerId 'dayzpartial01' -ServerRoot $partial -MapId 'chernarusplus' -Apply|Out-Null}catch{$partialBlocked=$true}
+ Assert $partialBlocked 'Empty DayZ mission folder accepted'
  # ARK ASA specific official launch level + CurseForge project ID, no actual game execution.
  $ark=New-FakeRental 'arkunit001' 'ark-asa' 'ShooterGame\Binaries\Win64\ArkAscendedServer.exe'
  & $script -GameKey 'ark-asa' -ServerId 'arkunit001' -ServerRoot $ark -MapId 'the-island' -ModIds @('123456') -Slots 20 -Apply|Out-Null

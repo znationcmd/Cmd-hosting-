@@ -265,7 +265,7 @@ try{
  Send-MachineHeartbeat ([string]$conf.agentId)
  Sync-ManagedDayZ $root $steam
  $heart=Api '/v1/agents/heartbeat' @{
-   agentId=[string]$conf.agentId;role='host';version='rental-worker-v2';serverCount=0}
+   agentId=[string]$conf.agentId;role='host';version='rental-worker-v2.1';serverCount=0}
  if(!$heart.heartbeatAccepted){throw 'CMD Hosting cloud did not acknowledge this authorized machine.'}
  $reply=Api '/v1/provisioning/agent/claim' @{nodeId=[string]$conf.nodeId}
  if(!$reply.ok -or !$reply.job){Write-Log 'No authorized paid rental work available.';exit 0}
@@ -288,10 +288,14 @@ try{
  if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'Official installer returned an error.'}
  $exe=Join-Path $folder ([string]$job.expectedExecutable).Replace('/','\')
  if(!(Test-Path -LiteralPath $exe -PathType Leaf)){throw 'Binary verification failed.'}
+ $validation=Json (Join-Path $folder 'cmdhosting-steam-validation.json')
+ if($validation.schema -cne 'cmd-hosting/steam-validation-v1' -or $validation.steamValidated -ne $true -or [string]$validation.appId -cne [string]$job.steamAppId -or [int]$validation.manifestStateFlags -ne 4){throw 'Complete Steam file validation receipt missing or wrong game.'}
+ $manifest=Join-Path (Join-Path $folder 'steamapps') ('appmanifest_'+[string]$validation.appId+'.acf')
+ if((Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToLowerInvariant() -cne [string]$validation.manifestSha256){throw 'Steam manifest changed after validation.'}
  $canon=if($key -eq 'ark-survival-ascended'){'ark-asa'}else{$key}
  Json-New (Join-Path $folder '.cmdhosting-initial-install.json') @{
   serverId=$serverId;gameKey=$canon;binaryVerified=$true;contentPrepared=$false;jobId=[string]$job.jobId}
- $contentScript=Download-Official 'Configure-CMDGameContent.ps1' 'https://raw.githubusercontent.com/znationcmd/Cmd-hosting-/4bbcf85e21abcf3c2b0720037c9cce6edf9407ca/scripts/Configure-CMDGameContent.ps1' 'cmdhosting-content-pending'
+ $contentScript=Download-Official 'Configure-CMDGameContent.ps1' ($cloud+'/downloads/game-content.ps1') 'cmdhosting-content-pending'
  $mapId=[string]$job.mapId
  if(!$mapId){throw 'Cloud returned no validated game map.'}
  $ids=@($job.modIds|Where-Object {$_})
@@ -307,7 +311,7 @@ try{
  }
  $registered=Register-NewRental $folder $canon $serverId $args
  Write-Log ('New server registry status: '+$registered)
- $report=Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='content_prepared'}
+ $report=Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='content_prepared';fileVerification=$validation}
  if(!$report.ok){throw 'Cloud did not confirm game/map content preparation.'}
  Write-Log ('Binaries and initial map prepared for '+$canon+'. Server startup and external connectivity not yet verified.')
 }catch{

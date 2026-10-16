@@ -73,14 +73,42 @@ foreach($path in @($root,(Join-Path $root $ServerId))){
 }
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 Write-Host "Starting authorized SteamCMD download into isolated directory $dest"
-& $steam '+force_install_dir' $dest '+login' 'anonymous' '+app_update' $item.app '+quit'
-if($LASTEXITCODE -ne 0){
+$steamOutput=@(& $steam '+@ShutdownOnFailedCommand' '1' '+@NoPromptForPassword' '1' '+force_install_dir' $dest '+login' 'anonymous' '+app_update' $item.app 'validate' '+quit' 2>&1)
+$steamExit=$LASTEXITCODE
+$steamOutput | ForEach-Object {Write-Host ([string]$_)}
+if($steamExit -ne 0){
  throw "SteamCMD did not complete successfully; if a Steam account is required, stop and follow official login instructions. Existing files are not deleted."
 }
 $exe=Join-Path $dest $item.exe
 if(!(Test-Path -LiteralPath $exe -PathType Leaf)){
- Write-Warning "Expected executable not found. Do not treat this rental as installed or operational."
- return
+ throw "Expected executable missing; installation is incomplete."
 }
 Write-Host "Server binary found: $exe. NOT started or verified." -ForegroundColor Green
 Write-Host "NEXT: discover generated configs, apply validated map/scenario/mods, test startup/network/logs, then confirm from an authenticated host agent."
+
+# A binary alone is not proof of a complete official installation.
+if((Get-Item -LiteralPath $exe).Length -le 0){throw "Server executable is empty."}
+$success="Success! App '"+$item.app+"' fully installed."
+if(($steamOutput -join "`n") -notmatch [regex]::Escape($success)){throw "SteamCMD did not confirm full installation and validation."}
+$manifest=Join-Path (Join-Path $dest 'steamapps') ('appmanifest_'+$item.app+'.acf')
+if(!(Test-Path -LiteralPath $manifest -PathType Leaf)){throw "Steam app manifest missing; completeness cannot be confirmed."}
+$acf=Get-Content -LiteralPath $manifest -Raw -Encoding UTF8
+function Manifest-Field([string]$name){
+ $match=[regex]::Match($acf,('"'+[regex]::Escape($name)+'"\s+"([^"\r\n]+)"'))
+ if(!$match.Success){throw ('Missing Steam manifest field '+$name)}
+ return $match.Groups[1].Value
+}
+if((Manifest-Field 'appid') -cne $item.app -or (Manifest-Field 'StateFlags') -ne '4'){throw "Steam manifest belongs to another game or is incomplete."}
+$build=Manifest-Field 'buildid'
+if($build -notmatch '^[1-9][0-9]*$'){throw "Steam build is not verified."}
+$files=@(Get-ChildItem -LiteralPath $dest -File -Recurse -ErrorAction Stop)
+$size=[long](($files|Measure-Object -Property Length -Sum).Sum)
+if($files.Count -lt 2 -or $size -le 0){throw "Installation content is empty."}
+$receipt=[ordered]@{schema='cmd-hosting/steam-validation-v1';appId=$item.app;buildId=$build;
+ steamValidated=$true;manifestStateFlags=4;manifestSha256=(Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToLowerInvariant();
+ fileCount=$files.Count;totalBytes=$size;validatedAt=(Get-Date).ToUniversalTime().ToString('o');
+ gameStarted=$false;serverReady=$false}
+$receiptFile=Join-Path $dest 'cmdhosting-steam-validation.json'
+if(Test-Path -LiteralPath $receiptFile){throw "Refusing to overwrite an installation receipt."}
+[IO.File]::WriteAllText($receiptFile,(ConvertTo-Json -InputObject $receipt -Depth 8),([Text.UTF8Encoding]::new($false)))
+Write-Host "Official Steam files validated. Startup, network access and generated game settings still require verification."

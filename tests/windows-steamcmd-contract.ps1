@@ -17,13 +17,14 @@ using System;
 using System.IO;
 public static class Program {
  public static int Main(string[] args) {
-   string folder=null, app=null; bool anonymous=false;
+   string folder=null, app=null; bool anonymous=false, validate=false;
    for(int i=0;i<args.Length;i++) {
      if(args[i]=="+force_install_dir" && i+1<args.Length) folder=args[++i];
      else if(args[i]=="+app_update" && i+1<args.Length) app=args[++i];
+     else if(args[i]=="validate") validate=true;
      else if(args[i]=="+login" && i+1<args.Length) anonymous=args[++i]=="anonymous";
    }
-   if(String.IsNullOrEmpty(folder)||String.IsNullOrEmpty(app)||!anonymous) {
+   if(String.IsNullOrEmpty(folder)||String.IsNullOrEmpty(app)||!anonymous||!validate) {
       Console.Error.WriteLine("Invalid SteamCMD arguments");return 3;
    }
    string name=app=="223350" ? "DayZServer_x64.exe":
@@ -32,7 +33,10 @@ public static class Program {
    Directory.CreateDirectory(folder);
    File.WriteAllText(Path.Combine(folder,name),"CI fake binary - not an actual game");
    if(app=="223350"){
-      Directory.CreateDirectory(Path.Combine(folder,"mpmissions","dayzOffline.chernarusplus"));
+      string mission=Path.Combine(folder,"mpmissions","dayzOffline.chernarusplus");
+      Directory.CreateDirectory(Path.Combine(mission,"db"));
+      File.WriteAllText(Path.Combine(mission,"init.c"),"void main() {}");
+      File.WriteAllText(Path.Combine(mission,"db","types.xml"),"<types/>");
       File.WriteAllText(Path.Combine(folder,"serverDZ.cfg"),
          "class Missions {class DayZ {template = \"dayzOffline.chernarusplus\";};};");
    }
@@ -40,7 +44,11 @@ public static class Program {
       File.WriteAllText(Path.Combine(folder,"serverconfig.xml"),
           "<ServerSettings><property name=\"GameWorld\" value=\"Navezgane\"/></ServerSettings>");
    }
-   Console.WriteLine("CI stub wrote a fake executable for app "+app);
+   Directory.CreateDirectory(Path.Combine(folder,"steamapps"));
+   string flags=Environment.GetEnvironmentVariable("CMD_TEST_INCOMPLETE_STEAM")=="1"?"1026":"4";
+   File.WriteAllText(Path.Combine(folder,"steamapps","appmanifest_"+app+".acf"),
+       "\"appid\" \""+app+"\"\n\"StateFlags\" \""+flags+"\"\n\"buildid\" \"12345\"");
+   Console.WriteLine("Success! App '"+app+"' fully installed.");
    return 0;
  }
 }
@@ -68,6 +76,14 @@ public static class Program {
  $folder=Join-Path (Join-Path $rootGames $id) 'dayz'
  Check (Test-Path -LiteralPath (Join-Path $folder 'DayZServer_x64.exe')) 'dayz appid did not create expected executable'
  Check (Test-Path -LiteralPath (Join-Path $folder 'serverDZ.cfg')) 'dayz server config fixture absent'
+ $proof=Get-Content (Join-Path $folder 'cmdhosting-steam-validation.json') -Raw|ConvertFrom-Json
+ Check ($proof.steamValidated -eq $true -and $proof.manifestStateFlags -eq 4) 'complete official validation receipt missing'
+ $env:CMD_TEST_INCOMPLETE_STEAM='1'
+ $incompleteBlocked=$false
+ try{& $installer -Game 'DayZ' -ServerId 'truncatedDayZ01' -InstallRoot $rootGames -SteamCmdPath $exe -Install -AcceptPublisherTerms|Out-Null}catch{$incompleteBlocked=$true}
+ Remove-Item Env:CMD_TEST_INCOMPLETE_STEAM
+ Check $incompleteBlocked 'incomplete Steam manifest accepted even with executable present'
+ Check (!(Test-Path (Join-Path $rootGames 'truncatedDayZ01\dayz\cmdhosting-steam-validation.json'))) 'false completeness receipt emitted'
  $overwritePrevented=$false
  try{
    & $installer -Game 'DayZ' -ServerId $id -InstallRoot $rootGames -SteamCmdPath $exe -Install -AcceptPublisherTerms|Out-Null
