@@ -25,5 +25,5 @@ test('icons stay scalable and menu handlers are preserved',()=>{
 });
 
 test('no Railway secrets or external API calls are introduced',()=>{
- assert.doesNotMatch(js+/\n/+css,/fetch\(|XMLHttpRequest|localStorage\.setItem|DATABASE_URL|CMD_CONTROL_ADMIN_KEY/);
+ assert.doesNotMatch(js+"\n"+css,/fetch\(|XMLHttpRequest|localStorage\.setItem|DATABASE_URL|CMD_CONTROL_ADMIN_KEY/);
 });
