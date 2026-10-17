@@ -114,3 +114,117 @@ html.cmd16-enabled .cmd16-only .cmd16-icon{margin:0}
 @media(prefers-reduced-motion:reduce){
   html.cmd16-enabled :is(button,.btn,[role="button"],a){transition:none}
 }
+
+
+/* ===============================================================
+ CMD HOSTING 16K | FULL LIVE-DOM PREMIUM OVERRIDES — 2026-10-17
+ Native-resolution-independent SVG & CSS, not a physical 16K bitmap
+ =============================================================== */
+html.cmd16-enabled{--cmd16-surface:#20142e;--cmd16-surface-raised:#322045;--cmd16-purple:#ab77f4;--cmd16-highlight:#f1dfff;--cmd16-dark:#0a0514;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+html.cmd16-enabled body{overflow-x:clip;min-height:100dvh;background:radial-gradient(ellipse 85% 45% at 85% -15%,#8650d13d,transparent 70%),radial-gradient(ellipse 60% 50% at -12% 50%,#57288424,transparent 70%),linear-gradient(145deg,#100a1b,#0a0713 70%)!important}
+html.cmd16-enabled :is(.hide,[hidden]){display:none!important}
+html.cmd16-enabled .wrap{max-width:1480px}
+html.cmd16-enabled .top{z-index:90;background:linear-gradient(160deg,#291936fa,#120b22f5)!important;border-bottom:1px solid #ba8cef91;box-shadow:inset 0 1px #fff5,0 10px 30px #000a}
+html.cmd16-enabled .topin{min-height:82px;gap:17px}
+html.cmd16-enabled .brand{flex-shrink:0;font-size:20px;color:#f8eaff;letter-spacing:.025em;text-shadow:0 2px 7px #000a}
+html.cmd16-enabled .brand b,html.cmd16-enabled .hero h1 em{color:#d2aeff!important;text-shadow:0 0 21px #ad61ff74}
+html.cmd16-enabled .cmd-brand-logo{width:55px;height:55px;object-fit:contain;border:1px solid #ce99f06e;border-radius:16px;background:#1d102e;padding:4px;box-shadow:inset 0 2px #fff3,0 9px 20px #0008,0 0 16px #ab67ff34}
+html.cmd16-enabled .top .links{min-width:0;gap:5px;align-items:center;scrollbar-width:thin;scrollbar-color:#ad77e7 #150d25}
+html.cmd16-enabled .top .links button{flex-shrink:0;font-size:12px;padding:10px 10px;white-space:nowrap;min-height:43px;border-radius:12px!important}
+html.cmd16-enabled .top .links button.active,html.cmd16-enabled .top .links button[aria-current="page"]{border:1.5px solid #edd0ff!important;background:linear-gradient(155deg,#bc8af0,#8050bc 55%,#4c3076)!important;box-shadow:inset 0 2px 3px #fff9,inset 0 -3px 7px #200d38,0 5px 0 #0c0718,0 0 18px #ac64f47f!important}
+html.cmd16-enabled .top .links :is(button,select){height:auto}
+html.cmd16-enabled .menu{border:1.5px solid #d4a2ff!important;min-width:50px;min-height:48px;border-radius:14px!important}
+html.cmd16-enabled .page{min-width:0}
+html.cmd16-enabled .hero{position:relative;isolation:isolate;gap:clamp(24px,3.5vw,65px);padding:clamp(40px,6vw,90px) 0 50px}
+html.cmd16-enabled .hero::before{content:"";position:absolute;inset:8% -6% 10% 34%;z-index:-1;background:radial-gradient(ellipse,#7640c028,transparent 68%);pointer-events:none}
+html.cmd16-enabled .eyebrow,html.cmd16-enabled .step{color:#cfadff;font-weight:850;letter-spacing:.09em;text-shadow:0 1px 14px #a558ff66}
+html.cmd16-enabled h1,html.cmd16-enabled h2,html.cmd16-enabled h3{color:#f9f2ff;text-wrap:balance}
+html.cmd16-enabled .hero h1{letter-spacing:-.055em;line-height:1.06}
+html.cmd16-enabled :is(.lead,.sub,.small,.tile p,.game p,.savedcard p,.note,.catalog-note,.account-note){color:#d1c3de}
+html.cmd16-enabled .section{padding-block:clamp(26px,4vw,64px)}
+html.cmd16-enabled .section h2{letter-spacing:-.035em}
+html.cmd16-enabled :is(.mock,.tile,.game,.metric,.auth-panel,.savedcard,.host-block,.host-msg,.note,.catalog-note,.account-note,.recap,.faq,.cmd-ai-panel,.order-cols>.tile,.row>.tile,.host-meta>div,.host-gamepicker,.host-gamefields){
+ color:#faf2ff;
+ border:1.4px solid #ae83da94!important;
+ background:linear-gradient(154deg,#30213fee 0%,#1b132dec 78%,#160f23ed)!important;
+ border-radius:18px!important;
+ box-shadow:inset 0 2px 2px #ffffff42,inset 0 -5px 12px #090416ab,0 13px 32px #0009!important;
+ -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+}
+html.cmd16-enabled :is(.mock,.auth-panel,.host-block,.game,.tile,.savedcard,.cmd-ai-panel){position:relative}
+html.cmd16-enabled :is(.tile,.game,.auth-panel,.savedcard,.host-block){transition:transform .19s ease,box-shadow .19s ease,border-color .19s ease}
+html.cmd16-enabled :is(.game,.tile,.savedcard,.host-block):hover{border-color:#d1a0f8!important;box-shadow:inset 0 2px 2px #ffffff61,0 18px 35px #000a,0 0 23px #8642ff31!important}
+html.cmd16-enabled .tile{padding:clamp(16px,2vw,26px)}
+html.cmd16-enabled .game{gap:15px;align-items:flex-start;overflow:hidden}
+html.cmd16-enabled .game img,.real-game-image{max-width:100%;border:1px solid #9c72cb7a;border-radius:12px;box-shadow:0 9px 18px #0008;object-fit:cover}
+html.cmd16-enabled .game-body{min-width:0;flex:1}
+html.cmd16-enabled .mock{overflow:hidden}
+html.cmd16-enabled .mockhead{background:linear-gradient(150deg,#47305c,#21142d)!important;color:#f2e6ff;border-bottom:1px solid #9863ca91}
+html.cmd16-enabled .mockbody{background:linear-gradient(145deg,#251a3bc9,#171123cc)}
+html.cmd16-enabled :is(.empty,.metric,.host-meta>div){background:linear-gradient(155deg,#352347e8,#160c24ee)!important;border:1px solid #906ab88a!important;border-radius:13px!important;box-shadow:inset 0 2px #fff3,0 6px 17px #0007}
+html.cmd16-enabled .metric strong,html.cmd16-enabled .host-meta b,html.cmd16-enabled .notice-count{color:#e5c7ff!important;text-shadow:0 0 11px #9d61ff71}
+html.cmd16-enabled .metrics{gap:12px}
+html.cmd16-enabled :is(.features,.games,.infrastructure,.auth-layout,.host-dashboard,.admin-cards){row-gap:20px;column-gap:20px}
+html.cmd16-enabled :is(.row,.order-cols){gap:20px}
+html.cmd16-enabled :is(.note,.catalog-note,.account-note,.host-msg){line-height:1.7;padding:16px 19px;overflow-wrap:anywhere}
+html.cmd16-enabled .savedcard{padding:20px}
+html.cmd16-enabled :is(.label,.tag,.status-badge,.badge){border:1px solid #c393eb91!important;border-radius:999px!important;background:linear-gradient(145deg,#5d3a788a,#241531dd)!important;color:#f0d9ff!important;box-shadow:inset 0 1px #ffffff60,0 4px 12px #0004!important}
+html.cmd16-enabled .tag{padding:7px 11px}
+html.cmd16-enabled :is(.host-toolbar,.host-actions,.toolbar,.manage-actions,.actions){gap:12px}
+html.cmd16-enabled :is(.field,.auth-panel label){gap:8px}
+html.cmd16-enabled :is(.field label,.auth-panel label){color:#e2d2f2;font-weight:760}
+html.cmd16-enabled :is(.field input,.field select,.auth-panel input,.toolbar input,.toolbar select,textarea,.host-block textarea,.host-block select,.host-block input){
+ min-height:46px;background:linear-gradient(150deg,#1b102ae8,#10091fe8)!important;color:#f7eaff!important;border:1px solid #b186e0!important;
+ box-shadow:inset 0 3px 10px #000a,inset 0 1px #fff2!important;border-radius:12px!important;
+}
+html.cmd16-enabled :is(.field input,.field select,.auth-panel input,.toolbar input,.toolbar select,textarea,.host-block textarea):focus{border-color:#e5bfff!important;outline:3px solid #c3a2ff55!important;outline-offset:1px}
+html.cmd16-enabled :is(.field input,.field select,.auth-panel input,.toolbar input,.toolbar select,textarea)::placeholder{color:#ac99bf}
+html.cmd16-enabled :is(button,.button,.ghost,.savedcard button,.host-actions button,.host-toolbar button):not([disabled]):not([aria-disabled="true"]){position:relative}
+html.cmd16-enabled :is(button,.button,.ghost,.savedcard button,.host-actions button,.host-toolbar button):not([disabled]):hover{filter:brightness(1.1)}
+html.cmd16-enabled :is(button,.button,.ghost,.savedcard button,.host-actions button,.host-toolbar button):not([disabled]):active{transform:translateY(3px)}
+html.cmd16-enabled :is(button,.button,.ghost,.savedcard button,.host-actions button,.host-toolbar button)[disabled]{cursor:not-allowed!important;opacity:.55;filter:saturate(.25)}
+html.cmd16-enabled :is(.danger,[data-action*="delete"],[data-action*="remove"],button[aria-label*="Supprimer"]){background:linear-gradient(160deg,#c76587,#833553 57%,#311829)!important;border-color:#fba4b3!important}
+html.cmd16-enabled :is(.host-block,.auth-panel,.recap){padding:clamp(16px,2vw,24px)}
+html.cmd16-enabled :is(.host-list,.host-game-list){min-width:0;overflow-x:auto}
+html.cmd16-enabled :is(.host-meta,.form-grid){gap:12px}
+html.cmd16-enabled :is(.host-editor,.host-block pre,pre,.console){max-width:100%;overflow-x:auto;border-radius:14px;background:#0b0714;color:#dccaf0}
+html.cmd16-enabled .cmd-ai-panel{background:linear-gradient(145deg,#302040fb,#140a22fa)!important;border:1px solid #bc8cf3!important;box-shadow:inset 0 2px #fff5,0 24px 56px #000c!important}
+html.cmd16-enabled .cmd-ai-toggle{border-radius:18px!important}
+html.cmd16-enabled :is(.faq,.recap){overflow-wrap:anywhere}
+html.cmd16-enabled ::selection{background:#8850d7;color:#fff}
+html.cmd16-enabled button .cmd16-icon{pointer-events:none;flex-shrink:0}
+html.cmd16-enabled .cmd16-leading-icon{display:inline-flex;align-items:center;gap:8px}
+html.cmd16-enabled .cmd16-leading-icon .cmd16-icon{margin:0}
+html.cmd16-enabled .cmd16-symbol{display:inline-grid;place-items:center;width:50px;height:50px;border:1px solid #c291f1;border-radius:14px;background:linear-gradient(145deg,#8454bd,#422463);box-shadow:inset 0 2px #fffb,0 5px 0 #160b28,0 9px 17px #0008}
+html.cmd16-enabled .cmd16-symbol .cmd16-icon{width:26px;height:26px;margin:0}
+html.cmd16-enabled .cmd16-status{position:relative}
+html.cmd16-enabled .cmd16-status[data-state="ready"]{color:#98f8d5}
+html.cmd16-enabled .cmd16-status[data-state="warning"]{color:#ffdb8b}
+@media(min-width:881px){html.cmd16-enabled .top .links{overflow-x:auto;max-width:calc(100vw - 300px);padding:5px 2px 12px}}
+@media(max-width:880px){
+ html.cmd16-enabled .topin{min-height:75px}
+ html.cmd16-enabled .top .links{display:none;position:absolute;left:12px;right:12px;top:calc(100% + 3px);max-height:calc(100dvh - 95px);overflow-y:auto;overflow-x:hidden;flex-direction:column;align-items:stretch;padding:18px 13px 25px!important;gap:11px;z-index:120;border:1.5px solid #b184e5;border-radius:19px;background:linear-gradient(155deg,#34224bf8,#130b23fc)!important;box-shadow:inset 0 2px #fff5,0 25px 50px #000d}
+ html.cmd16-enabled .top .links.open{display:flex}
+ html.cmd16-enabled .top .links button{width:100%;min-height:47px;text-align:left;font-size:14px;white-space:normal;display:inline-flex;align-items:center;gap:11px}
+ html.cmd16-enabled .top .links select{max-width:100%!important;width:100%;min-height:47px}
+ html.cmd16-enabled .top .menu{display:inline-flex;align-items:center;justify-content:center}
+ html.cmd16-enabled .hero{gap:28px}
+}
+@media(max-width:600px){
+ html.cmd16-enabled .wrap{padding-inline:14px}
+ html.cmd16-enabled .section{padding-block:28px}
+ html.cmd16-enabled .hero{padding:38px 0 26px}
+ html.cmd16-enabled .hero h1{font-size:clamp(39px,11vw,56px);letter-spacing:-.045em}
+ html.cmd16-enabled .features,html.cmd16-enabled .games,html.cmd16-enabled .infrastructure,html.cmd16-enabled .auth-layout,html.cmd16-enabled .host-dashboard{grid-template-columns:minmax(0,1fr)!important}
+ html.cmd16-enabled :is(.actions,.toolbar,.manage-actions,.host-toolbar,.host-actions){gap:10px}
+ html.cmd16-enabled .toolbar input{min-width:0;width:100%}
+ html.cmd16-enabled :is(.game,.tile,.auth-panel,.host-block,.savedcard){padding:16px}
+ html.cmd16-enabled .metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ html.cmd16-enabled .metric{padding:10px}
+ html.cmd16-enabled .host-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
+ html.cmd16-enabled .brand{font-size:17px}
+ html.cmd16-enabled .cmd-brand-logo{width:47px;height:47px}
+ html.cmd16-enabled :is(.button,.ghost,button){max-width:100%}
+ html.cmd16-enabled #cmdLangPicker{min-width:100%}
+}
+@media(prefers-reduced-motion:reduce){html.cmd16-enabled :is(.tile,.game,.host-block,.savedcard,button){transition:none!important}html.cmd16-enabled *{scroll-behavior:auto!important}}
