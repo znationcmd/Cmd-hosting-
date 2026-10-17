@@ -1,0 +1,39 @@
+name: CMD Hosting - 16K visual preview
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "web/public/**"
+      - "web/preview-build.mjs"
+      - ".github/workflows/cmd-hosting-visual-preview.yml"
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: cmd-hosting-visual-preview-pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify premium interface scripts and assets
+        run: node --test tests/premium-ui.test.mjs tests/restored-web.test.mjs
+      - name: Build isolated static visual preview
+        run: node web/preview-build.mjs
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/preview-dist/
+      - name: Deploy visual preview only
+        id: deployment
+        uses: actions/deploy-pages@v4
