@@ -164,7 +164,7 @@ function decoratePremium(){
  }
  for(const button of document.querySelectorAll("#nav button")){
   const id=button.dataset.page;
-  const key=id?menuIcons[id]:(button.id==="siteRefresh"?"refresh":null);
+  const key=(id?menuIcons[id]:(button.id==="siteRefresh"?"refresh":null))||actionIcon(button.textContent);
   if(key && button.firstChild?.nodeType===3){
     const label=button.firstChild.nodeValue||"";
     const clean=label.replace(/^\s*[⚙↻]\s*/u,"");
@@ -186,6 +186,7 @@ function decoratePremium(){
   const icon=forced&&paths[forced]?forced:actionIcon(button.textContent)||({"✕":"close","×":"close","✎":"pencil"}[button.textContent.trim()]);
   prefixIcon(button,icon);
  }
+ for(const anchor of document.querySelectorAll("#cmdSidebar a"))prefixIcon(anchor,actionIcon(anchor.textContent));
  makeToolSymbols();
  decorateSemantics();
 }

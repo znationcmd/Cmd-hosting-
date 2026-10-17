@@ -16,16 +16,16 @@ const fs=require('node:fs');
    });
    await page.goto('http://127.0.0.1:8765');
    await page.waitForFunction(()=>document.documentElement.classList.contains('cmd16-enabled'));
-   for(const id of ['accueil','jeux','infrastructure','panneau','machines','commande','configurations','offres','aide','compte']){
+   for(const id of ['accueil','jeux','infrastructure','panneau','machines','commande','configurations','offres','aide','compte','wallet','rentals','cmdCatalogSection','cmdMods','cmdGameSwitch','cmdCustomerCenter']){
     if(width<=980&&await page.locator('#cmdMenu').getAttribute('aria-expanded')!=='true')await page.locator('#cmdMenu').click();
     await page.screenshot({path:`visual-results/current-${width}.png`});
     await page.locator('#nav [data-page="'+id+'"]').click();
-    await page.waitForTimeout(60);
+    await page.waitForTimeout(250);
     assert(await page.locator('#'+id).isVisible(),id+' route must still work');
     const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth,navX:document.getElementById('cmdSidebar').getBoundingClientRect().x}));
     assert.equal(layout.overflow,false,`${width}/${id}: horizontal overflow`);
     if(width>980)assert.equal(layout.navX,0,'Desktop sidebar must align to viewport');
-    else assert.equal(await page.locator('#cmdMenu').getAttribute('aria-expanded'),'false');
+    else {assert.equal(await page.locator('#cmdMenu').getAttribute('aria-expanded'),'false');assert(await page.locator('#cmdSidebar').evaluate(e=>e.getBoundingClientRect().right<=1),'Mobile drawer must fully close')} 
     report.push({width,page:id,...layout});
     if(['accueil','machines','commande'].includes(id))await page.screenshot({path:`visual-results/${width}-${id}.png`,fullPage:true});
    }

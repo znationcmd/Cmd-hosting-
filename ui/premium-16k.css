@@ -224,3 +224,19 @@ html.cmd16-enabled #cmdClose {flex-shrink: 0}
  html.cmd16-enabled.cmd-console .host-toolbar > * {min-width: 0; flex: 1 1 130px}
  html.cmd16-enabled.cmd-console .host-block {padding: 18px !important}
 }
+/* Lazy-created store, mods, renter profile and support components. */
+html.cmd16-enabled :is(.cmd-shop-card,.cmd-shop-dialog,.cmdg-frame,.cmdv-card,.cmdv-block,.cmdv-details,.cmdc-panel,.switch-panel,.switch-quote,.cmdrp,.cmdrp-box) {color: #f5f1fc; background: linear-gradient(145deg,#2a2035,#19131f 85%) !important; border: 1px solid #604a73 !important; border-radius: 15px !important; box-shadow: inset 0 1px #fff3,0 10px 22px #0005 !important}
+html.cmd16-enabled :is(.cmd-shop-tools,.cmd-shop-feature,.cmd-shop-text,.cmdv-tabs,.cmdv-toolbar,.cmdv-settings,.cmdc-readiness,.cmdc-entry,.switch-banner,.cmdrp-head,.cmdrp-sidebar,#cmdrpBrief) {background: #24192f !important; border-color: #745283 !important; color: #e2d2ef}
+html.cmd16-enabled :is(.cmd-shop-name,.cmdv-card h3,.cmdc-panel h3,.cmdrp-box h3) {color: #f4eaff}
+html.cmd16-enabled :is(.cmdv-muted,.cmdv-sub,.cmdc-note,.cmdc-head p,.switch-muted,.cmdrp-box p,.cmd-shop-disclaimer) {color: #c3b3d0 !important; line-height: 1.7}
+html.cmd16-enabled :is(.cmdv-cardbuttons,.cmdv-toolbar,.cmdv-tabs,.cmdc-panel,.cmd-shop-dialog,.cmd-shop-platforms,.switch-panel,.cmdrp) button {background: linear-gradient(160deg,var(--btn-top,#77509e),var(--btn-bottom,#3c2852)) !important; border: 1px solid var(--btn-edge,#a47fc4) !important; border-radius: 10px !important; color: #fff !important; min-height: 44px; box-shadow: inset 0 1px #fff5,0 3px 0 #140c20,0 6px 12px #0005}
+html.cmd16-enabled :is(.cmdv-block,.cmdv-search,.cmdc-panel,.switch-panel,.cmdrp) :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea) {background: #160e20 !important; border-color: #836096 !important; color: #f5eaff !important; border-radius: 10px !important}
+html.cmd16-enabled :is(.cmd-shop-grid,.cmdv-grid,.cmdc-layout,.switch-grid) {gap: 18px}
+html.cmd16-enabled :is(.cmd-shop-card,.cmdv-card,.cmdc-panel,.switch-panel) {min-width: 0}
+html.cmd16-enabled .cmd-shop-modal {z-index: 1200}
+html.cmd16-enabled .cmd-shop-dialog {max-height: calc(100dvh - 32px); overflow-y: auto}
+html.cmd16-enabled .cmdrp-sidebar {border-right-color: #735084}
+html.cmd16-enabled .cmdrp-banner > div {background: linear-gradient(90deg,#140b22ee,#261336bb)}
+html.cmd16-enabled #cmdSidebar a[href="/connexion"] {display: flex; align-items: center; gap: 9px; color: #f0dfff !important; background: linear-gradient(145deg,#5d3c79,#332044) !important; border: 1px solid #a27ac0 !important; border-radius: 10px; box-shadow: inset 0 1px #fff3,0 4px 10px #0005}
+html.cmd16-enabled #cmdcTopBanner {background: #281c35 !important; border-color: #735284 !important; color: #dac8e7 !important}
+@media(max-width:600px) {html.cmd16-enabled :is(.cmd-shop-grid,.cmdv-grid,.cmdc-layout,.switch-grid) {grid-template-columns: minmax(0,1fr)} html.cmd16-enabled .cmd-shop-name {font-size: 16px} html.cmd16-enabled .cmd-shop-cover {height: auto; aspect-ratio: 16/9}}
