@@ -1,12 +1,6 @@
 name: CMD Hosting - 16K visual preview
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "web/public/**"
-      - "web/preview-build.mjs"
-      - ".github/workflows/cmd-hosting-visual-preview.yml"
 permissions:
   contents: read
   pages: write
