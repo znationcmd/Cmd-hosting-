@@ -5,7 +5,7 @@
  window.__CMD_HOSTING_16K__=true;
  const file=document.currentScript?.src||"";
  const href=file?new URL("./premium-16k.css",file).href:"/ui/premium-16k.css";
- if(!document.querySelector('link[data-cmd16k]')){
+ if(!document.querySelector('link[data-cmd16k],link[href$="/premium-16k.css"]')){
    const link=document.createElement("link");link.rel="stylesheet";link.href=href;
    link.dataset.cmd16k="1";document.head.append(link);
  }
