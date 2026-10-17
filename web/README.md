@@ -16,3 +16,12 @@ To preview layout only, serve `web/public/` as a static directory with a local H
 Missing publicly requested assets at recovery: `customer-onboard-ui.js`, `mod-explorer.js`, `mod-manager.js`, `account-ui.js`, `favicon.ico` (HTTP 404). They are not fabricated.
 
 Next gate for a complete migration: export the exact private Function source from Railway through an authorized means, scan it for embedded secrets, validate its routes against this UI, and only then create a separate test deployment and production cutover.
+## Refonte premium 16K prête sur la copie GitHub
+
+La refonte a été étendue aux onze sections de la page récupérée : barre de navigation, menus iPhone, cartes, jeux, serveurs, machines, commandes, compte, formulaires, consoles, sauvegardes et actions. Les boutons de la copie conservent leurs gestionnaires d'événements d'origine ; les icônes ajoutées sont des SVG vectoriels.
+
+La suite de tests `tests/premium-ui.test.mjs` + `tests/restored-web.test.mjs` a passé le contrôle GitHub Actions le 17 octobre 2026. Cela valide la syntaxe et les ressources, **pas** une simulation complète d'achat ni un test manuel iPhone en production.
+
+**Aperçu gratuit :** la construction de l'aperçu GitHub Pages (`web/preview-build.mjs`) a passé les tests, mais l'étape de publication a échoué : GitHub Pages n'est pas activé et l'installation GitHub actuelle ne peut pas le créer ("Resource not accessible by integration"). L'option se trouve dans le dépôt GitHub, Settings → Pages → Build and deployment → Source = GitHub Actions. Ensuite, exécuter manuellement le workflow "CMD Hosting - 16K visual preview" ; il est désactivé sur push pour éviter des échecs répétés. Cet aperçu est statique, annonce clairement que les commandes sont désactivées et bloque les soumissions.
+
+**Production :** ne pas déclarer CMD Hosting visuellement changé sur Railway : `cmd-hosting-web` est toujours une fonction Railway distincte ; son source backend reste inaccessible au connecteur. La copie GitHub n'est **pas** un remplacement opérationnel du backend.
