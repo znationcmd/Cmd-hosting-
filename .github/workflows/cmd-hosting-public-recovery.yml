@@ -1,18 +1,19 @@
-name: CMD Hosting - Public frontend recovery (read only)
+name: CMD Hosting - Public frontend recovery (safe backup branch)
 
 on:
   workflow_dispatch:
   push:
     paths:
       - "scripts/recover-hosting-public.mjs"
+      - "scripts/validate-public-frontend-snapshot.mjs"
       - ".github/workflows/cmd-hosting-public-recovery.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
-  group: cmd-hosting-public-frontend-snapshot
-  cancel-in-progress: true
+  group: cmd-hosting-public-frontend-recovery
+  cancel-in-progress: false
 
 jobs:
   snapshot:
@@ -20,18 +21,35 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Verify snapshot safety controls
+      - name: Verify safe URL matching
         run: node scripts/recover-hosting-public.mjs --self-test
-      - name: Capture public pages/assets only (no login)
+      - name: Capture anonymous public assets only
         run: node scripts/recover-hosting-public.mjs
-      - name: Keep a temporary recovery artifact, not a Git commit
+      - name: Detect potential exposed secrets and unsafe files before publication
+        run: node scripts/validate-public-frontend-snapshot.mjs recovery-public-only
+      - name: Save temporary backup artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cmd-hosting-public-web-snapshot
+          name: cmd-hosting-public-frontend-snapshot
           path: recovery-public-only/
           retention-days: 7
           if-no-files-found: warn
+      - name: Publish reviewed anonymous resources to a dedicated backup branch (not production)
+        run: |
+          set -euo pipefail
+          git config user.name "cmd-hosting-recovery[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C recovery/cmd-hosting-public-ui-20261017
+          git add recovery-public-only/
+          if git diff --cached --quiet; then
+            echo "No changes in the public frontend snapshot"
+          else
+            git commit -m "backup(hosting): anonymous publicly served frontend assets only"
+          fi
+          git push --force-with-lease origin recovery/cmd-hosting-public-ui-20261017
