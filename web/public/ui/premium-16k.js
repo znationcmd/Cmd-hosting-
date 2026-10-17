@@ -91,6 +91,11 @@ const menuIcons={
 function actionIcon(label){
  const s=String(label||"").trim();
  const checks=[
+ [/état.*pc|machines?/i,"machines"],
+ [/commandes?/i,"order"],
+ [/associer/i,"link"],
+ [/activer/i,"power"],
+ [/ia cmd/i,"cloud"],
  [/supprimer|effacer|retirer|delete/i,"trash"],
  [/redémarrer|restart/i,"refresh"],
  [/démarrer|allumer|start\b/i,"power"],
@@ -124,7 +129,7 @@ function prefixIcon(button,key){
  // Remove only leading decorative symbols, never rebuild a live control.
  for(const child of button.childNodes){
   if(child.nodeType!==3)continue;
-  const clean=(child.nodeValue||"").replace(/^\s*(?:[\p{Extended_Pictographic}\uFE0F\u200D]|[↻⚙▶■✎☰✓✕×])+\s*/u,"");
+  const clean=(child.nodeValue||"").replace(/^\s*(?:[\p{Extended_Pictographic}\uFE0F\u200D]|[↻⚙▶■✎☰✓✕×⌕▣▤▦◷≡◇◆↓↑＋+⚡])+\s*/u,"");
   if(clean!==child.nodeValue)child.nodeValue=clean;
   break;
  }
@@ -178,7 +183,7 @@ function decoratePremium(){
   ".savedcard button",".auth-panel button",".host-block button",
   ".admin-cards button",".provider-nav button",".row button",
   ".recap button","#cmdAiToggle",".cmd-ai-toggle",
-  "[data-go]","[data-cmd-icon]","button"
+  "[data-go]","[data-cmd-icon]","button","a.button","a.ghost"
  ];
  for(const button of document.querySelectorAll(selectors.join(","))){
   if(button.closest("#nav"))continue;
@@ -187,6 +192,7 @@ function decoratePremium(){
   prefixIcon(button,icon);
  }
  for(const anchor of document.querySelectorAll("#cmdSidebar a"))prefixIcon(anchor,actionIcon(anchor.textContent));
+ for(const heading of document.querySelectorAll("h2,h3,h4")){if(/^\s*\p{Extended_Pictographic}/u.test(heading.textContent))prefixIcon(heading,actionIcon(heading.textContent)||"dashboard")}
  makeToolSymbols();
  decorateSemantics();
 }
