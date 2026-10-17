@@ -84,3 +84,9 @@ Les sources des services Mods API et Cloud Agents présentes dans ce dépôt cor
 ### Snapshot frontal en lecture seule — 17 octobre 2026
 
 Une sauvegarde des pages et scripts **publics** est préparée par [le workflow GitHub Actions](.github/workflows/cmd-hosting-public-recovery.yml) et [le script de capture](scripts/recover-hosting-public.mjs). Elle ne remplace pas la fonction serveur Railway : l'original de `cmd-hosting-web` reste à récupérer via l'éditeur Function/Code. Ne pas relier encore la production à ce dépôt.
+
+### Frontend public restauré dans GitHub — 17 octobre 2026
+
+Le dossier [`web/public/`](web/public/) contient maintenant une copie de la page principale et de ses ressources publiques, automatiquement récupérées depuis Railway et contrôlées avant import. La copie est stylisée avec [le thème Premium CMD 16K](web/public/ui/premium-16k.css) et [ses icônes SVG](web/public/ui/premium-16k.js). La copie originale sans cette couche graphique reste dans [la branche de sauvegarde](https://github.com/znationcmd/Cmd-hosting-/tree/recovery/cmd-hosting-public-ui-20261017).
+
+Les **13 fichiers JS** de l'interface copiés ont été vérifiés syntaxiquement, et les références locales de la page sont présentes. Les tests de régression sont dans [`tests/restored-web.test.mjs`](tests/restored-web.test.mjs). Cette restauration constitue **le frontend public uniquement**. La fonction Bun backend, les données clients, la base PostgreSQL et les variables d'environnement ne sont pas migrées ; n'utilisez pas le dossier statique comme remplacement direct du service Railway en production. La source backend doit être récupérée de manière fiable avant le basculement.
