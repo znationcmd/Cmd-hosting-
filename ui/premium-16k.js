@@ -51,6 +51,7 @@
 // Premium SVG pictograms for the actual CMD Hosting navigation and action menus.
 // Existing click handlers, data-* attributes and button types are left untouched.
 Object.assign(paths,{
+ close:'<path d="m6 6 12 12M6 18 18 6"/>',
  home:'<path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/>',
  games:'<rect x="3" y="7" width="18" height="12" rx="5"/><path d="M8 10v6M5 13h6M16 12h3M17.5 10.5v3"/>',
  infra:'<path d="M12 3 2 8l10 5 10-5zM2 12l10 5 10-5M2 16l10 5 10-5"/>',
@@ -85,15 +86,20 @@ Object.assign(paths,{
 const menuIcons={
  accueil:"home",jeux:"games",infrastructure:"infra",panneau:"dashboard",
  machines:"machines",commande:"order",configurations:"settings",offres:"plans",
- aide:"help",admin:"settings",compte:"account"
+ aide:"help",admin:"settings",compte:"account",wallet:"card",rentals:"history",hostingPanel:"server",cmdMods:"mods",cmdGameSwitch:"refresh",cmdCustomerCenter:"help"
 };
 function actionIcon(label){
  const s=String(label||"").trim();
  const checks=[
+ [/état.*pc|machines?/i,"machines"],
+ [/commandes?/i,"order"],
+ [/associer/i,"link"],
+ [/activer/i,"power"],
+ [/ia cmd/i,"cloud"],
  [/supprimer|effacer|retirer|delete/i,"trash"],
+ [/redémarrer|restart/i,"refresh"],
  [/démarrer|allumer|start\b/i,"power"],
  [/arrêter|stop\b|éteindre/i,"power"],
- [/redémarrer|restart/i,"refresh"],
  [/actualiser|recharger|rafraîchir|refresh/i,"refresh"],
  [/sauvegarde|backup/i,"save"],
  [/installer|importer|ajouter|créer|nouveau|préparer|commander/i,"plus"],
@@ -109,7 +115,7 @@ function actionIcon(label){
  [/serveur/i,"server"],
  [/mod\b/i,"mods"],
  [/ouvrir|afficher|voir|consulter|détails/i,"eye"],
- [/fermer|annuler/i,"power"],
+ [/fermer|annuler/i,"close"],
  [/aide|assistance|support/i,"help"]
  ];
  return checks.find(([regex])=>regex.test(s))?.[1]||null;
@@ -120,6 +126,13 @@ function prefixIcon(button,key){
  if(button.querySelector(":scope > .cmd16-icon"))return;
  const already=button.querySelector("svg,img");
  if(already)return;
+ // Remove only leading decorative symbols, never rebuild a live control.
+ for(const child of button.childNodes){
+  if(child.nodeType!==3)continue;
+  const clean=(child.nodeValue||"").replace(/^\s*(?:[\p{Extended_Pictographic}\uFE0F\u200D]|[↻⚙▶■✎☰✓✕×⌕▣▤▦◷≡◇◆↓↑＋+⚡])+\s*/u,"");
+  if(clean!==child.nodeValue)child.nodeValue=clean;
+  break;
+ }
  const svg=makeIcon(key);
  button.insertBefore(svg,button.firstChild);
  button.classList.add("cmd16-leading-icon");
@@ -136,6 +149,19 @@ function makeToolSymbols(){
  }
 }
 function decoratePremium(){
+ const shellIcons={overview:"dashboard",settings:"settings",files:"file",backups:"save",schedule:"history",logs:"terminal",rentals:"history",wallet:"card",payments:"card"};
+ for(const button of document.querySelectorAll("#cmdPrimary button")){
+  const label=button.textContent;
+  const key=shellIcons[button.dataset.view]||actionIcon(label)||"settings";
+  const symbol=button.querySelector('span[aria-hidden="true"]')||button.querySelector("span:first-child");
+  if(symbol&&symbol.nextElementSibling){if(!symbol.querySelector("svg"))symbol.replaceChildren(makeIcon(key))}
+  else prefixIcon(button,key);
+ }
+ for(const [id,key] of [["cmdMenu","menu"],["cmdClose","close"]]){
+  const button=document.getElementById(id);
+  if(button&&!button.querySelector("svg"))button.replaceChildren(makeIcon(key));
+ }
+
  const menu=document.getElementById("menu");
  if(menu && !menu.querySelector("svg")){
   menu.replaceChildren(makeIcon("menu"));
@@ -143,7 +169,7 @@ function decoratePremium(){
  }
  for(const button of document.querySelectorAll("#nav button")){
   const id=button.dataset.page;
-  const key=id?menuIcons[id]:(button.id==="siteRefresh"?"refresh":null);
+  const key=(id?menuIcons[id]:(button.id==="siteRefresh"?"refresh":null))||actionIcon(button.textContent);
   if(key && button.firstChild?.nodeType===3){
     const label=button.firstChild.nodeValue||"";
     const clean=label.replace(/^\s*[⚙↻]\s*/u,"");
@@ -157,22 +183,62 @@ function decoratePremium(){
   ".savedcard button",".auth-panel button",".host-block button",
   ".admin-cards button",".provider-nav button",".row button",
   ".recap button","#cmdAiToggle",".cmd-ai-toggle",
-  "[data-go]","[data-cmd-icon]"
+  "[data-go]","[data-cmd-icon]","button","a.button","a.ghost"
  ];
  for(const button of document.querySelectorAll(selectors.join(","))){
   if(button.closest("#nav"))continue;
   const forced=button.getAttribute("data-cmd-icon");
-  const icon=forced&&paths[forced]?forced:actionIcon(button.textContent);
+  const icon=forced&&paths[forced]?forced:actionIcon(button.textContent)||({"✕":"close","×":"close","✎":"pencil"}[button.textContent.trim()]);
   prefixIcon(button,icon);
  }
+ for(const anchor of document.querySelectorAll("#cmdSidebar a"))prefixIcon(anchor,actionIcon(anchor.textContent));
+ for(const heading of document.querySelectorAll("h2,h3,h4")){if(/^\s*\p{Extended_Pictographic}/u.test(heading.textContent))prefixIcon(heading,actionIcon(heading.textContent)||"dashboard")}
  makeToolSymbols();
+ decorateSemantics();
+}
+function setIfChanged(node,name,value){if(node.getAttribute(name)!==value)node.setAttribute(name,value)}
+function decorateSemantics(){
+ const nav=document.getElementById("nav"),menu=document.getElementById("menu");
+ if(menu&&nav){setIfChanged(menu,"aria-controls","nav");setIfChanged(menu,"aria-expanded",String(nav.classList.contains("open")))}
+ for(const button of document.querySelectorAll("#nav [data-page]")){
+  if(button.classList.contains("active"))setIfChanged(button,"aria-current","page");
+  else if(button.hasAttribute("aria-current"))button.removeAttribute("aria-current");
+ }
+ for(const button of document.querySelectorAll("button")){
+  if(button.classList.contains("cmd16-untouched")||button.hasAttribute("data-cmd16-variant"))continue;
+  const action=button.dataset.act||button.dataset.action||"";
+  const label=button.textContent.trim();
+  let variant=button.classList.contains("danger")||/^(stop|delete|remove)$/.test(action)||/^(supprimer|effacer|arrêter|retirer)\b/i.test(label)?"danger":
+   /^(start)$/.test(action)||/^(démarrer|confirmer)\b/i.test(label)?"success":
+   /^(restart|restore)$/.test(action)||/^(redémarrer|restaurer)\b/i.test(label)?"warning":
+   button.classList.contains("ghost")||/^(annuler|fermer)\b/i.test(label)?"secondary":null;
+  if(variant)button.dataset.cmd16Variant=variant;
+ }
+ for(const status of document.querySelectorAll(".label,.status-badge,#hostOnline")){
+  const label=status.textContent.trim().toLocaleLowerCase();
+  // Derive only from explicit status text; never assume a server is online.
+  const state=/hors ligne|offline|à l’arrêt|à l'arrêt|stopped/.test(label)?"offline":
+   /en marche|pc connecté|online|running/.test(label)?"online":/à configurer|en attente|pending/.test(label)?"warning":null;
+  if(state)setIfChanged(status,"data-cmd16-state",state);
+  else if(status.hasAttribute("data-cmd16-state"))status.removeAttribute("data-cmd16-state");
+ }
+ for(const table of document.querySelectorAll("table")){
+  if(table.parentElement?.classList.contains("cmd16-table-scroll"))continue;
+  const wrap=document.createElement("div");wrap.className="cmd16-table-scroll";
+  wrap.tabIndex=0;wrap.setAttribute("role","region");wrap.setAttribute("aria-label",table.getAttribute("aria-label")||"Tableau défilant");
+  table.before(wrap);wrap.append(table);
+ }
+ for(const option of document.querySelectorAll("#cmdLangPicker option")){
+  const clean=option.textContent.replace(/^[\s\p{Regional_Indicator}]+/u,"");
+  if(clean!==option.textContent)option.textContent=clean;
+ }
 }
 
  const init=()=>{decorate(document);decoratePremium();const main=document.body;
   if(!main||!window.MutationObserver)return;
   let queued=false;
   const observer=new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;decorate(document);decoratePremium()})});
-  observer.observe(main,{childList:true,subtree:true});
+  observer.observe(main,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:["class"]});
  };
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
