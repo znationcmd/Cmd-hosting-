@@ -51,3 +51,29 @@ test("restoration records missing backend and no live deployment claim",()=>{
  assert.match(doc,/does not contain the Railway Function/);
  assert.match(doc,/Do not switch the Railway web service/);
 });
+
+
+test("eleven restored pages have navigation entries",()=>{
+ for(const id of ["accueil","jeux","infrastructure","panneau","offres","commande","configurations","compte","machines","admin","aide"]){
+  assert.ok(page.includes('id="'+id+'"'),"Missing page section "+id);
+  assert.ok(page.includes('data-page="'+id+'"'),"Missing navigation entry "+id);
+ }
+});
+test("navigation symbols are SVG pictograms without new click handlers",()=>{
+ const js=readFileSync(join(root,"ui/premium-16k.js"),"utf8");
+ for(const id of ["accueil","jeux","panneau","machines","commande","configurations","aide","admin","compte"])
+  assert.ok(js.includes(id+':"'),"Missing pictogram "+id);
+ assert.ok(js.includes("decoratePremium()"));
+ assert.ok(js.includes("createElementNS"));
+ assert.doesNotMatch(js,/\.onclick\s*=|addEventListener\(["']click["']/);
+});
+test("premium CSS covers management and responsive accessibility",()=>{
+ const css=readFileSync(join(root,"ui/premium-16k.css"),"utf8");
+ for(const selector of [".host-block",".auth-panel",".savedcard",".game",".recap",".host-toolbar",".cmd-ai-panel",".top .links",".field input"])
+  assert.ok(css.includes(selector),"Unstyled component "+selector);
+ assert.ok(css.includes("@media(max-width:880px)"));
+ assert.ok(css.includes("@media(max-width:600px)"));
+ assert.ok(css.includes("prefers-reduced-motion"));
+ assert.ok(css.includes(":focus-visible"));
+ assert.ok(css.includes("[hidden]"));
+});
