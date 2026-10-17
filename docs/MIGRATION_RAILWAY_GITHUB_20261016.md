@@ -37,3 +37,17 @@ Une migration complète nécessitera une copie fidèle de la fonction (source Ty
 - Ne jamais transférer sur GitHub les valeurs des variables `CMD_FOUNDER_PASSWORD`, `DATABASE_URL`, `CMD_CONTROL_ADMIN_KEY`, `RESEND_API_KEY`, jetons d'agent ou clés marchandes.
 - Ne pas déployer de nouvelles versions de `cmd-hosting-mods-api` et `cmd-hosting-cloud-agents` par erreur en appliquant le patch Railway en attente.
 - Ne pas déclarer la migration achevée tant que le backend web original n'est pas retrouvé et validé.
+
+## Préparation automatique ajoutée le 17 octobre 2026
+
+- `scripts/recover-hosting-public.mjs` : capture strictement en lecture seule les pages et scripts publics du site, sans identifiants ni appels API.
+- `.github/workflows/cmd-hosting-public-recovery.yml` : déclenche une récupération GitHub Actions, stockée **uniquement comme artifact temporaire** pendant sept jours. L'exécution et la réussite doivent encore être vérifiées dans l'onglet Actions.
+- `.github/workflows/cmd-hosting-ui-checks.yml` : vérifie le code du thème 16K et les règles de sécurité de la capture, **sans déploiement**.
+- Une récupération des fichiers visibles par un navigateur n'est **pas** un export du backend Bun, de la base SQL, des réglages Railway, des comptes ni des scripts privés.
+
+### Dernier élément indispensable
+
+Ouvrir sur Railway le projet **CMD Hosting** → service **cmd-hosting-web** → éditeur de **Function / Code**. Copier/exporter **l'intégralité du code source original** dans un fichier local `index.tsx` ou `index.ts`. Ne **pas** copier les valeurs des variables d'environnement, mots de passe ni clés API. Partager le fichier source original pour contrôle des secrets et import en branche de migration GitHub. Aucun remplacement du service de production avant validation.
+
+Les fonctions Railway stockent leur code via un mécanisme de configuration spécifique ; la lecture par le connecteur actuel renvoie deux caractères invalides pour ce service. Ne jamais les publier comme source et ne jamais déclencher une mise à jour de fonction avec ce résultat.
+
