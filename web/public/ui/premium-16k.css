@@ -177,3 +177,50 @@ html.cmd16-enabled ::selection {background: #7848b1; color: #fff}
 @media(min-width:2400px) {html.cmd16-enabled {--cmd16-sidebar: 280px} html.cmd16-enabled .wrap {max-width: 1900px} html.cmd16-enabled .games {grid-template-columns: repeat(4,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce) {html.cmd16-enabled *,html.cmd16-enabled *::before,html.cmd16-enabled *::after {scroll-behavior: auto !important; transition: none !important; animation: none !important}}
 @media(forced-colors:active) {html.cmd16-enabled :is(button,.card,.tile,.host-block,input,select) {border: 1px solid ButtonText; box-shadow: none}}
+/* Runtime administration shell created by console-ui.js. These scoped rules
+   supersede its legacy inline stylesheet without replacing its controls. */
+html.cmd16-enabled.cmd-console {--cmd-side: 264px; --cmd-head: 76px}
+html.cmd16-enabled.cmd-console body {background: radial-gradient(ellipse at 85% 0%,#632d9a24,transparent 55%),#0d0a14 !important}
+html.cmd16-enabled.cmd-console .top {display: none}
+html.cmd16-enabled.cmd-console main.wrap {padding: 28px 32px !important; max-width: 1600px !important}
+html.cmd16-enabled #cmdTopbar {background: linear-gradient(180deg,#291d35f5,#18111ff5); border-bottom: 1px solid #715385; box-shadow: inset 0 1px #fff2,0 8px 24px #0004; padding-inline: 32px}
+html.cmd16-enabled #cmdCrumb {font-size: 15px; color: #f1e7fa}
+html.cmd16-enabled #cmdCrumb small {color: #bca5d1; font-size: 11px; letter-spacing: .08em}
+html.cmd16-enabled #cmdTopbar .cmd-mode {background: #3a294b; border-color: #80608f; border-radius: 8px; color: #d9c1ef; font-size: 11px}
+html.cmd16-enabled #cmdSidebar {background: linear-gradient(165deg,#291c35,#15101e 80%); border-right: 1px solid #6c4e80; box-shadow: inset -1px 0 #fff1,8px 0 28px #0004}
+html.cmd16-enabled .cmd-brand {padding-inline: 18px; gap: 10px; border-bottom-color: #5d426d}
+html.cmd16-enabled .cmd-brand img {width: 43px; height: 43px; border: 1px solid #745386; border-radius: 11px; box-shadow: inset 0 1px #fff3,0 4px 12px #0007}
+html.cmd16-enabled .cmd-brand strong {font-size: 14px; letter-spacing: .04em}
+html.cmd16-enabled .cmd-brand small {font-size: 9px; color: #c4abd6}
+html.cmd16-enabled .cmd-sidebar-scroll {padding: 14px 12px 24px; scrollbar-width: thin; scrollbar-color: #79548f #181020}
+html.cmd16-enabled .cmd-group-title {font-size: 11px; color: #bca2d0; padding-top: 22px}
+html.cmd16-enabled #cmdSidebar button.cmd-nav,html.cmd16-enabled #cmdSidebar .links > button {display: flex; align-items: center; gap: 11px; padding: 12px !important; margin-block: 5px !important; border: 1px solid #493653; border-radius: 10px !important; background: linear-gradient(155deg,#35263f,#251b2e); color: #e0d2ec; font-size: 13px !important; font-weight: 600; min-height: 46px; box-shadow: inset 0 1px #fff2,0 3px 7px #0004}
+html.cmd16-enabled #cmdSidebar button.cmd-nav:hover,html.cmd16-enabled #cmdSidebar .links > button:hover {background: linear-gradient(155deg,#493254,#302039); color: #fff; border-color: #88639d}
+html.cmd16-enabled #cmdSidebar button[aria-current="page"],html.cmd16-enabled #cmdSidebar .links > button.active {background: linear-gradient(135deg,#7545a8,#43265d); color: #fff; border-color: #b88fdc; box-shadow: inset 3px 0 #e1c8ff,inset 0 1px #fff4,0 5px 14px #0006,0 0 18px #a060dd22}
+html.cmd16-enabled #cmdSidebar .cmd-nav span:first-child {width: 20px; flex-shrink: 0; display: inline-flex}
+html.cmd16-enabled #cmdSidebar .cmd-nav span:last-child {min-width: 0}
+html.cmd16-enabled #cmdSidebar details {border-color: #62456f}
+html.cmd16-enabled #cmdSidebar summary {color: #cbb2df; min-height: 32px; line-height: 1.6}
+html.cmd16-enabled .cmd-side-foot {border-color: #62456f; color: #c5b0d7; background: #160f1f; padding: 16px 20px}
+html.cmd16-enabled #cmdPrimary {background: transparent; box-shadow: none; backdrop-filter: none}
+html.cmd16-enabled #cmdSidebar #cmdLangPicker {border-color: #836197 !important; background: #21162d !important; color: #f3e9fa !important; border-radius: 10px !important; font-size: 14px !important}
+html.cmd16-enabled.cmd-console .host-block {background: linear-gradient(145deg,#2a2035,#19131f 85%) !important; border: 1px solid #604a73 !important; border-radius: 17px !important; box-shadow: inset 0 1px 1px #ffffff26,0 12px 26px #0005 !important}
+html.cmd16-enabled.cmd-console .host-block :is(input:not([type="checkbox"]):not([type="radio"]),select) {background: linear-gradient(180deg,#120d1a,#1b1325) !important; border-color: #795c91 !important; border-radius: 10px !important; color: #f5f1fc !important}
+html.cmd16-enabled.cmd-console .host-toolbar button {border-radius: 11px !important}
+html.cmd16-enabled.cmd-console #hpStart {background: linear-gradient(160deg,#287f66,#194739) !important; border-color: #72c9a9 !important}
+html.cmd16-enabled.cmd-console #hpStop {background: linear-gradient(160deg,#a43c5a,#582137) !important; border-color: #e890a3 !important}
+html.cmd16-enabled :is(.cmd-help,.cmd-result-row small,#cmdSelectedLabel,#cmdPaymentResult) {color: #bdaccd}
+html.cmd16-enabled .cmd-result-row {border-color: #51385f; padding: 16px 0}
+html.cmd16-enabled .cmd-result-row strong {color: #eadbf5; margin-bottom: 8px}
+html.cmd16-enabled :is(#cmdMenu,#cmdClose) {background: linear-gradient(145deg,#654086,#332044); border: 1px solid #a57dc4; color: #fff; border-radius: 10px; min-width: 44px; min-height: 44px; padding: 10px}
+html.cmd16-enabled #cmdClose {flex-shrink: 0}
+@media(max-width:980px) {
+ html.cmd16-enabled.cmd-console #cmdTopbar {padding-inline: 14px; gap: 10px}
+ html.cmd16-enabled.cmd-console main.wrap {padding: 18px 14px !important}
+ html.cmd16-enabled #cmdSidebar {width: min(310px,90vw)}
+ html.cmd16-enabled.cmd-menu-open #cmdOverlay {background: #06020cc7; backdrop-filter: blur(4px)}
+ html.cmd16-enabled #cmdCrumb {font-size: 14px}
+ html.cmd16-enabled #cmdTopbar .cmd-mode {font-size: 9px; padding: 6px}
+ html.cmd16-enabled.cmd-console .host-toolbar > * {min-width: 0; flex: 1 1 130px}
+ html.cmd16-enabled.cmd-console .host-block {padding: 18px !important}
+}

@@ -86,15 +86,15 @@ Object.assign(paths,{
 const menuIcons={
  accueil:"home",jeux:"games",infrastructure:"infra",panneau:"dashboard",
  machines:"machines",commande:"order",configurations:"settings",offres:"plans",
- aide:"help",admin:"settings",compte:"account"
+ aide:"help",admin:"settings",compte:"account",wallet:"card",rentals:"history",hostingPanel:"server",cmdMods:"mods",cmdGameSwitch:"refresh",cmdCustomerCenter:"help"
 };
 function actionIcon(label){
  const s=String(label||"").trim();
  const checks=[
  [/supprimer|effacer|retirer|delete/i,"trash"],
+ [/redémarrer|restart/i,"refresh"],
  [/démarrer|allumer|start\b/i,"power"],
  [/arrêter|stop\b|éteindre/i,"power"],
- [/redémarrer|restart/i,"refresh"],
  [/actualiser|recharger|rafraîchir|refresh/i,"refresh"],
  [/sauvegarde|backup/i,"save"],
  [/installer|importer|ajouter|créer|nouveau|préparer|commander/i,"plus"],
@@ -144,6 +144,19 @@ function makeToolSymbols(){
  }
 }
 function decoratePremium(){
+ const shellIcons={overview:"dashboard",settings:"settings",files:"file",backups:"save",schedule:"history",logs:"terminal",rentals:"history",wallet:"card",payments:"card"};
+ for(const button of document.querySelectorAll("#cmdPrimary button")){
+  const label=button.textContent;
+  const key=shellIcons[button.dataset.view]||actionIcon(label)||"settings";
+  const symbol=button.querySelector('span[aria-hidden="true"]')||button.querySelector("span:first-child");
+  if(symbol&&symbol.nextElementSibling){if(!symbol.querySelector("svg"))symbol.replaceChildren(makeIcon(key))}
+  else prefixIcon(button,key);
+ }
+ for(const [id,key] of [["cmdMenu","menu"],["cmdClose","close"]]){
+  const button=document.getElementById(id);
+  if(button&&!button.querySelector("svg"))button.replaceChildren(makeIcon(key));
+ }
+
  const menu=document.getElementById("menu");
  if(menu && !menu.querySelector("svg")){
   menu.replaceChildren(makeIcon("menu"));
