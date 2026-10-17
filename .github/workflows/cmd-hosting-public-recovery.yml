@@ -1,0 +1,37 @@
+name: CMD Hosting - Public frontend recovery (read only)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/recover-hosting-public.mjs"
+      - ".github/workflows/cmd-hosting-public-recovery.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cmd-hosting-public-frontend-snapshot
+  cancel-in-progress: true
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify snapshot safety controls
+        run: node scripts/recover-hosting-public.mjs --self-test
+      - name: Capture public pages/assets only (no login)
+        run: node scripts/recover-hosting-public.mjs
+      - name: Keep a temporary recovery artifact, not a Git commit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cmd-hosting-public-web-snapshot
+          path: recovery-public-only/
+          retention-days: 7
+          if-no-files-found: warn
