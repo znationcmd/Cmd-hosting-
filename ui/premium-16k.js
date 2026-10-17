@@ -101,7 +101,7 @@ function actionIcon(label){
  [/envoyer|uploader|upload/i,"upload"],
  [/rechercher|chercher|recherche/i,"search"],
  [/modifier|éditer|configurer|enregistrer|changer/i,"pencil"],
- [/connexion|connecter|lien|lier/i,"link"],
+ [/connexion|connecter|lien|lier|authentifier|s\u2019identifier|se connecter/i,"link"],
  [/facture|paiement|portefeuille|solde/i,"card"],
  [/profil|compte/i,"account"],
  [/joueur/i,"users"],
@@ -144,6 +144,11 @@ function decoratePremium(){
  for(const button of document.querySelectorAll("#nav button")){
   const id=button.dataset.page;
   const key=id?menuIcons[id]:(button.id==="siteRefresh"?"refresh":null);
+  if(key && button.firstChild?.nodeType===3){
+    const label=button.firstChild.nodeValue||"";
+    const clean=label.replace(/^\s*[⚙↻]\s*/u,"");
+    if(clean!==label)button.firstChild.nodeValue=clean;
+  }
   prefixIcon(button,key);
  }
  const selectors=[
