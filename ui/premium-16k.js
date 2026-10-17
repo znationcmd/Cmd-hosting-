@@ -47,10 +47,126 @@
    if(!key)continue;element.prepend(makeIcon(key));element.dataset.cmd16IconApplied="1";
   }
  }
- const init=()=>{decorate(document);const main=document.body;
+
+// Premium SVG pictograms for the actual CMD Hosting navigation and action menus.
+// Existing click handlers, data-* attributes and button types are left untouched.
+Object.assign(paths,{
+ home:'<path d="m3 10 9-7 9 7v10H3zM9 20v-7h6v7"/>',
+ games:'<rect x="3" y="7" width="18" height="12" rx="5"/><path d="M8 10v6M5 13h6M16 12h3M17.5 10.5v3"/>',
+ infra:'<path d="M12 3 2 8l10 5 10-5zM2 12l10 5 10-5M2 16l10 5 10-5"/>',
+ machines:'<rect x="4" y="3" width="16" height="15" rx="2"/><path d="M8 22h8M12 18v4M8 7h8M8 11h5"/>',
+ order:'<path d="M7 3h10v3h3v15H4V6h3zM7 3v4h10V3M9 12h6M12 9v6"/>',
+ plans:'<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 10h8M8 14h5M2 9v6M22 9v6"/>',
+ account:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>',
+ refresh:'<path d="M20 8a8 8 0 0 0-13-3L4 8M4 4v4h4M4 16a8 8 0 0 0 13 3l3-3M20 20v-4h-4"/>',
+ cloud:'<path d="M6 19h12a4 4 0 0 0 .4-8A6 6 0 0 0 7 9a5 5 0 0 0-1 10z"/>',
+ image:'<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.4"/><path d="m4 18 6-6 4 3 4-5 3 4"/>',
+ search:'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>',
+ check:'<path d="m4 12 5 5L20 6"/>',
+ alert:'<path d="m12 3 10 18H2zM12 9v5M12 17h.01"/>',
+ power:'<path d="M12 2v10M6 5a9 9 0 1 0 12 0"/>',
+ plus:'<path d="M12 4v16M4 12h16"/>',
+ upload:'<path d="M12 16V3m0 0-5 5m5-5 5 5M4 16v5h16v-5"/>',
+ download:'<path d="M12 3v13m0 0-5-5m5 5 5-5M4 19v2h16v-2"/>',
+ pencil:'<path d="m4 20 4-1 12-12-3-3L5 16zM15 6l3 3"/>',
+ trash:'<path d="M4 7h16M10 3h4M6 7l1 14h10l1-14M10 11v7M14 11v7"/>',
+ eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ filter:'<path d="M4 5h16M7 12h10M10 19h4"/>',
+ globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18M12 3c-5 5-5 13 0 18"/>',
+ history:'<path d="M3 11a9 9 0 1 1 3 7M3 4v7h7M12 7v6l4 2"/>',
+ shield:'<path d="M12 2 3 6v6c0 6 4 9 9 10 5-1 9-4 9-10V6zM9 12l2 2 4-4"/>',
+ link:'<path d="M10 13a5 5 0 0 0 7 .3l2-2a5 5 0 0 0-7-7l-2 2M14 11a5 5 0 0 0-7-.3l-2 2a5 5 0 0 0 7 7l2-2"/>',
+ menu:'<path d="M3 6h18M3 12h18M3 18h18"/>',
+ dollar:'<path d="M12 2v20M17 6c-1-2-9-3-10 2-1 4 10 3 10 8-1 5-9 5-11 2"/>',
+ file:'<path d="M5 3h10l5 5v13H5zM15 3v6h5M8 13h9M8 17h9"/>',
+ key:'<circle cx="8" cy="16" r="4"/><path d="m11 13 9-9M16 4h4v4"/>',
+ wrench:'<path d="M19 5a6 6 0 0 1-8 8L5 19a2 2 0 0 1-3-3l6-6a6 6 0 0 1 8-8l-4 4 4 4z"/>'
+});
+const menuIcons={
+ accueil:"home",jeux:"games",infrastructure:"infra",panneau:"dashboard",
+ machines:"machines",commande:"order",configurations:"settings",offres:"plans",
+ aide:"help",admin:"settings",compte:"account"
+};
+function actionIcon(label){
+ const s=String(label||"").trim();
+ const checks=[
+ [/supprimer|effacer|retirer|delete/i,"trash"],
+ [/démarrer|allumer|start\b/i,"power"],
+ [/arrêter|stop\b|éteindre/i,"power"],
+ [/redémarrer|restart/i,"refresh"],
+ [/actualiser|recharger|rafraîchir|refresh/i,"refresh"],
+ [/sauvegarde|backup/i,"save"],
+ [/installer|importer|ajouter|créer|nouveau|préparer|commander/i,"plus"],
+ [/télécharger|download/i,"download"],
+ [/envoyer|uploader|upload/i,"upload"],
+ [/rechercher|chercher|recherche/i,"search"],
+ [/modifier|éditer|configurer|enregistrer|changer/i,"pencil"],
+ [/connexion|connecter|lien|lier/i,"link"],
+ [/facture|paiement|portefeuille|solde/i,"card"],
+ [/profil|compte/i,"account"],
+ [/joueur/i,"users"],
+ [/jeu/i,"games"],
+ [/serveur/i,"server"],
+ [/mod\b/i,"mods"],
+ [/ouvrir|afficher|voir|consulter|détails/i,"eye"],
+ [/fermer|annuler/i,"power"],
+ [/aide|assistance|support/i,"help"]
+ ];
+ return checks.find(([regex])=>regex.test(s))?.[1]||null;
+}
+function prefixIcon(button,key){
+ if(!button||!key||!paths[key]||button.classList?.contains("cmd16-untouched"))return;
+ // Reactivate after an existing script rewrites the button label.
+ if(button.querySelector(":scope > .cmd16-icon"))return;
+ const already=button.querySelector("svg,img");
+ if(already)return;
+ const svg=makeIcon(key);
+ button.insertBefore(svg,button.firstChild);
+ button.classList.add("cmd16-leading-icon");
+ button.dataset.cmd16IconApplied="1";
+}
+function makeToolSymbols(){
+ for(const element of document.querySelectorAll(".tile > .symbol,.game > .symbol,.features .symbol,.infrastructure .symbol")){
+  if(element.querySelector("svg"))continue;
+  let heading=element.closest(".tile,.game")?.querySelector("h3")?.textContent||"";
+  let icon=actionIcon(heading)||(/indépendant|cloud/i.test(heading)?"cloud":"server");
+  element.replaceChildren(makeIcon(icon));
+  element.classList.add("cmd16-symbol");
+  element.setAttribute("aria-hidden","true");
+ }
+}
+function decoratePremium(){
+ const menu=document.getElementById("menu");
+ if(menu && !menu.querySelector("svg")){
+  menu.replaceChildren(makeIcon("menu"));
+  menu.classList.add("cmd16-leading-icon");
+ }
+ for(const button of document.querySelectorAll("#nav button")){
+  const id=button.dataset.page;
+  const key=id?menuIcons[id]:(button.id==="siteRefresh"?"refresh":null);
+  prefixIcon(button,key);
+ }
+ const selectors=[
+  ".actions button",".manage-actions button",".game-body button",
+  ".host-actions button",".host-toolbar button",".toolbar button",
+  ".savedcard button",".auth-panel button",".host-block button",
+  ".admin-cards button",".provider-nav button",".row button",
+  ".recap button","#cmdAiToggle",".cmd-ai-toggle",
+  "[data-go]","[data-cmd-icon]"
+ ];
+ for(const button of document.querySelectorAll(selectors.join(","))){
+  if(button.closest("#nav"))continue;
+  const forced=button.getAttribute("data-cmd-icon");
+  const icon=forced&&paths[forced]?forced:actionIcon(button.textContent);
+  prefixIcon(button,icon);
+ }
+ makeToolSymbols();
+}
+
+ const init=()=>{decorate(document);decoratePremium();const main=document.body;
   if(!main||!window.MutationObserver)return;
   let queued=false;
-  const observer=new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;decorate(document)})});
+  const observer=new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;decorate(document);decoratePremium()})});
   observer.observe(main,{childList:true,subtree:true});
  };
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
