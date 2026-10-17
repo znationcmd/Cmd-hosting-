@@ -20,6 +20,7 @@ jobs:
         run: |
           python3 -m http.server 8765 --directory web/public > /tmp/hosting-preview.log 2>&1 &
           node tests/hosting-responsive.cjs
+          node tests/hosting-uhd.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
