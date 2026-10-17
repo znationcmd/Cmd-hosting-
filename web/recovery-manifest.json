@@ -1,0 +1,166 @@
+{
+  "purpose": "unauthenticated-public-frontend-only",
+  "origin": "https://cmd-hosting-web-production.up.railway.app",
+  "exportedAt": "2026-10-17T03:26:54.289Z",
+  "backendSourceRecovered": false,
+  "secretsExported": false,
+  "loginAttempted": false,
+  "items": [
+    {
+      "path": "/",
+      "file": "index.html",
+      "bytes": 88842,
+      "sha256": "fc16dab243f2207fceb8117be69c30e85a5077c945d44f8d5a50f21b2ae4e5c3",
+      "contentType": "text/html; charset=utf-8",
+      "elapsedMs": 164
+    },
+    {
+      "path": "/hosting-ui.js",
+      "file": "hosting-ui.js",
+      "bytes": 12664,
+      "sha256": "b2802e7fbcf11ff9265f69f8cf8817a116026b8e636ddb53ce457d88e284f29c",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 24
+    },
+    {
+      "path": "/catalog-ui.js",
+      "file": "catalog-ui.js",
+      "bytes": 20711,
+      "sha256": "9ba89b3d23302fad958c51a4ee4d954c1f6746b693ce4063841eb91e9ab814b9",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 26
+    },
+    {
+      "path": "/catalog-compat.js",
+      "file": "catalog-compat.js",
+      "bytes": 25914,
+      "sha256": "cfadf9d8f1782d58f322646b067e801c5029998891f71dd9eb1ee9b13a230307",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 30
+    },
+    {
+      "path": "/console-ui.js",
+      "file": "console-ui.js",
+      "bytes": 20299,
+      "sha256": "4619af5dcca7d509bba98b363e10d7c3a1f67aa4e6524daf0a69e0a8bd304c4d",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 55
+    },
+    {
+      "path": "/rentals-ui.js",
+      "file": "rentals-ui.js",
+      "bytes": 4743,
+      "sha256": "9d1faca699f7ef3b840ddb3ea9c53882b61c9cd45344e4b104bf1af06eec6735",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 25
+    },
+    {
+      "path": "/wallet-ui.js",
+      "file": "wallet-ui.js",
+      "bytes": 8684,
+      "sha256": "7c417ebcedbbc1052fdb7e7b53b15b8e3472332c55dfd1e92701611ec891bdc0",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 59
+    },
+    {
+      "path": "/customer-ui.js",
+      "file": "customer-ui.js",
+      "bytes": 10176,
+      "sha256": "fde078badce3e769f523c67e4ad4245c3f6f7811d7daa6c0102ca01f7cc7b338",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 25
+    },
+    {
+      "path": "/game-install-ui.js",
+      "file": "game-install-ui.js",
+      "bytes": 5210,
+      "sha256": "fd32d7133f48f6d44482db8a68eeb3b8fb7dcceb6d535a95cc576b51045ef8c3",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 82
+    },
+    {
+      "path": "/game-switch-ui.js",
+      "file": "game-switch-ui.js",
+      "bytes": 8670,
+      "sha256": "92a33ed763199b2caee07ce30850e389030a4a4c087551087f26adb1b6b81947",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 27
+    },
+    {
+      "path": "/mod-v2-ui.js",
+      "file": "mod-v2-ui.js",
+      "bytes": 20596,
+      "sha256": "9632b2132ddcb6b6d086fe26256142192cbe7933a7fbd28f5924c40c0b4cfc9d",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 23
+    },
+    {
+      "path": "/mod-auto-detect.js",
+      "file": "mod-auto-detect.js",
+      "bytes": 3839,
+      "sha256": "7dde748da48e398efaaaf249615431c7fa20a6abe3529390861d179a64be47a4",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 27
+    },
+    {
+      "path": "/profile-donations.js",
+      "file": "profile-donations.js",
+      "bytes": 2586,
+      "sha256": "7adb6c98d6ba7ecf7baedc6349776cec45b896df08405ccca4be87414f766987",
+      "contentType": "application/javascript; charset=utf-8",
+      "elapsedMs": 22
+    },
+    {
+      "path": "/manifest.webmanifest",
+      "file": "manifest.webmanifest",
+      "bytes": 223,
+      "sha256": "9f9f7a9509d7c246f82f9339c82f7517d2f89f96a6d72214c5bcfdf8d64e2f9a",
+      "contentType": "application/manifest+json",
+      "elapsedMs": 57
+    },
+    {
+      "path": "/sw.js",
+      "file": "sw.js",
+      "bytes": 114,
+      "sha256": "f162bd819a54af2c584ca552cbae4186a65c7c77912f024ee34a543f245d86b4",
+      "contentType": "application/javascript",
+      "elapsedMs": 53
+    },
+    {
+      "path": "/brand-logo.webp",
+      "file": "brand-logo.webp",
+      "bytes": 2164,
+      "sha256": "fb7447aec060f02760f27425b1e1171f0f7c9ae7429580980b2cf1c8facf9290",
+      "contentType": "image/webp",
+      "elapsedMs": 26
+    }
+  ],
+  "errors": [
+    {
+      "path": "/customer-onboard-ui.js",
+      "error": "unavailable status=404 content-type=text/plain; charset=utf-8"
+    },
+    {
+      "path": "/mod-explorer.js",
+      "error": "unavailable status=404 content-type=text/plain; charset=utf-8"
+    },
+    {
+      "path": "/mod-manager.js",
+      "error": "unavailable status=404 content-type=text/plain; charset=utf-8"
+    },
+    {
+      "path": "/account-ui.js",
+      "error": "unavailable status=404 content-type=text/plain; charset=utf-8"
+    },
+    {
+      "path": "/favicon.ico",
+      "error": "unavailable status=404 content-type=text/plain; charset=utf-8"
+    }
+  ],
+  "summary": {
+    "downloaded": 16,
+    "missing": 5,
+    "totalBytes": 235435,
+    "siteHomeRetrieved": true
+  }
+}
