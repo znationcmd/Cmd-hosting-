@@ -1,230 +1,179 @@
-/* CMD Hosting Premium — 16K-ready vector-first design system.
-   Isolated to html.cmd16-enabled. Preserves existing layout and event listeners.
-   Resolution-independent SVG/CSS, not synthetic 16K bitmaps. */
+/* CMD Hosting • vector design system, 17 October 2026.
+   Presentation only. Existing IDs, routes and handlers remain authoritative. */
 html.cmd16-enabled {
-  --cmd16-bg:#0b0715;--cmd16-ink:#faf6ff;--cmd16-muted:#cdbada;
-  --cmd16-panel:#241630;--cmd16-line:#a276d6;--cmd16-hi:#d1a8ff;
-  --cmd16-glow:#a05ff0;--cmd16-shadow:#090414;
-  color-scheme:dark;
+  color-scheme: dark;
+  --cmd16-bg: #0d0a14;
+  --cmd16-ink: #f5f1fc;
+  --cmd16-muted: #bcb1ce;
+  --cmd16-line: #5b466f;
+  --cmd16-accent: #b99aef;
+  --cmd16-sidebar: 244px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  scroll-padding-top: 110px;
 }
-html.cmd16-enabled body{
-  color:var(--cmd16-ink);
-  background:radial-gradient(ellipse at 72% -12%,#703da33b,transparent 55%),
-    radial-gradient(ellipse at -20% 40%,#3b19573e,transparent 60%),
-    linear-gradient(145deg,#100a1e,#0b0715 65%,#07050e);
-  background-attachment:fixed;
+html.cmd16-enabled body {
+  margin: 0; min-height: 100dvh; color: var(--cmd16-ink);
+  background: radial-gradient(ellipse at 88% 0%, #632d9a24, transparent 52%), #0d0a14;
 }
-html.cmd16-enabled :is(header,.topbar,.top-bar,.navbar,.app-header,.site-header,[data-cmd16="header"]){
-  background:linear-gradient(145deg,#251632ed,#120b21f2);
-  border-color:#b17cdf65;
-  box-shadow:inset 0 1px 1px #ffffff45,0 8px 24px #0007;
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+html.cmd16-enabled *, html.cmd16-enabled *::before, html.cmd16-enabled *::after {box-sizing: border-box}
+html.cmd16-enabled :is(.hide, [hidden]) {display: none !important}
+html.cmd16-enabled .wrap {width: 100%; max-width: 1600px; padding-inline: clamp(16px, 3vw, 48px)}
+html.cmd16-enabled :is(.page, .section, .game-body, .field, .row > *, .order-cols > *, .form-grid > *, .host-toolbar > *, .host-actions > *) {min-width: 0}
+html.cmd16-enabled :is(h1,h2,h3,h4) {color: #f5f1fc; text-wrap: balance}
+html.cmd16-enabled :is(.lead,.sub,.small,.tile p,.game p,.savedcard p,.host-entry p,.account-note,.catalog-note) {color: var(--cmd16-muted); line-height: 1.7}
+html.cmd16-enabled :is(p,h1,h2,h3,h4,strong,label) {overflow-wrap: anywhere}
+html.cmd16-enabled .top {
+  position: sticky; top: 0; z-index: 90;
+  background: linear-gradient(180deg,#251b32f5,#17111ff5);
+  border-bottom: 1px solid #68517b; box-shadow: inset 0 1px #ffffff14, 0 8px 28px #0005;
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
 }
-html.cmd16-enabled :is(nav,aside,.sidebar,.side-menu,.side-nav,.menu-sidebar,[data-cmd16="navigation"]){
-  border-color:#995ebd80;
-  background:linear-gradient(150deg,#291b3bf4 0%,#150d23f5 70%,#100a1ef9);
-  box-shadow:inset -1px 0 #e7c4ff30,8px 0 34px #0009;
-  -webkit-backdrop-filter:blur(17px);backdrop-filter:blur(17px);
+html.cmd16-enabled .topin {min-height: 84px; flex-wrap: nowrap; gap: 16px}
+html.cmd16-enabled .brand {flex-shrink: 0; font-size: 19px; letter-spacing: -.025em}
+html.cmd16-enabled .brand b {color: #c6a3ff}
+html.cmd16-enabled .cmd-brand-logo {width: 48px; height: 48px; object-fit: contain; padding: 3px; border: 1px solid #78608b; border-radius: 13px; background: #1a1224; box-shadow: inset 0 1px #fff3, 0 4px 12px #0008}
+html.cmd16-enabled .top .links {gap: 8px; min-width: 0; scrollbar-width: thin; scrollbar-color: #70518e #17101f}
+html.cmd16-enabled .top .links button {justify-content: flex-start; text-align: left; width: 100%; padding: 12px 14px; font-size: 13px; white-space: normal; border-color: transparent; background: linear-gradient(160deg,#31243f,#211929); box-shadow: inset 0 1px #ffffff12, 0 2px 4px #0005}
+html.cmd16-enabled .top .links button.active, html.cmd16-enabled .top .links button[aria-current="page"] {background: linear-gradient(135deg,#7146aa,#432c64); border-color: #b28cdd; box-shadow: inset 3px 0 #d7bcff, inset 0 1px #ffffff40, 0 5px 12px #0006, 0 0 20px #a365f01a; color: white}
+html.cmd16-enabled #cmdLangPicker {width: 100%; max-width: 100% !important; min-height: 46px; margin-top: 8px}
+html.cmd16-enabled .menu {min-width: 46px; min-height: 46px}
+/* The original nav is repositioned, never cloned: listeners and IDs survive. */
+@media(min-width:881px) {
+  html.cmd16-enabled .top {-webkit-backdrop-filter: none; backdrop-filter: none}
+  html.cmd16-enabled body {padding-left: var(--cmd16-sidebar)}
+  html.cmd16-enabled .top .links {position: fixed; inset: 0 auto 0 0; width: var(--cmd16-sidebar); height: 100dvh; max-width: none; display: flex; flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; overflow-y: auto; padding: 26px 16px; background: linear-gradient(165deg,#241a30,#120e1a 80%); border-right: 1px solid #5b446e; box-shadow: inset -1px 0 #ffffff0a, 9px 0 30px #0003}
+  html.cmd16-enabled .top .links::before {content: "CMD / HOSTING"; font-size: 11px; font-weight: 800; letter-spacing: .16em; color: #d0b7ed; padding: 8px 12px 24px}
+  html.cmd16-enabled .top .links > * {flex-shrink: 0}
+  html.cmd16-enabled .top .menu {display: none}
 }
-html.cmd16-enabled :is(.card,.panel,.widget,.server-card,.game-card,.plan-card,.stat-card,.dashboard-card,.rental-card,.mod-card,.shop-card,[data-cmd16="card"]){
-  color:var(--cmd16-ink);
-  background:linear-gradient(155deg,#332340ee,#1b112aee 82%);
-  border:1px solid #ad81db83;border-radius:19px;
-  box-shadow:inset 0 2px 2px #ffffff28,inset 0 -4px 9px #0804128a,0 12px 27px #0009;
-  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+/* Shared raised controls. Each semantic variant keeps a distinct colour. */
+html.cmd16-enabled :is(button,.btn,.button,.ghost,[role="button"],input[type="submit"],input[type="button"]):not(.cmd16-untouched) {
+  --btn-top: #9866cf; --btn-bottom: #55307e; --btn-edge: #bd96e4;
+  color: #fff; font: inherit; font-size: 14px; font-weight: 700; line-height: 1.4;
+  min-height: 44px; max-width: 100%; padding: 11px 16px; border: 1px solid var(--btn-edge); border-radius: 11px;
+  background: linear-gradient(160deg,var(--btn-top),var(--btn-bottom));
+  box-shadow: inset 0 1px 1px #ffffff66, inset 0 -2px 2px #0003, 0 3px 0 #160c23, 0 6px 13px #0005;
+  text-shadow: 0 1px 2px #0005; cursor: pointer; white-space: normal; overflow-wrap: anywhere;
+  transition: transform .14s ease, filter .14s ease, box-shadow .14s ease;
 }
-html.cmd16-enabled :is(button,.btn,.button,[role="button"],input[type="submit"],input[type="button"],[data-cmd16="button"]):not(.cmd16-untouched){
-  color:#fff;border:1.3px solid #d2a8ff;border-radius:14px;
-  background:linear-gradient(155deg,#b783f2 0%,#824cc5 35%,#4b287b 72%,#271339);
-  box-shadow:inset 0 2px 3px #ffffff7a,inset 0 -5px 8px #0c061cc2,
-    0 5px 0 #170b25,0 11px 22px #020107ae;
-  text-shadow:0 1px 2px #10061d;
-  font-weight:700;
-  transition:transform .15s ease,filter .15s ease,box-shadow .15s ease;
+html.cmd16-enabled :is(.ghost,.secondary,[data-cmd16-variant="secondary"]):not(.cmd16-untouched) {--btn-top: #3e304e; --btn-bottom: #241b31; --btn-edge: #735b8d}
+html.cmd16-enabled :is(.success,[data-cmd16-variant="success"]):not(.cmd16-untouched) {--btn-top: #287f66; --btn-bottom: #194739; --btn-edge: #72c9a9}
+html.cmd16-enabled :is(.danger,[data-cmd16-variant="danger"]):not(.cmd16-untouched) {--btn-top: #a43c5a; --btn-bottom: #582137; --btn-edge: #e890a3}
+html.cmd16-enabled :is(.warning,[data-cmd16-variant="warning"]):not(.cmd16-untouched) {--btn-top: #80572a; --btn-bottom: #4c321c; --btn-edge: #dfb478}
+html.cmd16-enabled :is(button,.btn,.button,.ghost,[role="button"]):not(:disabled):not([aria-disabled="true"]):hover {filter: brightness(1.13); box-shadow: inset 0 1px #fff6, 0 3px 0 #160c23, 0 8px 20px #9b60dc30}
+html.cmd16-enabled :is(button,.btn,.button,.ghost,[role="button"]):not(:disabled):not([aria-disabled="true"]):active {transform: translateY(2px); box-shadow: inset 0 2px 6px #0007, 0 1px 0 #160c23}
+html.cmd16-enabled :is(button,.btn,.button,[role="button"]):is(:disabled,[aria-disabled="true"]) {opacity: .48; cursor: not-allowed; filter: saturate(.25); transform: none}
+html.cmd16-enabled :is(a,button,input,textarea,select,summary,[tabindex]):focus-visible {outline: 3px solid #92e5f5 !important; outline-offset: 4px}
+html.cmd16-enabled .cmd16-icon {display: inline-block; width: 20px; height: 20px; flex-shrink: 0; vertical-align: -.2em; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; pointer-events: none}
+html.cmd16-enabled .cmd16-leading-icon {display: inline-flex; align-items: center; justify-content: center; gap: 9px}
+html.cmd16-enabled .cmd16-symbol {display: inline-grid; place-items: center; width: 48px; height: 48px; flex-shrink: 0; color: #d9b9ff; border: 1px solid #806099; border-radius: 13px; background: linear-gradient(145deg,#503265,#261c34); box-shadow: inset 0 1px #fff4,0 4px 0 #130d1d,0 8px 16px #0006}
+html.cmd16-enabled .cmd16-symbol .cmd16-icon {width: 25px; height: 25px}
+/* Cards, account, order, server management and finance use the same surface. */
+html.cmd16-enabled :is(.tile,.game,.card,.panel,.widget,.server-card,.game-card,.mod-card,.stat-card,.rental-card,.savedcard,.auth-panel,.host-block,.host-gamepicker,.recap,.mock,.cmd-ai-panel,.status) {
+  color: var(--cmd16-ink); background: linear-gradient(145deg,#2a2035,#19131f 85%);
+  border: 1px solid #604a73; border-radius: 17px;
+  box-shadow: inset 0 1px 1px #ffffff26, inset 0 -2px 5px #0003, 0 12px 26px #0005;
 }
-html.cmd16-enabled :is(button,.btn,.button,[role="button"]):not([disabled]):not([aria-disabled="true"]):hover{
-  filter:brightness(1.12) saturate(1.1);
+html.cmd16-enabled :is(.tile,.savedcard,.auth-panel,.host-block,.host-gamepicker,.recap) {padding: clamp(18px,2vw,26px)}
+html.cmd16-enabled :is(.tile,.game,.savedcard,.host-entry):hover {border-color: #9470b6}
+html.cmd16-enabled :is(.features,.tiles,.games,.infrastructure,.auth-layout,.host-dashboard,.admin-cards,.row,.order-cols) {gap: 22px}
+html.cmd16-enabled :is(.host-entry,.metric,.host-meta > div,.note,.catalog-note,.account-note,.host-msg,.faq details) {background: linear-gradient(155deg,#241b30,#15101e); border: 1px solid #52405f; border-radius: 12px; box-shadow: inset 0 1px #ffffff16,0 5px 12px #0003; color: var(--cmd16-muted)}
+html.cmd16-enabled :is(.note,.host-msg,.catalog-note,.account-note) {padding: 16px 18px; line-height: 1.7; overflow-wrap: anywhere}
+html.cmd16-enabled .host-entry {padding: 18px; margin-block: 12px; overflow: visible; display: flow-root}
+html.cmd16-enabled .host-entry strong {font-size: 16px}
+html.cmd16-enabled :is(.metric strong,.host-meta b,.admin-figure,.notice-count) {color: #e0c7ff; font-variant-numeric: tabular-nums; letter-spacing: -.025em}
+html.cmd16-enabled .metric strong {font-size: 20px}
+html.cmd16-enabled :is(.metric small,.host-meta small) {color: #c4b8d3; font-size: 12px; line-height: 1.5}
+html.cmd16-enabled .game {padding: 0; overflow: hidden; gap: 0; align-items: stretch}
+html.cmd16-enabled .game-body {padding: 20px; gap: 12px}
+html.cmd16-enabled .real-game-image {width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; display: block; border-bottom: 1px solid #5b446c; background: #20162b}
+html.cmd16-enabled .host-game-art {border-color: #6f5186; object-fit: cover}
+html.cmd16-enabled .hero {gap: clamp(24px,4vw,60px); padding-block: 64px 48px}
+html.cmd16-enabled .hero h1 {font-size: clamp(40px,4.8vw,72px); letter-spacing: -.05em; line-height: 1.08}
+html.cmd16-enabled .hero h1 em {color: #c29bee; text-shadow: 0 0 32px #b077e829}
+html.cmd16-enabled :is(.eyebrow,.step) {color: #cca5f4; font-weight: 800}
+html.cmd16-enabled .section {padding-block: 36px}
+html.cmd16-enabled .section h2 {font-size: clamp(28px,3vw,42px); letter-spacing: -.035em}
+html.cmd16-enabled .mockhead, html.cmd16-enabled .cmd-ai-heading {background: linear-gradient(150deg,#392746,#23182e); border-bottom: 1px solid #614575; color: #eee2fa}
+html.cmd16-enabled .mockbody {background: #18111f}
+html.cmd16-enabled .empty {background: #1c1526; border: 1px dashed #6a507d}
+html.cmd16-enabled .empty p {color: var(--cmd16-muted)}
+html.cmd16-enabled :is(.label,.tag,.badge,.status-badge) {display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 6px 10px; border: 1px solid #826294; border-radius: 999px; background: #382747; color: #ead7ff; box-shadow: inset 0 1px #fff2; font-size: 12px; line-height: 1.4; white-space: normal}
+html.cmd16-enabled [data-cmd16-state="online"] {color: #a9f3d4; border-color: #43866b; background: #173e30}
+html.cmd16-enabled [data-cmd16-state="offline"] {color: #ead5de; border-color: #866474; background: #35232e}
+html.cmd16-enabled [data-cmd16-state="warning"] {color: #ffe0a6; border-color: #9a7947; background: #40301b}
+/* Native checkboxes, radios and upload controls keep their semantics and sizing. */
+html.cmd16-enabled :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]):not([type="submit"]):not([type="button"]),select,textarea) {
+  min-width: 0; max-width: 100%; min-height: 46px; padding: 11px 13px; color: #f5f1fc; font: inherit;
+  border: 1px solid #795c91; border-radius: 10px; background: linear-gradient(180deg,#120d1a,#1b1325); box-shadow: inset 0 2px 5px #0007;
 }
-html.cmd16-enabled :is(button,.btn,.button,[role="button"]):not([disabled]):active{
-  transform:translateY(3px);
-  box-shadow:inset 0 3px 10px #0b041b,0 2px 0 #170b25,0 4px 12px #0009;
+html.cmd16-enabled :is(.field input,.field select,.auth-panel input,.host-block textarea,.host-gamefields input,.host-gamefields select) {width: 100%}
+html.cmd16-enabled :is(input,textarea)::placeholder {color: #b1a2c0; opacity: 1}
+html.cmd16-enabled select option {color: #f5f1fc; background: #21182c}
+html.cmd16-enabled textarea {resize: vertical; line-height: 1.6}
+html.cmd16-enabled :is(input[type="checkbox"],input[type="radio"]) {width: 20px; height: 20px; min-height: 0; margin: 0; padding: 0; accent-color: #b481ee; vertical-align: middle; flex-shrink: 0}
+html.cmd16-enabled input[type="range"] {accent-color: #b481ee; width: 100%; min-height: 28px}
+html.cmd16-enabled input::file-selector-button {background: #46315e; color: #fff; padding: 9px 12px; border: 1px solid #9977bc; border-radius: 7px; margin-right: 12px; cursor: pointer}
+html.cmd16-enabled :is(.field label,.auth-panel label,.host-gamefields label) {color: #ded1eb; font-size: 14px; font-weight: 650}
+html.cmd16-enabled :is(.field,.auth-panel label) {gap: 8px}
+html.cmd16-enabled :is(.toolbar,.host-toolbar,.host-actions,.manage-actions,.actions) {gap: 12px; flex-wrap: wrap}
+html.cmd16-enabled .toolbar input {min-width: 0}
+html.cmd16-enabled .provider-nav {position: relative; top: auto; z-index: 2; gap: 10px; padding: 14px; background: #1e1629; border-color: #715288; box-shadow: inset 0 1px #fff2,0 6px 15px #0004}
+html.cmd16-enabled .provider-nav button {flex: 0 1 auto}
+html.cmd16-enabled :is(.recap p,.recap strong) {color: #e5d9ef; line-height: 1.6}
+html.cmd16-enabled #sumprice {font-size: 28px; color: #e0beff; font-variant-numeric: tabular-nums}
+html.cmd16-enabled .faq {background: transparent; border: 0; box-shadow: none}
+html.cmd16-enabled .faq details {padding: 18px 20px}
+html.cmd16-enabled .faq summary {min-height: 32px; color: #ecdef9}
+html.cmd16-enabled .faq p {color: var(--cmd16-muted)}
+html.cmd16-enabled table {border-collapse: separate; border-spacing: 0; width: 100%; font-size: 14px}
+html.cmd16-enabled :is(th,td) {text-align: start; padding: 14px 16px; border-bottom: 1px solid #4f3a61; vertical-align: middle; line-height: 1.5}
+html.cmd16-enabled th {color: #ead9fb; background: #30223e; font-weight: 700}
+html.cmd16-enabled tbody tr:nth-child(even) {background: #ffffff03}
+html.cmd16-enabled tbody tr:hover {background: #ad7ed512}
+html.cmd16-enabled .cmd16-table-scroll {max-width: 100%; overflow: auto; border: 1px solid #614775; border-radius: 12px}
+html.cmd16-enabled :is(pre,.console,.host-text) {max-width: 100%; overflow: auto; padding: 16px; border: 1px solid #5e4672; border-radius: 12px; background: #0d0912; color: #e2d7ec; font: 13px/1.7 ui-monospace,SFMono-Regular,Consolas,monospace; box-shadow: inset 0 2px 10px #0008}
+html.cmd16-enabled :is(dialog,[role="dialog"],.modal-content,.dropdown,.popover,[role="menu"]) {color: #f5edff; background: linear-gradient(145deg,#32233f,#1b1227); border: 1px solid #9773b5; border-radius: 16px; box-shadow: inset 0 1px #fff3,0 24px 70px #000b; max-width: calc(100vw - 32px); max-height: calc(100dvh - 48px); overflow: auto}
+html.cmd16-enabled dialog::backdrop {background: #05020bbf; backdrop-filter: blur(5px)}
+html.cmd16-enabled .cmd-ai-wrap {right: max(16px,env(safe-area-inset-right)); bottom: max(16px,env(safe-area-inset-bottom))}
+html.cmd16-enabled .cmd-ai-panel {height: min(560px,70dvh); overflow: hidden}
+html.cmd16-enabled .cmd-ai-bubble {color: #e5dbef; background: #332440}
+html.cmd16-enabled .cmd-ai-user {background: #563479}
+html.cmd16-enabled .cmd-ai-form {border-color: #584166}
+html.cmd16-enabled footer {border-color: #493654; color: #b3a3c2; padding-bottom: 96px}
+html.cmd16-enabled ::selection {background: #7848b1; color: #fff}
+@media(max-width:880px) {
+  html.cmd16-enabled .topin {min-height: 76px}
+  html.cmd16-enabled .top .menu {display: inline-flex; align-items: center; justify-content: center}
+  html.cmd16-enabled .top .links {display: none; position: absolute; top: 100%; left: 12px; right: 12px; max-height: calc(100dvh - 100px); overflow: auto; flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; padding: 16px 14px 24px; border: 1px solid #86649e; border-radius: 0 0 16px 16px; background: #21172dfc; box-shadow: 0 20px 40px #000b}
+  html.cmd16-enabled .top .links.open {display: flex}
+  html.cmd16-enabled .top .links > * {flex-shrink: 0}
+  html.cmd16-enabled .top .links button {min-height: 48px; font-size: 15px}
+  html.cmd16-enabled .hero {grid-template-columns: minmax(0,1fr); padding-block: 40px 24px}
+  html.cmd16-enabled .hero h1 {font-size: clamp(38px,7vw,58px)}
+  html.cmd16-enabled :is(.order-cols,.row) {grid-template-columns: minmax(0,1fr)}
 }
-html.cmd16-enabled :is(button,.btn,.button,[role="button"])[disabled],
-html.cmd16-enabled :is(button,.btn,.button,[role="button"])[aria-disabled="true"]{
-  opacity:.52;cursor:not-allowed;filter:grayscale(.5);
+@media(max-width:600px) {
+  html.cmd16-enabled .wrap {padding-inline: 16px}
+  html.cmd16-enabled .section {padding-block: 26px}
+  html.cmd16-enabled :is(.features,.tiles,.games,.infrastructure,.auth-layout,.host-dashboard,.admin-cards,.form-grid,.host-gamefields) {grid-template-columns: minmax(0,1fr)}
+  html.cmd16-enabled .wide {grid-column: auto}
+  html.cmd16-enabled .host-dashboard .host-block:nth-child(2) {grid-row: auto}
+  html.cmd16-enabled :is(input,select,textarea) {font-size: 16px !important}
+  html.cmd16-enabled :is(.tile,.auth-panel,.host-block,.host-gamepicker,.savedcard,.recap) {padding: 18px}
+  html.cmd16-enabled .metrics {grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px}
+  html.cmd16-enabled .metric {padding: 10px 8px}
+  html.cmd16-enabled .metric strong {font-size: 17px}
+  html.cmd16-enabled .host-meta {grid-template-columns: repeat(2,minmax(0,1fr))}
+  html.cmd16-enabled :is(.host-actions,.host-toolbar,.manage-actions) > button {flex: 1 1 130px}
+  html.cmd16-enabled .toolbar > :is(input,select) {width: 100%; flex: 1 1 100%}
+  html.cmd16-enabled .provider-nav button {flex: 1 1 120px; font-size: 13px}
+  html.cmd16-enabled .brand {font-size: 17px}
+  html.cmd16-enabled .cmd-brand-logo {width: 44px; height: 44px}
+  html.cmd16-enabled table {min-width: 520px}
+  html.cmd16-enabled .recap p {flex-wrap: wrap}
+  html.cmd16-enabled .cmd-ai-toggle {max-width: 220px}
 }
-html.cmd16-enabled :is(.danger,[data-variant="danger"],[data-cmd16-variant="danger"]){
-  --cmd16-line:#ff8198;
-}
-html.cmd16-enabled :is(.danger,[data-variant="danger"],[data-cmd16-variant="danger"]):is(button,.btn,[role="button"]){
-  background:linear-gradient(155deg,#e0638f,#903b61 65%,#43203a);
-  border-color:#ff9bb0;
-}
-html.cmd16-enabled :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),textarea,select,[data-cmd16="input"]){
-  color:var(--cmd16-ink);
-  background:linear-gradient(145deg,#1d122d,#120b21);
-  border:1px solid #a06bcf;border-radius:12px;
-  box-shadow:inset 0 2px 8px #0008,inset 0 1px #ffffff20;
-}
-html.cmd16-enabled :is(input,textarea)::placeholder{color:#bba6cd}
-html.cmd16-enabled :is(select,option){color:#fff;background-color:#20132f}
-html.cmd16-enabled :is([role="dialog"],dialog,.modal,.dropdown,.popover,[role="menu"],[data-cmd16="menu"]){
-  color:#fcf8ff;
-  background:linear-gradient(155deg,#352248fa,#160e26fa);
-  border:1.5px solid #bd90f4;border-radius:19px;
-  box-shadow:inset 0 2px 2px #ffffff43,0 21px 54px #000c,0 0 28px #8e50db55;
-  -webkit-backdrop-filter:blur(23px);backdrop-filter:blur(23px);
-}
-html.cmd16-enabled :is(nav,aside,.sidebar,.side-nav) a:not(.cmd16-untouched){
-  color:#f1e3ff;border-radius:11px;
-  transition:background .14s ease,box-shadow .14s ease;
-}
-html.cmd16-enabled :is(nav,aside,.sidebar,.side-nav) a:not(.cmd16-untouched):hover{
-  background:linear-gradient(145deg,#7b4fba75,#40275d66);
-  box-shadow:inset 0 1px #fff4,0 4px 13px #0004;
-}
-html.cmd16-enabled :is(nav,aside,.sidebar,.side-nav) a[aria-current="page"]{
-  background:linear-gradient(145deg,#9560da91,#40245b95);
-  border:1px solid #bf94ea8d;box-shadow:inset 0 2px #fff3,0 4px 12px #0005;
-}
-html.cmd16-enabled :is(table){border-collapse:separate;border-spacing:0}
-html.cmd16-enabled :is(table th,table td){border-bottom:1px solid #9867c03b}
-html.cmd16-enabled table tr:nth-child(even){background:#3e26512b}
-html.cmd16-enabled table th{background:#70489c29;color:#ecd8ff}
-html.cmd16-enabled :is(.badge,.status-badge,[data-cmd16="badge"]){
-  border:1px solid #a884df90;border-radius:999px;
-  box-shadow:inset 0 1px #ffffff42;
-}
-html.cmd16-enabled :is(img,.game-cover,.server-cover){image-rendering:auto}
-html.cmd16-enabled :is(button,a,input,select,textarea,[role="button"]):focus-visible{
-  outline:3px solid #abf1ff;outline-offset:3px;
-}
-html.cmd16-enabled .cmd16-icon{
-  width:1.15em;height:1.15em;display:inline-block;vertical-align:-.16em;
-  margin-inline-end:.45em;stroke:currentColor;fill:none;stroke-width:1.9;
-  stroke-linecap:round;stroke-linejoin:round;
-  filter:drop-shadow(0 1px 2px #170c2c);
-}
-html.cmd16-enabled .cmd16-only .cmd16-icon{margin:0}
-@media(max-width:760px){
-  html.cmd16-enabled :is(.card,.panel,.game-card,.server-card,.dashboard-card){border-radius:15px}
-  html.cmd16-enabled :is(button,.btn,[role="button"]){min-height:42px}
-  html.cmd16-enabled :is(table){display:block;overflow-x:auto}
-}
-@media(prefers-reduced-motion:reduce){
-  html.cmd16-enabled :is(button,.btn,[role="button"],a){transition:none}
-}
-
-
-/* ===============================================================
- CMD HOSTING 16K | FULL LIVE-DOM PREMIUM OVERRIDES — 2026-10-17
- Native-resolution-independent SVG & CSS, not a physical 16K bitmap
- =============================================================== */
-html.cmd16-enabled{--cmd16-surface:#20142e;--cmd16-surface-raised:#322045;--cmd16-purple:#ab77f4;--cmd16-highlight:#f1dfff;--cmd16-dark:#0a0514;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-html.cmd16-enabled body{overflow-x:clip;min-height:100dvh;background:radial-gradient(ellipse 85% 45% at 85% -15%,#8650d13d,transparent 70%),radial-gradient(ellipse 60% 50% at -12% 50%,#57288424,transparent 70%),linear-gradient(145deg,#100a1b,#0a0713 70%)!important}
-html.cmd16-enabled :is(.hide,[hidden]){display:none!important}
-html.cmd16-enabled .wrap{max-width:1480px}
-html.cmd16-enabled .top{z-index:90;background:linear-gradient(160deg,#291936fa,#120b22f5)!important;border-bottom:1px solid #ba8cef91;box-shadow:inset 0 1px #fff5,0 10px 30px #000a}
-html.cmd16-enabled .topin{min-height:82px;gap:17px}
-html.cmd16-enabled .brand{flex-shrink:0;font-size:20px;color:#f8eaff;letter-spacing:.025em;text-shadow:0 2px 7px #000a}
-html.cmd16-enabled .brand b,html.cmd16-enabled .hero h1 em{color:#d2aeff!important;text-shadow:0 0 21px #ad61ff74}
-html.cmd16-enabled .cmd-brand-logo{width:55px;height:55px;object-fit:contain;border:1px solid #ce99f06e;border-radius:16px;background:#1d102e;padding:4px;box-shadow:inset 0 2px #fff3,0 9px 20px #0008,0 0 16px #ab67ff34}
-html.cmd16-enabled .top .links{min-width:0;gap:5px;align-items:center;scrollbar-width:thin;scrollbar-color:#ad77e7 #150d25}
-html.cmd16-enabled .top .links button{flex-shrink:0;font-size:12px;padding:10px 10px;white-space:nowrap;min-height:43px;border-radius:12px!important}
-html.cmd16-enabled .top .links button.active,html.cmd16-enabled .top .links button[aria-current="page"]{border:1.5px solid #edd0ff!important;background:linear-gradient(155deg,#bc8af0,#8050bc 55%,#4c3076)!important;box-shadow:inset 0 2px 3px #fff9,inset 0 -3px 7px #200d38,0 5px 0 #0c0718,0 0 18px #ac64f47f!important}
-html.cmd16-enabled .top .links :is(button,select){height:auto}
-html.cmd16-enabled .menu{border:1.5px solid #d4a2ff!important;min-width:50px;min-height:48px;border-radius:14px!important}
-html.cmd16-enabled .page{min-width:0}
-html.cmd16-enabled .hero{position:relative;isolation:isolate;gap:clamp(24px,3.5vw,65px);padding:clamp(40px,6vw,90px) 0 50px}
-html.cmd16-enabled .hero::before{content:"";position:absolute;inset:8% -6% 10% 34%;z-index:-1;background:radial-gradient(ellipse,#7640c028,transparent 68%);pointer-events:none}
-html.cmd16-enabled .eyebrow,html.cmd16-enabled .step{color:#cfadff;font-weight:850;letter-spacing:.09em;text-shadow:0 1px 14px #a558ff66}
-html.cmd16-enabled h1,html.cmd16-enabled h2,html.cmd16-enabled h3{color:#f9f2ff;text-wrap:balance}
-html.cmd16-enabled .hero h1{letter-spacing:-.055em;line-height:1.06}
-html.cmd16-enabled :is(.lead,.sub,.small,.tile p,.game p,.savedcard p,.note,.catalog-note,.account-note){color:#d1c3de}
-html.cmd16-enabled .section{padding-block:clamp(26px,4vw,64px)}
-html.cmd16-enabled .section h2{letter-spacing:-.035em}
-html.cmd16-enabled :is(.mock,.tile,.game,.metric,.auth-panel,.savedcard,.host-block,.host-msg,.note,.catalog-note,.account-note,.recap,.faq,.cmd-ai-panel,.order-cols>.tile,.row>.tile,.host-meta>div,.host-gamepicker,.host-gamefields){
- color:#faf2ff;
- border:1.4px solid #ae83da94!important;
- background:linear-gradient(154deg,#30213fee 0%,#1b132dec 78%,#160f23ed)!important;
- border-radius:18px!important;
- box-shadow:inset 0 2px 2px #ffffff42,inset 0 -5px 12px #090416ab,0 13px 32px #0009!important;
- -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
-}
-html.cmd16-enabled :is(.mock,.auth-panel,.host-block,.game,.tile,.savedcard,.cmd-ai-panel){position:relative}
-html.cmd16-enabled :is(.tile,.game,.auth-panel,.savedcard,.host-block){transition:transform .19s ease,box-shadow .19s ease,border-color .19s ease}
-html.cmd16-enabled :is(.game,.tile,.savedcard,.host-block):hover{border-color:#d1a0f8!important;box-shadow:inset 0 2px 2px #ffffff61,0 18px 35px #000a,0 0 23px #8642ff31!important}
-html.cmd16-enabled .tile{padding:clamp(16px,2vw,26px)}
-html.cmd16-enabled .game{gap:15px;align-items:flex-start;overflow:hidden}
-html.cmd16-enabled .game img,.real-game-image{max-width:100%;border:1px solid #9c72cb7a;border-radius:12px;box-shadow:0 9px 18px #0008;object-fit:cover}
-html.cmd16-enabled .game-body{min-width:0;flex:1}
-html.cmd16-enabled .mock{overflow:hidden}
-html.cmd16-enabled .mockhead{background:linear-gradient(150deg,#47305c,#21142d)!important;color:#f2e6ff;border-bottom:1px solid #9863ca91}
-html.cmd16-enabled .mockbody{background:linear-gradient(145deg,#251a3bc9,#171123cc)}
-html.cmd16-enabled :is(.empty,.metric,.host-meta>div){background:linear-gradient(155deg,#352347e8,#160c24ee)!important;border:1px solid #906ab88a!important;border-radius:13px!important;box-shadow:inset 0 2px #fff3,0 6px 17px #0007}
-html.cmd16-enabled .metric strong,html.cmd16-enabled .host-meta b,html.cmd16-enabled .notice-count{color:#e5c7ff!important;text-shadow:0 0 11px #9d61ff71}
-html.cmd16-enabled .metrics{gap:12px}
-html.cmd16-enabled :is(.features,.games,.infrastructure,.auth-layout,.host-dashboard,.admin-cards){row-gap:20px;column-gap:20px}
-html.cmd16-enabled :is(.row,.order-cols){gap:20px}
-html.cmd16-enabled :is(.note,.catalog-note,.account-note,.host-msg){line-height:1.7;padding:16px 19px;overflow-wrap:anywhere}
-html.cmd16-enabled .savedcard{padding:20px}
-html.cmd16-enabled :is(.label,.tag,.status-badge,.badge){border:1px solid #c393eb91!important;border-radius:999px!important;background:linear-gradient(145deg,#5d3a788a,#241531dd)!important;color:#f0d9ff!important;box-shadow:inset 0 1px #ffffff60,0 4px 12px #0004!important}
-html.cmd16-enabled .tag{padding:7px 11px}
-html.cmd16-enabled :is(.host-toolbar,.host-actions,.toolbar,.manage-actions,.actions){gap:12px}
-html.cmd16-enabled :is(.field,.auth-panel label){gap:8px}
-html.cmd16-enabled :is(.field label,.auth-panel label){color:#e2d2f2;font-weight:760}
-html.cmd16-enabled :is(.field input,.field select,.auth-panel input,.toolbar input,.toolbar select,textarea,.host-block textarea,.host-block select,.host-block input){
- min-height:46px;background:linear-gradient(150deg,#1b102ae8,#10091fe8)!important;color:#f7eaff!important;border:1px solid #b186e0!important;
- box-shadow:inset 0 3px 10px #000a,inset 0 1px #fff2!important;border-radius:12px!important;
-}
-html.cmd16-enabled :is(.field input,.field select,.auth-panel input,.toolbar input,.toolbar select,textarea,.host-block textarea):focus{border-color:#e5bfff!important;outline:3px solid #c3a2ff55!important;outline-offset:1px}
-html.cmd16-enabled :is(.field input,.field select,.auth-panel input,.toolbar input,.toolbar select,textarea)::placeholder{color:#ac99bf}
-html.cmd16-enabled :is(button,.button,.ghost,.savedcard button,.host-actions button,.host-toolbar button):not([disabled]):not([aria-disabled="true"]){position:relative}
-html.cmd16-enabled :is(button,.button,.ghost,.savedcard button,.host-actions button,.host-toolbar button):not([disabled]):hover{filter:brightness(1.1)}
-html.cmd16-enabled :is(button,.button,.ghost,.savedcard button,.host-actions button,.host-toolbar button):not([disabled]):active{transform:translateY(3px)}
-html.cmd16-enabled :is(button,.button,.ghost,.savedcard button,.host-actions button,.host-toolbar button)[disabled]{cursor:not-allowed!important;opacity:.55;filter:saturate(.25)}
-html.cmd16-enabled :is(.danger,[data-action*="delete"],[data-action*="remove"],button[aria-label*="Supprimer"]){background:linear-gradient(160deg,#c76587,#833553 57%,#311829)!important;border-color:#fba4b3!important}
-html.cmd16-enabled :is(.host-block,.auth-panel,.recap){padding:clamp(16px,2vw,24px)}
-html.cmd16-enabled :is(.host-list,.host-game-list){min-width:0;overflow-x:auto}
-html.cmd16-enabled :is(.host-meta,.form-grid){gap:12px}
-html.cmd16-enabled :is(.host-editor,.host-block pre,pre,.console){max-width:100%;overflow-x:auto;border-radius:14px;background:#0b0714;color:#dccaf0}
-html.cmd16-enabled .cmd-ai-panel{background:linear-gradient(145deg,#302040fb,#140a22fa)!important;border:1px solid #bc8cf3!important;box-shadow:inset 0 2px #fff5,0 24px 56px #000c!important}
-html.cmd16-enabled .cmd-ai-toggle{border-radius:18px!important}
-html.cmd16-enabled :is(.faq,.recap){overflow-wrap:anywhere}
-html.cmd16-enabled ::selection{background:#8850d7;color:#fff}
-html.cmd16-enabled button .cmd16-icon{pointer-events:none;flex-shrink:0}
-html.cmd16-enabled .cmd16-leading-icon{display:inline-flex;align-items:center;gap:8px}
-html.cmd16-enabled .cmd16-leading-icon .cmd16-icon{margin:0}
-html.cmd16-enabled .cmd16-symbol{display:inline-grid;place-items:center;width:50px;height:50px;border:1px solid #c291f1;border-radius:14px;background:linear-gradient(145deg,#8454bd,#422463);box-shadow:inset 0 2px #fffb,0 5px 0 #160b28,0 9px 17px #0008}
-html.cmd16-enabled .cmd16-symbol .cmd16-icon{width:26px;height:26px;margin:0}
-html.cmd16-enabled .cmd16-status{position:relative}
-html.cmd16-enabled .cmd16-status[data-state="ready"]{color:#98f8d5}
-html.cmd16-enabled .cmd16-status[data-state="warning"]{color:#ffdb8b}
-@media(min-width:881px){html.cmd16-enabled .top .links{overflow-x:auto;max-width:calc(100vw - 300px);padding:5px 2px 12px}}
-@media(max-width:880px){
- html.cmd16-enabled .topin{min-height:75px}
- html.cmd16-enabled .top .links{display:none;position:absolute;left:12px;right:12px;top:calc(100% + 3px);max-height:calc(100dvh - 95px);overflow-y:auto;overflow-x:hidden;flex-direction:column;align-items:stretch;padding:18px 13px 25px!important;gap:11px;z-index:120;border:1.5px solid #b184e5;border-radius:19px;background:linear-gradient(155deg,#34224bf8,#130b23fc)!important;box-shadow:inset 0 2px #fff5,0 25px 50px #000d}
- html.cmd16-enabled .top .links.open{display:flex}
- html.cmd16-enabled .top .links button{width:100%;min-height:47px;text-align:left;font-size:14px;white-space:normal;display:inline-flex;align-items:center;gap:11px}
- html.cmd16-enabled .top .links select{max-width:100%!important;width:100%;min-height:47px}
- html.cmd16-enabled .top .menu{display:inline-flex;align-items:center;justify-content:center}
- html.cmd16-enabled .hero{gap:28px}
-}
-@media(max-width:600px){
- html.cmd16-enabled .wrap{padding-inline:14px}
- html.cmd16-enabled .section{padding-block:28px}
- html.cmd16-enabled .hero{padding:38px 0 26px}
- html.cmd16-enabled .hero h1{font-size:clamp(39px,11vw,56px);letter-spacing:-.045em}
- html.cmd16-enabled .features,html.cmd16-enabled .games,html.cmd16-enabled .infrastructure,html.cmd16-enabled .auth-layout,html.cmd16-enabled .host-dashboard{grid-template-columns:minmax(0,1fr)!important}
- html.cmd16-enabled :is(.actions,.toolbar,.manage-actions,.host-toolbar,.host-actions){gap:10px}
- html.cmd16-enabled .toolbar input{min-width:0;width:100%}
- html.cmd16-enabled :is(.game,.tile,.auth-panel,.host-block,.savedcard){padding:16px}
- html.cmd16-enabled .metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
- html.cmd16-enabled .metric{padding:10px}
- html.cmd16-enabled .host-meta{grid-template-columns:repeat(2,minmax(0,1fr))}
- html.cmd16-enabled .brand{font-size:17px}
- html.cmd16-enabled .cmd-brand-logo{width:47px;height:47px}
- html.cmd16-enabled :is(.button,.ghost,button){max-width:100%}
- html.cmd16-enabled #cmdLangPicker{min-width:100%}
-}
-@media(prefers-reduced-motion:reduce){html.cmd16-enabled :is(.tile,.game,.host-block,.savedcard,button){transition:none!important}html.cmd16-enabled *{scroll-behavior:auto!important}}
+@media(min-width:2400px) {html.cmd16-enabled {--cmd16-sidebar: 280px} html.cmd16-enabled .wrap {max-width: 1900px} html.cmd16-enabled .games {grid-template-columns: repeat(4,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce) {html.cmd16-enabled *,html.cmd16-enabled *::before,html.cmd16-enabled *::after {scroll-behavior: auto !important; transition: none !important; animation: none !important}}
+@media(forced-colors:active) {html.cmd16-enabled :is(button,.card,.tile,.host-block,input,select) {border: 1px solid ButtonText; box-shadow: none}}

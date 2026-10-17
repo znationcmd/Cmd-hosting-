@@ -14,7 +14,7 @@ test('styles require explicit opt-in and preserve reduced motion',()=>{
  assert.match(css,/html\.cmd16-enabled/);
  assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
  assert.match(css,/:focus-visible/);
- assert.match(css,/#d2a8ff/);
+ assert.match(css,/--cmd16-accent:/);
 });
 
 test('icons stay scalable and menu handlers are preserved',()=>{
@@ -27,3 +27,4 @@ test('icons stay scalable and menu handlers are preserved',()=>{
 test('no Railway secrets or external API calls are introduced',()=>{
  assert.doesNotMatch(js+"\n"+css,/fetch\(|XMLHttpRequest|localStorage\.setItem|DATABASE_URL|CMD_CONTROL_ADMIN_KEY/);
 });
+
