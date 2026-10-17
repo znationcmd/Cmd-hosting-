@@ -80,3 +80,7 @@ Le **panneau principal** CMD Hosting fonctionne encore depuis une fonction Railw
 - [Tests de non-régression du thème](tests/premium-ui.test.mjs)
 
 Les sources des services Mods API et Cloud Agents présentes dans ce dépôt correspondent au code actuellement déployé sur Railway au 16 octobre 2026. Les variantes **staged** sur Railway ne sont pas encore appliquées. Le dépôt est actuellement **public** ; ne jamais y enregistrer des secrets.
+
+### Snapshot frontal en lecture seule — 17 octobre 2026
+
+Une sauvegarde des pages et scripts **publics** est préparée par [le workflow GitHub Actions](.github/workflows/cmd-hosting-public-recovery.yml) et [le script de capture](scripts/recover-hosting-public.mjs). Elle ne remplace pas la fonction serveur Railway : l'original de `cmd-hosting-web` reste à récupérer via l'éditeur Function/Code. Ne pas relier encore la production à ce dépôt.
