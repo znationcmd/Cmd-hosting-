@@ -1,0 +1,54 @@
+name: CMD Hosting - real browser 3D check
+on:
+  push:
+    paths: [".github/workflows/cmd-hosting-live-3d-browser.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install browser driver
+        run: npm install --no-save --ignore-scripts --no-audit --no-fund playwright-core@1.58.2
+      - name: Verify production CSS effects on real DOM
+        shell: bash
+        run: |
+          cat > /tmp/check-cmd-hosting-3d.cjs <<'EOF'
+          const { chromium }=require(process.cwd()+'/node_modules/playwright-core');
+          (async()=>{
+           const browser=await chromium.launch({channel:'chrome',headless:true,args:['--no-sandbox']});
+           const page=await browser.newPage({viewport:{width:1440,height:900}});
+           const errors=[];
+           page.on('pageerror',error=>errors.push(error.message.slice(0,140)));
+           const response=await page.goto('https://cmd-hosting-web-production.up.railway.app/',{waitUntil:'domcontentloaded',timeout:55000});
+           if(!response?.ok())throw Error('Homepage did not return 200: '+response?.status());
+           await page.waitForFunction(()=>document.getElementById('cmd-hosting-blue-violet-live')&&document.documentElement.classList.contains('cmd16-enabled'),{timeout:20000});
+           const result=await page.evaluate(()=>{
+             const sheet=document.getElementById('cmd-hosting-blue-violet-live');
+             const cards=document.querySelectorAll('.hosting-3d-surface').length;
+             const button=document.createElement('button');
+             button.type='button';button.textContent='TEST GLOW';document.body.appendChild(button);
+             button.click();
+             const lit=button.classList.contains('hosting-click-lit');
+             button.remove();
+             return {
+               cssInjected:!!sheet,
+               blue:sheet.textContent.includes('#55c6ff'),
+               violet:sheet.textContent.includes('#a573ff'),
+               cards,
+               lit,
+               responsive:!!document.querySelector('meta[name="viewport"]')
+             };
+           });
+           console.log('PRODUCTION DOM CHECK',JSON.stringify({status:response.status(),result,pageErrors:errors.slice(0,5)}));
+           await browser.close();
+           if(!result.cssInjected||!result.blue||!result.violet||!result.cards||!result.lit||!result.responsive)throw Error('Live 3D DOM verification failed');
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          EOF
+          node /tmp/check-cmd-hosting-3d.cjs
