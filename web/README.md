@@ -25,3 +25,13 @@ La suite de tests `tests/premium-ui.test.mjs` + `tests/restored-web.test.mjs` a 
 **Aperçu gratuit :** la construction de l'aperçu GitHub Pages (`web/preview-build.mjs`) a passé les tests, mais l'étape de publication a échoué : GitHub Pages n'est pas activé et l'installation GitHub actuelle ne peut pas le créer ("Resource not accessible by integration"). L'option se trouve dans le dépôt GitHub, Settings → Pages → Build and deployment → Source = GitHub Actions. Ensuite, exécuter manuellement le workflow "CMD Hosting - 16K visual preview" ; il est désactivé sur push pour éviter des échecs répétés. Cet aperçu est statique, annonce clairement que les commandes sont désactivées et bloque les soumissions.
 
 **Production :** ne pas déclarer CMD Hosting visuellement changé sur Railway : `cmd-hosting-web` est toujours une fonction Railway distincte ; son source backend reste inaccessible au connecteur. La copie GitHub n'est **pas** un remplacement opérationnel du backend.
+
+## Dégradé bleu-violet et perspective 3D — 19 octobre 2026
+
+- Nouvelle couche CSS isolée : `web/public/ui/hosting-blue-violet-3d.css` (dégradés bleu → violet, cartes 3D, boutons à reflet et contours lumineux au clic).
+- Script ajouté : `web/public/ui/hosting-blue-violet-3d.js` (panneaux inclinables à la souris sur PC, activation volontaire du gyroscope sur iPhone/Android et demande d'autorisation iOS, accès aux appareils photo et micro **non** demandé).
+- Le script est chargé **après** le `premium-16k.js` d'origine. Il n'écrase aucun gestionnaire d'événement, aucune donnée et aucune route API ; le fond original de l'interface est préservé.
+- Responsive iPhone/Android/PC, réduction des animations via `prefers-reduced-motion`, traitements vectoriels nets à haute résolution (l'écran lui-même ne devient pas physiquement 16K).
+- Tests ajoutés dans `tests/premium-ui.test.mjs` et validés par `CMD Hosting - UI and migration safety checks`.
+
+**Déploiement :** ces changements concernent exclusivement le frontend reconstitué et suivi sur GitHub. En production, `cmd-hosting-web` reste une Railway Function Bun distincte, et le connecteur renvoie un code source illisible (deux caractères de remplacement) au 19 octobre. Ne **pas** utiliser `update_function_source_code` avec un fichier de remplacement incomplet, ni basculer le service sur cette copie statique : le backend de location/compte/serveurs serait perdu. La mise en production dépend d'une récupération fiable du vrai code source de la Function et de tests des API sur un environnement de préproduction avant la bascule.
