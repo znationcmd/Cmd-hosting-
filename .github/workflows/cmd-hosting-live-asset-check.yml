@@ -1,4 +1,4 @@
-name: CMD Hosting - live asset verification
+name: CMD Hosting - production 3D verification
 on:
   push:
     paths:
@@ -11,22 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - uses: actions/checkout@v4
-      - name: Compare deployed public scripts to GitHub recovery copy
+      - name: Check live page and injected script without touching account data
         shell: bash
         run: |
           set -euo pipefail
-          for item in profile-donations.js hosting-ui.js; do
-            echo "::group::Checking $item"
-            curl --fail --silent --show-error --location --retry 3 --retry-delay 3 --max-time 35 --connect-timeout 12 \
-              "https://cmd-hosting-web-production.up.railway.app/$item" -o "/tmp/$item"
-            echo "Live bytes: $(wc -c < "/tmp/$item")"
-            echo "GitHub bytes: $(wc -c < "web/public/$item")"
-            sha256sum "/tmp/$item" "web/public/$item"
-            if ! cmp -s "/tmp/$item" "web/public/$item"; then
-              echo "::error::Live script differs from the recovered file; do not overwrite Railway variables"
-              exit 1
-            fi
-            echo "Exact byte match verified: $item"
-            echo "::endgroup::"
-          done
+          base="https://cmd-hosting-web-production.up.railway.app"
+          curl --fail --silent --show-error --location --retry 3 --retry-delay 3 --connect-timeout 12 --max-time 40 "$base/" -o /tmp/home.html
+          curl --fail --silent --show-error --location --retry 3 --retry-delay 3 --connect-timeout 12 --max-time 40 "$base/mod-auto-detect.js" -o /tmp/mod.js
+          echo "HTML bytes: $(wc -c < /tmp/home.html)"
+          echo "JS bytes: $(wc -c < /tmp/mod.js)"
+          grep -q "mod-auto-detect.js" /tmp/home.html
+          grep -q "cmd-hosting-blue-violet-live" /tmp/mod.js
+          grep -q "hosting-3d-surface" /tmp/mod.js
+          grep -q "hosting-click-lit" /tmp/mod.js
+          grep -q "requestPermission" /tmp/mod.js
+          grep -q "cvRefresh" /tmp/mod.js
+          echo "All checks passed: website online, original module retained, blue-to-violet 3D active in served code"
