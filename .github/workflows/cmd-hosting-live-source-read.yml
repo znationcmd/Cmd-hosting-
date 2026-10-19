@@ -1,0 +1,37 @@
+name: CMD Hosting - read live public UI scripts
+on:
+  push:
+    paths:
+      - ".github/workflows/cmd-hosting-live-source-read.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Fetch only publicly available JavaScript assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for item in profile-donations.js hosting-ui.js; do
+            curl --fail --silent --show-error --location --retry 3 --retry-delay 2 --max-time 35 \
+              "https://cmd-hosting-web-production.up.railway.app/$item" -o "/tmp/$item"
+            head -c 8 "/tmp/$item" | od -An -tx1
+          done
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+          for name in ('profile-donations.js','hosting-ui.js'):
+              data=Path('/tmp/'+name).read_bytes()
+              if len(data)>100000: raise ValueError('Unexpectedly large public asset')
+              decoded=data.decode('utf-8')
+              if '<html' in decoded.lower()[:300]:
+                  raise ValueError('Expected a JavaScript asset, received an HTML page')
+              encoded=base64.b64encode(data).decode('ascii')
+              print('ASSET_START:'+name+':'+str(len(data)),flush=True)
+              for i in range(0,len(encoded),1500):
+                  print('ASSET_PART:'+name+':'+str(i//1500)+':'+encoded[i:i+1500],flush=True)
+              print('ASSET_END:'+name,flush=True)
+          PY
