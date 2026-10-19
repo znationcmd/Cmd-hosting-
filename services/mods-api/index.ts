@@ -114,6 +114,36 @@ const OTHER_GAME_MOD_PROVIDERS=[
  [/^Palworld$/i,"Palworld","local","https://www.pocketpair.jp/",0,"Support serveur du mod à vérifier; pas d'activation automatique."],
  [/^Core Keeper$/i,"Core Keeper","local","https://mod.io/",0,"Support mod et serveur à vérifier avec l'éditeur."],
  [/^Enshrouded$/i,"Enshrouded","publisher-review","https://enshrouded.com/",0,"Aucune intégration de mods serveur validée sans accord/support éditeur."]
+ [/^Farming Simulator 19$/i,"Farming Simulator 19","modhub-native","https://www.farming-simulator.com/mods.php",0,"ModHub FS19 natif, archives ZIP conformes à la version serveur."],
+ [/^Euro Truck Simulator 2$/i,"Euro Truck Simulator 2","local","https://eurotrucksimulator2.com/",0,"Synchronisation des mods multijoueur et serveur dédié à vérifier dans la configuration SCS."],
+ [/^American Truck Simulator$/i,"American Truck Simulator","local","https://americantrucksimulator.com/",0,"Compatibilité des mods sur serveur Convoy dédié à vérifier."],
+ [/^Assetto Corsa$/i,"Assetto Corsa","local","https://assettocorsa.gg/",0,"Fichiers piste/voiture validés et mêmes versions sur serveur et clients."],
+ [/^FiveM \(GTA V RP\)$|^FiveM \(Grand Theft Auto V\)$/i,"FiveM (GTA V RP)","local","https://docs.fivem.net/docs/scripting-manual/introduction/creating-your-first-script/",0,"Ressources FXServer dans resources/ avec fxmanifest.lua; permissions et serveur arrêté avant mise à jour."],
+ [/^RedM \(Red Dead RP\)$|^RedM \(Red Dead Redemption 2\)$/i,"RedM (Red Dead RP)","local","https://docs.fivem.net/docs/scripting-manual/introduction/creating-your-first-script/",0,"Ressources RedM autorisées dans resources/; dépendances et permissions à vérifier."],
+ [/^Minecraft: BungeeCord \(proxy multi-serveurs\)$/i,"Minecraft: BungeeCord (proxy multi-serveurs)","local","https://www.spigotmc.org/wiki/bungeecord-plugin-development/",0,"Plugins BungeeCord côté proxy; ne pas confondre avec les mods Java du serveur."],
+ [/^Garry.s Mod \(GMod\)$/i,"Garry's Mod (GMod)","steam","https://steamcommunity.com/app/4000/workshop/",4000,"Collections Workshop et addons pour GMod; vérifier le serveur dédié."],
+ [/^Barotrauma$/i,"Barotrauma","steam","https://steamcommunity.com/app/602960/workshop/",602960,"Modules Workshop et ordre de chargement côté serveur et clients."],
+ [/^Avorion$/i,"Avorion","steam","https://steamcommunity.com/app/445220/workshop/",445220,"Mods Workshop; synchronisation et scripts serveur à valider."],
+ [/^Killing Floor 2$/i,"Killing Floor 2","steam","https://steamcommunity.com/app/232090/workshop/",232090,"Modifications serveur Steam Workshop à vérifier pour la version du jeu."],
+ [/^Left 4 Dead 2$/i,"Left 4 Dead 2","steam","https://steamcommunity.com/app/550/workshop/",550,"Addons serveur et SourceMod; les mods purement client ne sont pas installés automatiquement."],
+ [/^Wurm Unlimited$/i,"Wurm Unlimited","steam","https://steamcommunity.com/app/366220/workshop/",366220,"Mods/Workshop à valider selon version et configuration du serveur."],
+ [/^Counter-Strike 2$/i,"Counter-Strike 2","local","https://www.sourcemm.net/",0,"Plugins serveur via MetaMod/SourceMod compatibles CS2; Steam Workshop non équivalent."],
+ [/^Counter-Strike: Source$|^Counter-Strike: Global Offensive \(CS:GO\)$|^Counter-Strike: Condition Zero$/i,"Counter-Strike: Source","local","https://www.sourcemod.net/",0,"SourceMod et plugins selon le moteur Source/GoldSrc du titre exact."],
+ [/^Team Fortress 2$/i,"Team Fortress 2","local","https://www.sourcemod.net/",0,"Plugins serveur SourceMod autorisés, pas de redistribution automatique de mods client."],
+ [/^Risk of Rain 2$/i,"Risk of Rain 2","thunderstore-guided","https://thunderstore.io/c/riskofrain2/",0,"Chargeur mod BepInEx/R2API et compatibilité multijoueur à vérifier."],
+ [/^Vintage Story$/i,"Vintage Story","native-guided","https://mods.vintagestory.at/",0,"Catalogue des mods Vintage Story; compatibilité serveur et version à contrôler."],
+ [/^Path of Titans$/i,"Path of Titans","native-guided","https://support.alderongames.com/",0,"Mods via l'écosystème officiel du jeu et options du serveur, API publique non présumée."],
+ [/^Eco$/i,"Eco","local","https://play.eco/",0,"Importer uniquement les mods Eco validés pour la version et le serveur."],
+ [/^Squad 44$/i,"Squad 44","native-guided","https://store.steampowered.com/app/736220/Squad_44/",0,"Vérifier le support de mods côté serveur et les règles éditeur avant activation."],
+ [/^Stationeers$/i,"Stationeers","local","https://store.steampowered.com/app/544550/Stationeers/",0,"Modules/Workshop compatibles serveur uniquement après revue."],
+ [/^Wreckfest$/i,"Wreckfest","local","https://store.steampowered.com/app/228380/Wreckfest/",0,"Mods/Workshop compatibles serveur dédiés à valider; pas d'activation automatique."],
+ [/^Empyrion: Galactic Survival$/i,"Empyrion: Galactic Survival","steam","https://steamcommunity.com/app/383120/workshop/",383120,"Workshop de scénarios et mods serveur selon configuration des mondes."],
+ [/^Necesse$/i,"Necesse","native-guided","https://store.steampowered.com/app/1169040/Necesse/",0,"Support serveur des mods à vérifier; les mods client ne sont pas automatiquement compatibles."],
+ [/^The Forest$/i,"The Forest","local","https://endnightgames.com/",0,"Mods non officiels: support dédié et compatibilité réseau à vérifier."],
+ [/^Abiotic Factor$/i,"Abiotic Factor","local","https://store.steampowered.com/app/427410/Abiotic_Factor/",0,"Compatibilité et chargeur communautaires à vérifier avant toute importation."],
+ [/^Atlas$/i,"Atlas","steam","https://steamcommunity.com/app/834910/workshop/",834910,"Mods Workshop avec précautions de compatibilité de cluster."],
+ [/^Mount and Blade 2: Bannerlord$/i,"Mount and Blade 2: Bannerlord","local","https://www.taleworlds.com/",0,"Modules de serveur multijoueur à vérifier; tous les mods solo ne conviennent pas."]
+
 ];
 function otherGameModProfile(game,platform="pc"){
  const title=String(game||"").trim().slice(0,120),p=String(platform||"pc").trim().toLowerCase().slice(0,25);
