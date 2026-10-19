@@ -87,6 +87,71 @@ function readiness() {
   };
 }
 
+
+/* CMD_HOSTING_OTHER_GAMES_MODS_V1: authorised catalogues, discovery only.
+ * Existing DayZ / Arma / ARK routes and module state remain unchanged.
+ * No remote installation, no downloads, no arbitrary provider URLs. */
+const OTHER_GAME_MOD_PROVIDERS=[
+ [/^Farming Simulator 25$/i,"FS25 ModHub","modhub-native","https://www.farming-simulator.com/mods.php",0,"Gestionnaire de mods du serveur dédié GIANTS; ZIP vérifiés et serveur arrêté."],
+ [/^Farming Simulator 22$/i,"FS22 ModHub","modhub-native","https://www.farming-simulator.com/mods.php",0,"Utiliser le gestionnaire ModHub natif de la version du serveur."],
+ [/^Minecraft:?(?: Java Edition| Java)$/i,"Minecraft Java","modrinth","https://modrinth.com/mods",0,"Contrôler version du jeu, chargeur, dépendances et compatibilité serveur."],
+ [/^Minecraft:?(?: Bedrock Edition| Bedrock)$/i,"Minecraft Bedrock","local","https://www.minecraft.net/marketplace",0,"Add-ons packs Bedrock seulement, pas de mods Java."],
+ [/^Factorio$/i,"Factorio","factorio","https://mods.factorio.com/",0,"Mod Portal officiel. Téléchargement authentifié seulement sur l'hôte autorisé."],
+ [/^Project Zomboid$/i,"Project Zomboid","steam","https://steamcommunity.com/app/108600/workshop/",108600,"Workshop et listes Mods/WorkshopItems du serveur."],
+ [/^Conan Exiles$/i,"Conan Exiles","steam","https://steamcommunity.com/app/440900/workshop/",440900,"Respecter l'ordre du fichier modlist.txt et les droits d'utilisation."],
+ [/^Space Engineers$/i,"Space Engineers","steam","https://steamcommunity.com/app/244850/workshop/",244850,"Workshop; vérifier le monde et ses dépendances."],
+ [/^Unturned$/i,"Unturned","steam","https://steamcommunity.com/app/304930/workshop/",304930,"Installation Workshop serveur et configuration associée."],
+ [/^Garry.s Mod$/i,"Garry's Mod","steam","https://steamcommunity.com/app/4000/workshop/",4000,"Ateliers et collections; vérifier les ressources serveur."],
+ [/^Squad$/i,"Squad","steam","https://steamcommunity.com/app/393380/workshop/",393380,"Contrôler que le serveur dédié accepte la version du mod."],
+ [/^Starbound$/i,"Starbound","steam","https://steamcommunity.com/app/211820/workshop/",211820,"Modifications serveur et dépendances Workshop à vérifier."],
+ [/^Don.t Starve Together$/i,"Don't Starve Together","steam","https://steamcommunity.com/app/322330/workshop/",322330,"Configurer dedicated_server_mods_setup.lua hors partie."],
+ [/^7 Days to Die$/i,"7 Days to Die","local","https://7daystodie.com/",0,"Modlets dans Mods/; sauvegarde du monde; attention au cross-play."],
+ [/^Valheim$/i,"Valheim","thunderstore-guided","https://thunderstore.io/c/valheim/",0,"Vérifier BepInEx et les dépendances sur serveur et clients."],
+ [/^Terraria$/i,"Terraria","local","https://store.steampowered.com/app/1281930/tModLoader/",0,"Mods uniquement si le serveur est installé avec tModLoader."],
+ [/^Rust$/i,"Rust","local","https://umod.org/games/rust",0,"Plugins uMod/Oxide seulement si le chargeur est présent."],
+ [/^Satisfactory$/i,"Satisfactory","local","https://ficsit.app/",0,"Contrôler SML, le jeu et le support serveur dédié."],
+ [/^V Rising$/i,"V Rising","thunderstore-guided","https://thunderstore.io/c/v-rising/",0,"Chargeur et version du serveur à contrôler avant import."],
+ [/^Palworld$/i,"Palworld","local","https://www.pocketpair.jp/",0,"Support serveur du mod à vérifier; pas d'activation automatique."],
+ [/^Core Keeper$/i,"Core Keeper","local","https://mod.io/",0,"Support mod et serveur à vérifier avec l'éditeur."],
+ [/^Enshrouded$/i,"Enshrouded","publisher-review","https://enshrouded.com/",0,"Aucune intégration de mods serveur validée sans accord/support éditeur."]
+];
+function otherGameModProfile(game,platform="pc"){
+ const title=String(game||"").trim().slice(0,120),p=String(platform||"pc").trim().toLowerCase().slice(0,25);
+ if(/^(?:DayZ|Arma(?:\s|$|-)|ARK(?::|\s|-))/i.test(title))return {game:title,platform:p,eligible:false,provider:"existing",reason:"existing_provider_retained",autoInstall:false};
+ const item=OTHER_GAME_MOD_PROVIDERS.find(r=>r[0].test(title));
+ if(!item)return {game:title,platform:p,eligible:false,provider:"review",reason:"publisher_mod_support_not_verified",autoInstall:false};
+ const allowed=["pc","windows","linux","steam"].includes(p);
+ return {game:title,platform:p,eligible:allowed,provider:item[2],officialName:item[1],officialUrl:item[3],
+  steamAppId:item[4]||null,note:item[5],autoInstall:false,installStatus:"requires_authorized_host_agent_and_backup",
+  reason:allowed?"catalogue_only":"console_mod_support_not_verified"};
+}
+async function otherGameModLookup(profile,q,page,origin){
+ if(!profile.eligible)return answer({error:profile.reason,profile},422,origin);
+ if(q.length>100)return answer({error:"invalid_search_query"},400,origin);
+ const empty=()=>answer({profile,items:[],mode:"open_official_manager_or_authorized_import",note:profile.note,autoInstall:false},200,origin);
+ if(!["modrinth","factorio","steam"].includes(profile.provider))return empty();
+ if(profile.provider==="modrinth"){
+  const facets=JSON.stringify([["project_type:mod"],["environment:server_only","environment:server_only_client_optional","environment:client_and_server","environment:dedicated_server_only"]]);
+  const opts=new URLSearchParams({query:q,limit:"20",offset:String((page-1)*20),facets});
+  const d=await upstream("https://api.modrinth.com/v2/search?"+opts,{headers:{"user-agent":"CMDHosting/1.0 mod-catalogue","accept":"application/json"}},"other:modrinth:"+opts);
+  const items=(d.hits||[]).map(x=>({id:x.project_id,title:x.title,description:String(x.description||"").slice(0,240),author:x.author,url:"https://modrinth.com/mod/"+encodeURIComponent(x.slug||x.project_id),downloads:x.downloads}));
+  return answer({profile,items,page,total:d.total_hits||0,mode:"catalogue",autoInstall:false},200,origin);
+ }
+ if(profile.provider==="factorio"){
+  const opts=new URLSearchParams({page:String(page),page_size:"50",sort:"updated_at",sort_order:"desc"});
+  const d=await upstream("https://mods.factorio.com/api/mods?"+opts,{headers:{"user-agent":"CMDHosting/1.0 mod-catalogue"}},"other:factorio:"+opts);
+  const hits=(d.results||[]).filter(x=>!q||(String(x.title||"")+" "+String(x.name||"")).toLowerCase().includes(q.toLowerCase())).slice(0,20);
+  return answer({profile,items:hits.map(x=>({id:x.name,title:x.title||x.name,description:x.summary,version:x.latest_release?.version||null,url:"https://mods.factorio.com/mod/"+encodeURIComponent(x.name)})),page,mode:"recent_page_filter",note:"Le filtre ne cherche que dans cette page de 50 mods; ouvrir le portail pour une recherche globale.",autoInstall:false},200,origin);
+ }
+ if(!Bun.env.STEAM_WEB_API_KEY)return answer({error:"steam_web_api_key_required",profile},503,origin);
+ if(!q)return answer({error:"search_query_required"},400,origin);
+ const appid=profile.steamAppId;
+ const opts=new URLSearchParams({key:Bun.env.STEAM_WEB_API_KEY,query_type:"12",appid:String(appid),creator_appid:String(appid),search_text:q,page:String(page),numperpage:"20",return_short_description:"true",return_previews:"true"});
+ const d=await upstream("https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/?"+opts,{},"other:steam:"+appid+":"+q.toLowerCase()+":"+page);
+ const items=(d.response?.publishedfiledetails||[]).filter(x=>Number(x.consumer_app_id||x.creator_app_id)===appid).map(x=>({id:String(x.publishedfileid),title:x.title,description:String(x.short_description||"").slice(0,240),url:"https://steamcommunity.com/sharedfiles/filedetails/?id="+encodeURIComponent(x.publishedfileid),imageUrl:x.preview_url||null}));
+ return answer({profile,items,page,total:d.response?.total||0,mode:"catalogue",autoInstall:false},200,origin);
+}
+
 /* CMD HOSTING PREPRODUCTION GAME BLUEPRINTS v1
  * Non-destructive, no false installations, independent of hardware.
  * Game list is mirrored from the existing 173-item CMD Hosting public catalogue.
@@ -278,6 +343,23 @@ async function handle(request) {
   if(path==="/api/preproduction/nintendo"||path==="/api/preproduction/status"||path==="/api/preproduction/games"||/^\/api\/preproduction\/games\/[0-9]+$/.test(path)){
     if(request.method!=="GET")return answer({error:"method_not_allowed"},405,origin);
     return cmdBlueprintsApi(path,query,origin);
+  }
+
+
+  if(["/api/mods/games","/api/mods/games/catalogue","/api/mods/games/profile","/api/mods/games/search"].includes(path)){
+    if(request.method!=="GET")return answer({error:"method_not_allowed"},405,origin);
+    const game=(query.get("game")||"").trim(),platform=query.get("platform")||"pc";
+    if(path==="/api/mods/games")return answer({version:"1.0",writesEnabled:false,excluded:["DayZ","Arma","ARK"],games:OTHER_GAME_MOD_PROVIDERS.map(x=>otherGameModProfile(x[1]))},200,origin);
+    if(path==="/api/mods/games/catalogue"){
+      try{const games=await cmdGameCatalog();return answer({total:games.length,mods:games.map(g=>({catalogId:g.id,catalogueName:g.name,gameKey:g.key,...otherGameModProfile(g.name,platform)})),writesEnabled:false},200,origin);}
+      catch{return answer({error:"catalogue_unavailable"},503,origin);}
+    }
+    if(!game||game.length>120)return answer({error:"game_required"},400,origin);
+    const profile=otherGameModProfile(game,platform);
+    if(path==="/api/mods/games/profile")return answer(profile,200,origin);
+    try{return await otherGameModLookup(profile,(query.get("q")||"").trim(),bounded(query.get("page"),1,1,100),origin);}
+    catch(e){if(["TimeoutError","AbortError"].includes(e?.name))return answer({error:"provider_timeout",profile},504,origin);
+      return answer({error:"provider_unavailable",providerStatus:e?.providerStatus||null,profile},502,origin);}
   }
 
   /*CMD_MODS_WINDOWS_AGENT_DISTRIBUTION_V2*/
