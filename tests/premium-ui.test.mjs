@@ -27,3 +27,31 @@ test('icons stay scalable and menu handlers are preserved',()=>{
 test('no Railway secrets or external API calls are introduced',()=>{
  assert.doesNotMatch(js+"\n"+css,/fetch\(|XMLHttpRequest|localStorage\.setItem|DATABASE_URL|CMD_CONTROL_ADMIN_KEY/);
 });
+
+const hostingCss=readFileSync(new URL('../web/public/ui/hosting-blue-violet-3d.css',import.meta.url),'utf8');
+const hostingJs=readFileSync(new URL('../web/public/ui/hosting-blue-violet-3d.js',import.meta.url),'utf8');
+const hostingIndex=readFileSync(new URL('../web/public/index.html',import.meta.url),'utf8');
+
+test('blue-violet 3D visual layer loads without replacing existing backend or handlers',()=>{
+ assert.doesNotThrow(()=>new Script(hostingJs,{filename:'web/public/ui/hosting-blue-violet-3d.js'}));
+ assert.match(hostingIndex,/src="\/ui\/premium-16k\.js"/);
+ assert.match(hostingIndex,/src="\/ui\/hosting-blue-violet-3d\.js\?v=20261019-1"/);
+ assert.match(hostingCss,/html\.cmd16-enabled/);
+ assert.match(hostingCss,/#55c6ff/);
+ assert.match(hostingCss,/#a573ff/);
+ assert.match(hostingCss,/linear-gradient\(120deg/);
+ assert.match(hostingCss,/hosting-click-lit/);
+ assert.match(hostingCss,/hosting-3d-surface/);
+ assert.match(hostingCss,/prefers-reduced-motion:reduce/);
+ assert.doesNotMatch(hostingJs,/fetch\(|XMLHttpRequest|localStorage\.setItem|stopPropagation\(|preventDefault\(|\.onclick\s*=/);
+});
+
+test('real 3D perspective reacts to pointer and opt-in phone orientation only',()=>{
+ assert.match(hostingJs,/pointermove/);
+ assert.match(hostingJs,/deviceorientation/);
+ assert.match(hostingJs,/requestPermission/);
+ assert.match(hostingJs,/aria-pressed/);
+ assert.match(hostingJs,/MutationObserver/);
+ assert.match(hostingJs,/capture:true/);
+ assert.match(hostingCss,/perspective\(1600px\)/);
+});
