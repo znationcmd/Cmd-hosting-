@@ -29,9 +29,11 @@ jobs:
            const response=await page.goto('https://cmd-hosting-web-production.up.railway.app/',{waitUntil:'domcontentloaded',timeout:55000});
            if(!response?.ok())throw Error('Homepage did not return 200: '+response?.status());
            await page.waitForFunction(()=>document.getElementById('cmd-hosting-blue-violet-live')&&document.documentElement.classList.contains('cmd16-enabled'),{timeout:20000});
+           await page.waitForFunction(()=>!!document.getElementById('cmdOtherGamesModsLink'),{timeout:20000});
            const result=await page.evaluate(()=>{
              const sheet=document.getElementById('cmd-hosting-blue-violet-live');
              const cards=document.querySelectorAll('.hosting-3d-surface').length;
+             const multigame=document.getElementById('cmdOtherGamesModsLink')?.getAttribute('href')==='https://cmd-hosting-mods-api-production.up.railway.app/mods/autres-jeux';
              const button=document.createElement('button');
              button.type='button';button.textContent='TEST GLOW';document.body.appendChild(button);
              button.click();
@@ -42,13 +44,14 @@ jobs:
                blue:sheet.textContent.includes('#55c6ff'),
                violet:sheet.textContent.includes('#a573ff'),
                cards,
+               multigame,
                lit,
                responsive:!!document.querySelector('meta[name="viewport"]')
              };
            });
            console.log('PRODUCTION DOM CHECK',JSON.stringify({status:response.status(),result,pageErrors:errors.slice(0,5)}));
            await browser.close();
-           if(!result.cssInjected||!result.blue||!result.violet||!result.cards||!result.lit||!result.responsive)throw Error('Live 3D DOM verification failed');
+           if(!result.cssInjected||!result.blue||!result.violet||!result.cards||!result.multigame||!result.lit||!result.responsive)throw Error('Live 3D DOM verification failed');
           })().catch(e=>{console.error(e);process.exitCode=1});
           EOF
           node /tmp/check-cmd-hosting-3d.cjs
