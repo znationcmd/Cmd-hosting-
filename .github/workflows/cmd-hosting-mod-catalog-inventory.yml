@@ -17,6 +17,7 @@ jobs:
           req=urllib.request.Request('https://cmd-hosting-mods-api-production.up.railway.app/api/mods/games/catalogue',headers={'User-Agent':'CMDHosting-Audit/1.0'})
           with urllib.request.urlopen(req,timeout=40) as r:data=json.load(r)
           print('COUNT',data['total'],'ELIGIBLE',sum(x['eligible'] for x in data['mods']))
+          print('PROVIDER_COUNTS', {k:sum(x['provider']==k for x in data['mods']) for k in set(x['provider'] for x in data['mods'])})
           for p in data['mods']:
             print('GAME',p['catalogId'],p['catalogueName'],'SOURCE',p['provider'],'ELIGIBLE',p['eligible'])
           PY
