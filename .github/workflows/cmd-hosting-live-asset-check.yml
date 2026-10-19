@@ -1,0 +1,32 @@
+name: CMD Hosting - live asset verification
+on:
+  push:
+    paths:
+      - ".github/workflows/cmd-hosting-live-asset-check.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare deployed public scripts to GitHub recovery copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          for item in profile-donations.js hosting-ui.js; do
+            echo "::group::Checking $item"
+            curl --fail --silent --show-error --location --retry 3 --retry-delay 3 --max-time 35 --connect-timeout 12 \
+              "https://cmd-hosting-web-production.up.railway.app/$item" -o "/tmp/$item"
+            echo "Live bytes: $(wc -c < "/tmp/$item")"
+            echo "GitHub bytes: $(wc -c < "web/public/$item")"
+            sha256sum "/tmp/$item" "web/public/$item"
+            if ! cmp -s "/tmp/$item" "web/public/$item"; then
+              echo "::error::Live script differs from the recovered file; do not overwrite Railway variables"
+              exit 1
+            fi
+            echo "Exact byte match verified: $item"
+            echo "::endgroup::"
+          done
