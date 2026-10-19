@@ -22,13 +22,13 @@ jobs:
             echo "$path => $code ($(wc -c < "$outfile") bytes)"
             test "$code" = "200" || exit 1
             if [[ "$path" == "/api/mods/games/catalogue" ]]; then
-              node -e "const a=require(process.argv[1]);if(a.total!==173||a.mods.length!==173)process.exit(1);console.log('Catalog games:',a.total,'eligible:',a.mods.filter(x=>x.eligible).length);" "$outfile"
+              node -e "const a=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));if(a.total!==173||a.mods.length!==173)process.exit(1);console.log('Catalog games:',a.total,'eligible:',a.mods.filter(x=>x.eligible).length);" "$outfile"
             fi
             if [[ "$path" == "/api/mods/games/profile?game=Farming%20Simulator%2025" ]]; then
-              node -e "const a=require(process.argv[1]);if(a.provider!=='modhub-native'||a.autoInstall!==false)process.exit(1);" "$outfile"
+              node -e "const a=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));if(a.provider!=='modhub-native'||a.autoInstall!==false)process.exit(1);" "$outfile"
             fi
             if [[ "$path" == "/api/mods/games/profile?game=DayZ" ]]; then
-              node -e "const a=require(process.argv[1]);if(a.provider!=='existing')process.exit(1);" "$outfile"
+              node -e "const a=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'));if(a.provider!=='existing')process.exit(1);" "$outfile"
             fi
             if [[ "$path" == "/mods/autres-jeux" ]]; then
               grep -q 'CMD Hosting · Mods multi-jeux' "$outfile"
