@@ -113,7 +113,7 @@ const OTHER_GAME_MOD_PROVIDERS=[
  [/^V Rising$/i,"V Rising","thunderstore-guided","https://thunderstore.io/c/v-rising/",0,"Chargeur et version du serveur à contrôler avant import."],
  [/^Palworld$/i,"Palworld","local","https://www.pocketpair.jp/",0,"Support serveur du mod à vérifier; pas d'activation automatique."],
  [/^Core Keeper$/i,"Core Keeper","local","https://mod.io/",0,"Support mod et serveur à vérifier avec l'éditeur."],
- [/^Enshrouded$/i,"Enshrouded","publisher-review","https://enshrouded.com/",0,"Aucune intégration de mods serveur validée sans accord/support éditeur."]
+ [/^Enshrouded$/i,"Enshrouded","publisher-review","https://enshrouded.com/",0,"Aucune intégration de mods serveur validée sans accord/support éditeur."],
  [/^Farming Simulator 19$/i,"Farming Simulator 19","modhub-native","https://www.farming-simulator.com/mods.php",0,"ModHub FS19 natif, archives ZIP conformes à la version serveur."],
  [/^Euro Truck Simulator 2$/i,"Euro Truck Simulator 2","local","https://eurotrucksimulator2.com/",0,"Synchronisation des mods multijoueur et serveur dédié à vérifier dans la configuration SCS."],
  [/^American Truck Simulator$/i,"American Truck Simulator","local","https://americantrucksimulator.com/",0,"Compatibilité des mods sur serveur Convoy dédié à vérifier."],
