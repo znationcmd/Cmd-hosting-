@@ -126,7 +126,7 @@ function render(){
  }
  grid.append(fragment);
 }
-fetch('/api/catalog',{cache:'no-store'}).then(r=>r.json()).then(d=>{records=(d.games||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'fr'));render()}).catch(()=>{grid.innerHTML='<p class="cmd-shop-empty">Catalogue momentanément indisponible. Actualise la page.</p>'});
+fetch('/api/catalog',{cache:'no-store'}).then(r=>r.json()).then(d=>{records=(d.games||[]).slice();if(!records.some(g=>String(g.name||'').toLowerCase().includes('anomalia')))records.push({id:'anomalia-cmd',name:'ANOMALIA PRIMEVAL OUTBOUNDUN',genre:'Survie · Zombies · Dinosaures · RP/PVP/PVE',platforms:['pc'],status:'review',cover:'/anomalia-promo-preview.jpg',storeUrl:'https://github.com/znationcmd/ANOMALIA-PRIMEVAL-OUTBOUNDUN'});records.sort((a,b)=>a.name.localeCompare(b.name,'fr'));render()}).catch(()=>{grid.innerHTML='<p class="cmd-shop-empty">Catalogue momentanément indisponible. Actualise la page.</p>'});
 if(window.location.hash==='#cmdCatalogSection')openShop();
 })();
 
