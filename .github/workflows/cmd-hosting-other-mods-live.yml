@@ -1,0 +1,37 @@
+name: CMD Hosting - multi-game mods live API tests
+on:
+  push:
+    paths: [".github/workflows/cmd-hosting-other-mods-live.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify deployed multi-game Mods API
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://cmd-hosting-mods-api-production.up.railway.app"
+          for path in "/api/mods/status" "/api/mods/games" "/api/mods/games/catalogue" "/api/mods/games/profile?game=Farming%20Simulator%2025" "/api/mods/games/search?game=Farming%20Simulator%2025&q=tractor" "/api/mods/games/profile?game=DayZ" "/mods/autres-jeux"; do
+            outfile="/tmp/response-$RANDOM"
+            code=$(curl --silent --show-error --location --retry 3 --retry-delay 3 --connect-timeout 12 --max-time 45 -o "$outfile" -w "%{http_code}" "$base$path")
+            echo "$path => $code ($(wc -c < "$outfile") bytes)"
+            test "$code" = "200" || exit 1
+            if [[ "$path" == "/api/mods/games/catalogue" ]]; then
+              node -e "const a=require(process.argv[1]);if(a.total!==173||a.mods.length!==173)process.exit(1);console.log('Catalog games:',a.total,'eligible:',a.mods.filter(x=>x.eligible).length);" "$outfile"
+            fi
+            if [[ "$path" == "/api/mods/games/profile?game=Farming%20Simulator%2025" ]]; then
+              node -e "const a=require(process.argv[1]);if(a.provider!=='modhub-native'||a.autoInstall!==false)process.exit(1);" "$outfile"
+            fi
+            if [[ "$path" == "/api/mods/games/profile?game=DayZ" ]]; then
+              node -e "const a=require(process.argv[1]);if(a.provider!=='existing')process.exit(1);" "$outfile"
+            fi
+            if [[ "$path" == "/mods/autres-jeux" ]]; then
+              grep -q 'CMD Hosting · Mods multi-jeux' "$outfile"
+            fi
+            rm -f "$outfile"
+          done
