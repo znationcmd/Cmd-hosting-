@@ -92,10 +92,10 @@ function readiness() {
  * Existing DayZ / Arma / ARK routes and module state remain unchanged.
  * No remote installation, no downloads, no arbitrary provider URLs. */
 const OTHER_GAME_MOD_PROVIDERS=[
- [/^Farming Simulator 25$/i,"FS25 ModHub","modhub-native","https://www.farming-simulator.com/mods.php",0,"Gestionnaire de mods du serveur dédié GIANTS; ZIP vérifiés et serveur arrêté."],
- [/^Farming Simulator 22$/i,"FS22 ModHub","modhub-native","https://www.farming-simulator.com/mods.php",0,"Utiliser le gestionnaire ModHub natif de la version du serveur."],
- [/^Minecraft:?(?: Java Edition| Java)$/i,"Minecraft Java","modrinth","https://modrinth.com/mods",0,"Contrôler version du jeu, chargeur, dépendances et compatibilité serveur."],
- [/^Minecraft:?(?: Bedrock Edition| Bedrock)$/i,"Minecraft Bedrock","local","https://www.minecraft.net/marketplace",0,"Add-ons packs Bedrock seulement, pas de mods Java."],
+ [/^Farming Simulator 25$/i,"Farming Simulator 25","modhub-native","https://www.farming-simulator.com/mods.php",0,"Gestionnaire de mods du serveur dédié GIANTS; ZIP vérifiés et serveur arrêté."],
+ [/^Farming Simulator 22$/i,"Farming Simulator 22","modhub-native","https://www.farming-simulator.com/mods.php",0,"Utiliser le gestionnaire ModHub natif de la version du serveur."],
+ [/^Minecraft:?(?: Java Edition| Java)$/i,"Minecraft: Java Edition","modrinth","https://modrinth.com/mods",0,"Contrôler version du jeu, chargeur, dépendances et compatibilité serveur."],
+ [/^Minecraft:?(?: Bedrock Edition| Bedrock)$/i,"Minecraft: Bedrock Edition","local","https://www.minecraft.net/marketplace",0,"Add-ons packs Bedrock seulement, pas de mods Java."],
  [/^Factorio$/i,"Factorio","factorio","https://mods.factorio.com/",0,"Mod Portal officiel. Téléchargement authentifié seulement sur l'hôte autorisé."],
  [/^Project Zomboid$/i,"Project Zomboid","steam","https://steamcommunity.com/app/108600/workshop/",108600,"Workshop et listes Mods/WorkshopItems du serveur."],
  [/^Conan Exiles$/i,"Conan Exiles","steam","https://steamcommunity.com/app/440900/workshop/",440900,"Respecter l'ordre du fichier modlist.txt et les droits d'utilisation."],
@@ -120,7 +120,7 @@ function otherGameModProfile(game,platform="pc"){
  if(/^(?:DayZ|Arma(?:\s|$|-)|ARK(?::|\s|-))/i.test(title))return {game:title,platform:p,eligible:false,provider:"existing",reason:"existing_provider_retained",autoInstall:false};
  const item=OTHER_GAME_MOD_PROVIDERS.find(r=>r[0].test(title));
  if(!item)return {game:title,platform:p,eligible:false,provider:"review",reason:"publisher_mod_support_not_verified",autoInstall:false};
- const allowed=["pc","windows","linux","steam"].includes(p);
+ const allowed=["pc","windows","linux","steam"].includes(p)&&item[2]!=="publisher-review";
  return {game:title,platform:p,eligible:allowed,provider:item[2],officialName:item[1],officialUrl:item[3],
   steamAppId:item[4]||null,note:item[5],autoInstall:false,installStatus:"requires_authorized_host_agent_and_backup",
   reason:allowed?"catalogue_only":"console_mod_support_not_verified"};
