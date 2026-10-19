@@ -1,0 +1,170 @@
+/* CMD Hosting — blue > violet, real interactive CSS 3D.
+   Vector/resolution-independent, isolated to the existing cmd16-enabled UI.
+   Does not touch existing forms, APIs, server actions or background media. */
+html.cmd16-enabled{
+  --hosting-sky:#55c6ff;
+  --hosting-violet:#a573ff;
+  --hosting-dark:#080e25;
+  --hosting-bevel:inset 0 2px 1px rgba(255,255,255,.29),inset 0 -4px 8px rgba(2,5,27,.61);
+  --hosting-depth:0 10px 25px rgba(0,3,19,.67),0 3px 0 rgba(3,6,26,.8);
+  --hosting-glow:0 0 0 1px rgba(162,157,255,.95),0 0 18px rgba(80,155,255,.66),0 0 36px rgba(164,105,255,.45);
+  --hosting-view-x:0deg;
+  --hosting-view-y:0deg;
+  --hosting-bg-x:0px;
+  --hosting-bg-y:0px;
+  --cmd16-bg:#080e25;--cmd16-ink:#edf5ff;--cmd16-muted:#afc5ea;
+  --cmd16-panel:#18234a;--cmd16-line:#8894f8;--cmd16-hi:#a9d8ff;
+  --cmd16-glow:#796df4;--cmd16-shadow:#05071b;
+  --cmd16-purple:#9d76f4;--cmd16-highlight:#cae4ff;--cmd16-dark:#080c22;
+}
+html.cmd16-enabled body{
+  color:#edf5ff!important;
+  background:radial-gradient(ellipse 80% 55% at 5% 6%,rgba(36,116,215,.37),transparent 70%),
+    radial-gradient(ellipse 80% 60% at 90% 29%,rgba(129,62,220,.36),transparent 70%),
+    linear-gradient(120deg,#081326 0%,#132b50 34%,#2a2058 69%,#0d0e2d 100%)!important;
+  background-attachment:fixed!important;
+}
+html.cmd16-enabled .top,html.cmd16-enabled :is(header.top,.topbar,.navbar,.app-header,.site-header){
+  background:linear-gradient(114deg,#163a65f5 0%,#1d2a57f5 51%,#3d256cf4 100%)!important;
+  border-bottom:1px solid rgba(152,184,255,.75)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.25),0 10px 31px rgba(2,4,19,.65),0 0 15px rgba(137,109,255,.18)!important;
+  backdrop-filter:blur(18px);
+}
+html.cmd16-enabled :is(nav,aside,.sidebar,.side-menu,.side-nav,.menu-sidebar,[data-cmd16="navigation"]){
+  background:linear-gradient(160deg,rgba(28,55,91,.97),rgba(27,34,74,.97) 52%,rgba(43,27,79,.98))!important;
+  border-color:rgba(135,172,255,.45)!important;
+}
+html.cmd16-enabled .brand b,html.cmd16-enabled .hero h1 em{
+  color:#9bdfff!important;text-shadow:0 0 14px rgba(74,171,255,.65),0 0 24px rgba(160,90,255,.36)!important;
+}
+html.cmd16-enabled .cmd-brand-logo{
+  background:linear-gradient(145deg,#165e9b,#63349b)!important;
+  border-color:rgba(151,181,255,.75)!important;
+  box-shadow:var(--hosting-bevel),0 8px 19px rgba(0,0,0,.48),0 0 17px rgba(108,146,255,.44)!important;
+}
+html.cmd16-enabled :is(.eyebrow,.step){color:#a5dbff!important;text-shadow:0 0 13px rgba(83,161,255,.55)!important}
+html.cmd16-enabled :is(h1,h2,h3){color:#f3f6ff!important}
+html.cmd16-enabled :is(.lead,.sub,.small,.tile p,.game p,.savedcard p,.note,.catalog-note,.account-note){color:#c0cee9!important}
+html.cmd16-enabled :is(.mock,.tile,.game,.metric,.auth-panel,.savedcard,.host-block,.host-msg,.note,.catalog-note,.account-note,.recap,.faq details,.cmd-ai-panel,.order-cols>.tile,.row>.tile,.host-meta>div,.host-gamepicker,.host-gamefields,.card,.panel,.server-card,.dashboard-card,.status,.host-entry){
+  color:#f0f5ff!important;
+  background:linear-gradient(145deg,rgba(23,57,96,.96),rgba(28,37,84,.98) 54%,rgba(56,34,95,.95))!important;
+  border:1.3px solid rgba(133,165,255,.64)!important;
+  box-shadow:var(--hosting-bevel),0 12px 30px rgba(0,3,18,.62),0 0 14px rgba(107,112,255,.13)!important;
+  border-radius:clamp(12px,1.1vw,19px)!important;
+}
+html.cmd16-enabled :is(.game,.tile,.auth-panel,.host-block,.savedcard,.metric,.host-meta>div):hover{
+  border-color:rgba(168,194,255,.94)!important;
+  box-shadow:var(--hosting-bevel),0 15px 33px rgba(0,4,19,.73),0 0 23px rgba(139,110,255,.29)!important;
+}
+html.cmd16-enabled .mockhead{
+  background:linear-gradient(120deg,#1b5688,#473078)!important;
+  color:#edf7ff!important;border-color:rgba(122,168,255,.46)!important;
+}
+html.cmd16-enabled .mockbody{background:linear-gradient(140deg,rgba(21,54,96,.84),rgba(44,30,82,.82))!important}
+html.cmd16-enabled :is(.empty,.metric,.host-meta>div){
+  background:linear-gradient(145deg,#214169,#2b2153)!important;
+  border-color:rgba(133,165,255,.64)!important;
+}
+html.cmd16-enabled :is(.metric strong,.host-meta b,.notice-count){
+  color:#a8dfff!important;text-shadow:0 0 12px rgba(91,165,255,.55)!important;
+}
+html.cmd16-enabled :is(.tag,.label,.status-badge,.badge){
+  background:linear-gradient(140deg,rgba(39,100,166,.63),rgba(93,52,148,.64))!important;
+  color:#e7ecff!important;border:1px solid rgba(171,161,255,.68)!important;
+}
+html.cmd16-enabled :is(button,.btn,.button,[role="button"],input[type="submit"],input[type="button"]):not(.cmd16-untouched):not(:disabled){
+  position:relative;
+  border:1.5px solid rgba(172,190,255,.85)!important;
+  border-radius:13px!important;
+  background:linear-gradient(155deg,#8fdcff 0%,#368cdb 28%,#5656b7 65%,#6d348e 100%)!important;
+  color:#f9fbff!important;
+  box-shadow:var(--hosting-bevel),var(--hosting-depth)!important;
+  text-shadow:0 1px 2px rgba(2,3,33,.56);
+  transition:box-shadow .22s,filter .22s,transform .18s,border-color .22s!important;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+html.cmd16-enabled :is(.ghost,.danger,button.danger,[data-variant="danger"]):not(.cmd16-untouched){
+  background:linear-gradient(160deg,#704c99,#423364 65%,#2a2448)!important;
+}
+html.cmd16-enabled :is(button,.btn,.button,[role="button"]):not(.cmd16-untouched):not(:disabled)::before{
+  content:"";position:absolute;inset:1px 1px auto;height:43%;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(155deg,rgba(255,255,255,.32),rgba(255,255,255,.045) 72%,transparent);
+}
+html.cmd16-enabled :is(button,.btn,.button,[role="button"],input[type="submit"],input[type="button"]):not(:disabled):where(:hover,:focus-visible,.hosting-click-lit){
+  border-color:#c7ddff!important;
+  box-shadow:var(--hosting-bevel),0 11px 22px rgba(0,3,18,.59),var(--hosting-glow)!important;
+  filter:brightness(1.10);
+}
+html.cmd16-enabled :is(button,.btn,.button,[role="button"]):not(:disabled):active{
+  transform:translateY(2px) scale(.995);
+  box-shadow:inset 0 4px 9px rgba(0,2,23,.65),0 0 17px rgba(112,148,255,.52)!important;
+}
+html.cmd16-enabled :is(.links button,.top .links button,#nav button):where(.active,[aria-current="page"],.hosting-click-lit){
+  background:linear-gradient(140deg,#2477c6,#484cad 55%,#733eac)!important;
+  box-shadow:var(--hosting-bevel),var(--hosting-glow)!important;
+  border-color:#c4dbff!important;
+}
+html.cmd16-enabled :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),textarea,select){
+  background:linear-gradient(140deg,rgba(14,34,62,.96),rgba(37,29,77,.97))!important;
+  border-color:rgba(137,159,244,.69)!important;
+  color:#f2f5ff!important;box-shadow:inset 0 3px 9px rgba(0,4,17,.67),inset 0 1px rgba(255,255,255,.07)!important;
+}
+html.cmd16-enabled :is(input,textarea,select):focus-visible{
+  outline:2px solid #8dd9ff!important;outline-offset:2px;
+  box-shadow:inset 0 3px 8px rgba(0,2,21,.57),0 0 0 3px rgba(139,151,255,.26),0 0 19px rgba(125,147,255,.51)!important;
+}
+html.cmd16-enabled :is(dialog,[role="dialog"],.modal,.dropdown,.popover){
+  background:linear-gradient(155deg,#23466ff9,#302659f9 65%,#221d46f9)!important;
+  border-color:rgba(178,181,255,.78)!important;
+  box-shadow:0 23px 52px rgba(0,2,19,.83),0 0 27px rgba(139,114,255,.3)!important;
+}
+html.cmd16-enabled :is(table th,table td){border-color:rgba(143,164,255,.24)!important}
+html.cmd16-enabled table th{color:#d4e5ff!important;background:rgba(26,68,117,.44)!important}
+html.cmd16-enabled .cmd16-icon{filter:drop-shadow(0 1px 2px #0a1239)}
+html.cmd16-enabled .page{perspective:1800px;perspective-origin:50% 40%}
+html.cmd16-enabled .hosting-3d-surface{
+  --hosting-card-x:var(--hosting-view-x);
+  --hosting-card-y:var(--hosting-view-y);
+  transform:perspective(1600px) rotateX(var(--hosting-card-x)) rotateY(var(--hosting-card-y));
+  transform-origin:center;transform-style:preserve-3d;backface-visibility:hidden;
+  transition:transform .3s cubic-bezier(.19,.9,.26,1),box-shadow .22s!important;
+}
+html.cmd16-enabled .hosting-3d-surface.hosting-3d-hover{
+  transition:transform 95ms linear,box-shadow .22s!important;
+  border-color:rgba(175,199,255,.86)!important;
+  box-shadow:var(--hosting-bevel),0 18px 37px rgba(0,3,18,.73),0 0 20px rgba(126,137,255,.34)!important;
+}
+html.cmd16-enabled .hosting-3d-surface::after{
+  content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;
+  background:radial-gradient(circle at var(--hosting-shine-x,50%) var(--hosting-shine-y,10%),rgba(208,223,255,.19),transparent 60%);
+  opacity:0;transition:opacity .3s;
+}
+html.cmd16-enabled .hosting-3d-surface.hosting-3d-hover::after{opacity:1}
+html.cmd16-enabled .hosting-motion-switch{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:44px;white-space:nowrap;font-size:12px!important;padding:8px 11px!important;
+  border:1px solid rgba(170,200,255,.85)!important;
+  background:linear-gradient(145deg,#215b9e,#593a96)!important;
+}
+html.cmd16-enabled .hosting-motion-switch[aria-pressed="true"]{box-shadow:var(--hosting-bevel),var(--hosting-glow)!important}
+@media(min-width:2000px){
+ html.cmd16-enabled .wrap{max-width:3000px}
+ html.cmd16-enabled :is(.game,.tile,.host-block,.auth-panel){padding:clamp(21px,1.2vw,37px)}
+ html.cmd16-enabled .hero h1{font-size:clamp(52px,3vw,100px)}
+}
+@media(max-width:880px){
+ html.cmd16-enabled .hosting-motion-switch{font-size:11px!important}
+ html.cmd16-enabled .hosting-3d-surface{transform:perspective(1900px) rotateX(var(--hosting-card-x)) rotateY(var(--hosting-card-y))}
+}
+@media(max-width:550px){
+ html.cmd16-enabled :is(.game,.tile,.host-block,.auth-panel){border-radius:14px!important}
+ html.cmd16-enabled .hosting-3d-surface.hosting-3d-hover{transform:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+ html.cmd16-enabled .hosting-3d-surface,html.cmd16-enabled .hosting-3d-surface.hosting-3d-hover{
+   transform:none!important;transition:none!important;
+ }
+ html.cmd16-enabled .hosting-3d-surface::after{display:none}
+ html.cmd16-enabled :is(button,.btn,.button,.hosting-motion-switch){transition:none!important}
+}
