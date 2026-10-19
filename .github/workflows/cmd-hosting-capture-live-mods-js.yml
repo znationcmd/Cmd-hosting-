@@ -1,0 +1,32 @@
+name: CMD Hosting - capture current public mods UI
+on:
+  push:
+    paths: [".github/workflows/cmd-hosting-capture-live-mods-js.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Verify live mod-auto-detect JavaScript and output bounded text encoding
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error --location --retry 3 --retry-delay 2 --connect-timeout 10 --max-time 40 \
+            "https://cmd-hosting-web-production.up.railway.app/mod-auto-detect.js" -o /tmp/live-mod-auto.js
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+          b=Path('/tmp/live-mod-auto.js').read_bytes()
+          if len(b)<3000 or len(b)>45000:raise ValueError('unexpected public JS length')
+          s=b.decode('utf-8')
+          if not (s.startswith('(function(){') and 'cvAutoGame' in s and 'cmd-hosting-blue-violet-live' in s):
+              raise ValueError('live JS does not contain both existing mod manager and blue-violet layer')
+          x=base64.b64encode(b).decode('ascii')
+          print('CMD_LIVE_JS_BYTES',len(b),flush=True)
+          for i in range(0,len(x),2000):
+              print('CMD_LIVE_JS_PART',i//2000,x[i:i+2000],flush=True)
+          print('CMD_LIVE_JS_END',flush=True)
+          PY
