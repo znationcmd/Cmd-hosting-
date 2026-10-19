@@ -1,0 +1,29 @@
+name: CMD Hosting - external mod catalogue probes
+on:
+  push:
+    paths: [".github/workflows/cmd-hosting-live-provider-probes.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check provider responses without installing anything
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://cmd-hosting-mods-api-production.up.railway.app"
+          for name in "Factorio" "Minecraft: Java Edition" "Conan Exiles"; do
+            output="/tmp/resp-$RANDOM"
+            url="$base/api/mods/games/search?game=$(printf '%s' "$name" | jq -sRr @uri)&q=server"
+            code=$(curl --silent --show-error --location --retry 2 --retry-delay 2 --max-time 40 -o "$output" -w '%{http_code}' "$url")
+            MODE="$name" CODE="$code" FILE="$output" python3 - <<'PY'
+          import json,os
+          try:doc=json.load(open(os.environ['FILE']))
+          except Exception:doc={}
+          print('PROVIDER_RESULT',os.environ['MODE'],'HTTP',os.environ['CODE'],'items',len(doc.get('items') or []),'mode',doc.get('mode'),'error',doc.get('error'),'status',doc.get('providerStatus'))
+          PY
+            rm -f "$output"
+          done
