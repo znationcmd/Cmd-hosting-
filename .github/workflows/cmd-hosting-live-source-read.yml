@@ -15,7 +15,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for item in profile-donations.js hosting-ui.js; do
+          for item in profile-donations.js hosting-ui.js mod-auto-detect.js; do
             curl --fail --silent --show-error --location --retry 3 --retry-delay 2 --max-time 35 \
               "https://cmd-hosting-web-production.up.railway.app/$item" -o "/tmp/$item"
             head -c 8 "/tmp/$item" | od -An -tx1
@@ -23,7 +23,7 @@ jobs:
           python3 - <<'PY'
           import base64
           from pathlib import Path
-          for name in ('profile-donations.js','hosting-ui.js'):
+          for name in ('profile-donations.js','hosting-ui.js','mod-auto-detect.js'):
               data=Path('/tmp/'+name).read_bytes()
               if len(data)>100000: raise ValueError('Unexpectedly large public asset')
               decoded=data.decode('utf-8')
