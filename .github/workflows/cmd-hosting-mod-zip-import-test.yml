@@ -1,0 +1,38 @@
+name: CMD Hosting - FS25 and Factorio ZIP importer safety
+on:
+  push:
+    paths:
+      - "scripts/CMDHosting-Import-ModZIP.ps1"
+      - ".github/workflows/cmd-hosting-mod-zip-import-test.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-test:
+    runs-on: windows-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse script and exercise dry-run, approval and backup
+        shell: pwsh
+        run: |
+          $ErrorActionPreference='Stop'
+          $file='scripts/CMDHosting-Import-ModZIP.ps1'
+          $tokens=$null;$errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$errors) | Out-Null
+          if($errors.Count){throw "PowerShell parser found $($errors.Count) error(s)"}
+          $temp=Join-Path $env:RUNNER_TEMP 'cmdhosting-modtest'
+          $src=Join-Path $temp 'source';$mods=Join-Path $temp 'mods';$zip=Join-Path $temp 'FS25_Test.zip'
+          New-Item -ItemType Directory -Path $src,$mods -Force | Out-Null
+          Set-Content -Path (Join-Path $src 'modDesc.xml') -Value '<modDesc descVersion="99"><title>Test</title></modDesc>'
+          [System.IO.Compression.ZipFile]::CreateFromDirectory($src,$zip)
+          $plan=(& pwsh -NoProfile -File $file -Game FS25 -ModsDirectory $mods -ModZip $zip | Out-String | ConvertFrom-Json)
+          if($plan.installMode -ne 'preview_only' -or (Test-Path (Join-Path $mods 'FS25_Test.zip'))) {throw 'Dry run modified data'}
+          $blocked=$false
+          try{& pwsh -NoProfile -File $file -Game FS25 -ModsDirectory $mods -ModZip $zip -Apply 2>$null | Out-Null}catch{$blocked=$true}
+          if(-not $blocked){throw 'Apply without explicit authorization must fail'}
+          $applied=(& pwsh -NoProfile -File $file -Game FS25 -ModsDirectory $mods -ModZip $zip -Apply -PublisherApproved -ServerStopped | Out-String | ConvertFrom-Json)
+          if(-not $applied.ok -or -not (Test-Path (Join-Path $mods 'FS25_Test.zip'))) {throw 'Authorized install failed'}
+          $applied2=(& pwsh -NoProfile -File $file -Game FS25 -ModsDirectory $mods -ModZip $zip -Apply -PublisherApproved -ServerStopped | Out-String | ConvertFrom-Json)
+          if(-not $applied2.backup -or -not (Test-Path $applied2.backup)){throw 'Existing mod was overwritten without backup'}
+          Write-Host 'FS25 ZIP import validation passed, with backups and guarded writes'
