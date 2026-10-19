@@ -1,0 +1,25 @@
+name: CMD Hosting - other game mods gateway tests
+on:
+  push:
+    paths:
+      - "services/mods-api/index.ts"
+      - "tests/other-games-mods.test.ts"
+      - "tests/mods-gateway.test.ts"
+      - ".github/workflows/cmd-hosting-other-game-mods.yml"
+  pull_request:
+    paths:
+      - "services/mods-api/index.ts"
+      - "tests/other-games-mods.test.ts"
+      - "tests/mods-gateway.test.ts"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  gateway:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - name: Verify old and new mod gateway paths
+        run: bun test tests/other-games-mods.test.ts tests/mods-gateway.test.ts
