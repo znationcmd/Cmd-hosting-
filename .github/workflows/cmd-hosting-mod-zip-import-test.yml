@@ -28,9 +28,8 @@ jobs:
           [System.IO.Compression.ZipFile]::CreateFromDirectory($src,$zip)
           $plan=(& pwsh -NoProfile -File $file -Game FS25 -ModsDirectory $mods -ModZip $zip | Out-String | ConvertFrom-Json)
           if($plan.installMode -ne 'preview_only' -or (Test-Path (Join-Path $mods 'FS25_Test.zip'))) {throw 'Dry run modified data'}
-          $blocked=$false
-          try{& pwsh -NoProfile -File $file -Game FS25 -ModsDirectory $mods -ModZip $zip -Apply 2>$null | Out-Null}catch{$blocked=$true}
-          if(-not $blocked){throw 'Apply without explicit authorization must fail'}
+          & pwsh -NoProfile -File $file -Game FS25 -ModsDirectory $mods -ModZip $zip -Apply 2>$null | Out-Null
+          if($LASTEXITCODE -eq 0){throw 'Apply without explicit authorization must fail'}
           $applied=(& pwsh -NoProfile -File $file -Game FS25 -ModsDirectory $mods -ModZip $zip -Apply -PublisherApproved -ServerStopped | Out-String | ConvertFrom-Json)
           if(-not $applied.ok -or -not (Test-Path (Join-Path $mods 'FS25_Test.zip'))) {throw 'Authorized install failed'}
           $applied2=(& pwsh -NoProfile -File $file -Game FS25 -ModsDirectory $mods -ModZip $zip -Apply -PublisherApproved -ServerStopped | Out-String | ConvertFrom-Json)
