@@ -22,7 +22,7 @@ test('every declared nonexcluded game has safe metadata, no fake installation',a
  expect(data.writesEnabled).toBe(false);
  expect(data.games.length).toBeGreaterThanOrEqual(20);
  for(const profile of data.games){
-  expect(profile.eligible).toBe(true);
+  expect(profile.eligible).toBe(profile.provider!=="publisher-review");
   expect(profile.autoInstall).toBe(false);
   expect(profile.officialUrl.startsWith('https://')).toBe(true);
   expect(profile.installStatus).toBe('requires_authorized_host_agent_and_backup');
