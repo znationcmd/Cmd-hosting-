@@ -1,3 +1,4 @@
+import {oracleFreeAssessment} from "./oracle-free-anomalia.mjs";
 /**
  * CMD Hosting: provider classification and integration planning.
  * Independent of the existing Lenovo, V5 and Mods agents.
@@ -26,7 +27,7 @@ export function resolveProvider(value){
   if(!provider)throw Error("Hosting provider not configured");
   return {...PROVIDERS[provider]};
 }
-export function providerPlan({provider,platform="pc",gameKey="",accountConnected=false,vmEnrolled=false}={}){
+export function providerPlan({provider,platform="pc",gameKey="",accountConnected=false,vmEnrolled=false,oracleFacts={}}={}){
  const p=resolveProvider(provider);
  const game=String(gameKey).trim().toLowerCase();
  const platformKey=String(platform).toLowerCase().trim();
@@ -39,7 +40,12 @@ export function providerPlan({provider,platform="pc",gameKey="",accountConnected
  else if(isManaged)status=attached?"provider_service_discovery_required":"requires_provider_api_authorization";
  else if(nonPC)status="console_provider_required";
  else status=attached?"host_platform_and_game_verification_required":"requires_machine_enrollment";
+ // Oracle A1 needs a validated Linux ARM64 native build and tenancy quota proof.
+ const oracleAnomalia=p.id==="oracle"&&["anomalia","anomalia-primeval"].includes(game)
+   ?oracleFreeAssessment({...oracleFacts,gameKey:game,vmEnrolled}):null;
+ if(oracleAnomalia)status=oracleAnomalia.status;
  return {provider:p.id,category:p.type,gameKey:game,requestedPlatform:platformKey,
+  ...(oracleAnomalia?{oracleCompatibility:oracleAnomalia}:{}),
   status,accountConnected:attached,localWorkerAllowed:!isManaged&&!nonPC,
   commandsAllowed:false,gameInstalled:false,serverReady:false,
   automaticModsReady:false,automaticMapsReady:false,
