@@ -149,7 +149,7 @@ if(!item)return {game:title,platform:p,eligible:false,provider:"review",reason:"
 const allowed=["pc","windows","linux","steam"].includes(p)&&item[2]!=="publisher-review"&&item[2]!=="workforge-local";
 return {game:title,platform:p,eligible:allowed,provider:item[2],officialName:item[1],officialUrl:item[3],
 steamAppId:item[4]||null,note:item[5],autoInstall:false,installStatus:"requires_authorized_host_agent_and_backup",
-reason:allowed?"catalogue_only":"console_mod_support_not_verified"};
+reason:allowed?"catalogue_only":item[2]==="workforge-local"?"workforge_game_loader_not_verified":"console_mod_support_not_verified"};
 }
 async function otherGameModLookup(profile,q,page,origin){
 if(!profile.eligible)return answer({error:profile.reason,profile},422,origin);
