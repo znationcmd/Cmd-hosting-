@@ -22,11 +22,19 @@ test('every declared nonexcluded game has safe metadata, no fake installation',a
  expect(data.writesEnabled).toBe(false);
  expect(data.games.length).toBeGreaterThanOrEqual(20);
  for(const profile of data.games){
-  expect(profile.eligible).toBe(profile.provider!=="publisher-review");
+  expect(profile.eligible).toBe(profile.provider!=="publisher-review"&&profile.provider!=="workforge-local");
   expect(profile.autoInstall).toBe(false);
   expect(profile.officialUrl.startsWith('https://')).toBe(true);
   expect(profile.installStatus).toBe('requires_authorized_host_agent_and_backup');
  }
+});
+test('ANOMALIA WorkForge is visible but server mod installation is not falsely enabled',async()=>{
+ const {r,data}=await call('/api/mods/games/profile?game=ANOMALIA%20PRIMEVAL%20OUTBOUNDUN&platform=pc');
+ expect(r.status).toBe(200);
+ expect(data.provider).toBe('workforge-local');
+ expect(data.eligible).toBe(false);
+ expect(data.autoInstall).toBe(false);
+ expect(data.reason).toBe('workforge_game_loader_not_verified');
 });
 test('FS25: native ModHub manager and console restrictions are explicit',async()=>{
  const fs=await call('/api/mods/games/profile?game=Farming%20Simulator%2025');
