@@ -371,7 +371,7 @@ if(request.method!=="GET")return answer({error:"method_not_allowed"},405,origin)
 const game=(query.get("game")||"").trim(),platform=query.get("platform")||"pc";
 if(path==="/api/mods/games")return answer({version:"1.0",writesEnabled:false,excluded:["DayZ","Arma","ARK"],games:OTHER_GAME_MOD_PROVIDERS.map(x=>otherGameModProfile(x[1]))},200,origin);
 if(path==="/api/mods/games/catalogue"){
-try{const games=await cmdGameCatalog();return answer({total:games.length,mods:games.map(g=>({catalogId:g.id,catalogueName:g.name,gameKey:g.key,...otherGameModProfile(g.name,platform)})),writesEnabled:false},200,origin);}
+try{const games=await cmdGameCatalog();const mods=games.map(g=>({catalogId:g.id,catalogueName:g.name,gameKey:g.key,...otherGameModProfile(g.name,platform)}));if(!mods.some(x=>/\bANOMALIA\b/i.test(x.catalogueName)))mods.push({catalogId:null,catalogueName:"ANOMALIA PRIMEVAL OUTBOUNDUN",gameKey:"anomalia",...otherGameModProfile("ANOMALIA PRIMEVAL OUTBOUNDUN",platform)});return answer({total:mods.length,mods,writesEnabled:false},200,origin);}
 catch{return answer({error:"catalogue_unavailable"},503,origin);}
 }
 if(!game||game.length>120)return answer({error:"game_required"},400,origin);
