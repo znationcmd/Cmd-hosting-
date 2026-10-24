@@ -88,6 +88,7 @@ dayz_workshop_app_id:DAYZ_APP_ID
 * Existing DayZ / Arma / ARK routes and module state remain unchanged.
 * No remote installation, no downloads, no arbitrary provider URLs. */
 const OTHER_GAME_MOD_PROVIDERS=[
+[/^ANOMALIA(?: PRIMEVAL OUTBOUNDUN)?$/i,"ANOMALIA PRIMEVAL OUTBOUNDUN","workforge-local","https://github.com/znationcmd/ANOMALIA-PRIMEVAL-OUTBOUNDUN",0,"ANOMALIA WorkForge : catalogue de mods locaux et export de manifestes. Aucun serveur dédié UE5, téléchargement ni chargement distant de mods vérifié."],
 [/^Farming Simulator 25$/i,"Farming Simulator 25","modhub-native","https://www.farming-simulator.com/mods.php",0,"Gestionnaire de mods du serveur dédié GIANTS; ZIP vérifiés et serveur arrêté."],
 [/^Farming Simulator 22$/i,"Farming Simulator 22","modhub-native","https://www.farming-simulator.com/mods.php",0,"Utiliser le gestionnaire ModHub natif de la version du serveur."],
 [/^Minecraft:?(?: Java Edition| Java)$/i,"Minecraft: Java Edition","modrinth","https://modrinth.com/mods",0,"Contrôler version du jeu, chargeur, dépendances et compatibilité serveur."],
@@ -145,10 +146,10 @@ const title=String(game||"").trim().slice(0,120),p=String(platform||"pc").trim()
 if(/^(?:DayZ|Arma(?:\s|$|-)|ARK(?::|\s|-))/i.test(title))return {game:title,platform:p,eligible:false,provider:"existing",reason:"existing_provider_retained",autoInstall:false};
 const item=OTHER_GAME_MOD_PROVIDERS.find(r=>r[0].test(title));
 if(!item)return {game:title,platform:p,eligible:false,provider:"review",reason:"publisher_mod_support_not_verified",autoInstall:false};
-const allowed=["pc","windows","linux","steam"].includes(p)&&item[2]!=="publisher-review";
+const allowed=["pc","windows","linux","steam"].includes(p)&&item[2]!=="publisher-review"&&item[2]!=="workforge-local";
 return {game:title,platform:p,eligible:allowed,provider:item[2],officialName:item[1],officialUrl:item[3],
 steamAppId:item[4]||null,note:item[5],autoInstall:false,installStatus:"requires_authorized_host_agent_and_backup",
-reason:allowed?"catalogue_only":"console_mod_support_not_verified"};
+reason:allowed?"catalogue_only":item[2]==="workforge-local"?"workforge_game_loader_not_verified":"console_mod_support_not_verified"};
 }
 async function otherGameModLookup(profile,q,page,origin){
 if(!profile.eligible)return answer({error:profile.reason,profile},422,origin);
@@ -274,10 +275,10 @@ modRequirement:"La carte communautaire doit être téléchargée depuis Steam Wo
 notes:"Noms de carte différents de ceux d'ARK Survival Ascended."};
 modSource="steam-workshop";
 }else if(/^DayZ$/i.test(name)){
-mapControl={mode:"mission-map",choices:[{name:"Chernarus",launchName:"dayzOffline.chernarusplus",kind:"official"},{name:"Livonia",launchName:"dayzOffline.enoch",kind:"official"}],
+mapControl={mode:"mission-map",choices:[{name:"Chernarus",launchName:"dayzOffline.chernarusplus",kind:"official"},{name:"Livonia",launchName:"dayzOffline.enoch",kind:"official"},{name:"Sakhal (Frostline)",launchName:"dayzOffline.sakhal",kind:"official",dlc:"Frostline"},{name:"Nasdara (Badlands)",launchName:"dayzOffline.nasdara",kind:"official",dlc:"Badlands",minVersion:"1.30"}],
 customAllowed:true,customSyntax:"^[A-Za-z0-9_.-]{2,120}$",
 modRequirement:"Installer le terrain Workshop, la mission et leurs dépendances sur PC; ne jamais réutiliser les mods PC sur console.",
-notes:"Le modèle de mission est déclaré avec template dans serverDZ.cfg. Vérifier les droits d'usage de la carte."};
+notes:"Pour Nasdara, mettre à jour le serveur DayZ en 1.30+, sauvegarder les mondes, puis sélectionner template=dayzOffline.nasdara dans serverDZ.cfg. Nasdara est une carte officielle Badlands (pas un mod Steam Workshop). Les joueurs doivent disposer de l’extension appropriée. Les sauvegardes et réglages sont séparés par mission."};
 modSource="steam-workshop";
 }else if(/^Arma Reforger/i.test(name)){
 mapControl={mode:"scenario-resource",choices:[{name:"Everon",launchName:"Everon",kind:"display-only"},{name:"Arland",launchName:"Arland",kind:"display-only"}],

@@ -29,13 +29,32 @@ export interface GameProvisionProfile {
   installationPerformed:false;startupVerified:false;
   installationSteps:string[];requirements:string[];
 }
+/**
+ * The official DayZ terrain template is in serverDZ.cfg, not a Steam Workshop mod ID.
+ * Validation generates a plan; changing a real server is reserved for an enrolled host agent.
+ */
+export const DAYZ_OFFICIAL_MISSIONS=Object.freeze({
+  chernarusplus:{label:"Chernarus",template:"dayzOffline.chernarusplus"},
+  enoch:{label:"Livonia",template:"dayzOffline.enoch"},
+  sakhal:{label:"Sakhal · Frostline",template:"dayzOffline.sakhal",dlc:"Frostline"},
+  nasdara:{label:"Nasdara · Badlands",template:"dayzOffline.nasdara",dlc:"Badlands",minServerVersion:"1.30"}
+});
+export function prepareDayZMissionSwitch(key:keyof typeof DAYZ_OFFICIAL_MISSIONS) {
+  const mission=DAYZ_OFFICIAL_MISSIONS[key];
+  if(!mission)return null;
+  return {game:"DayZ",mission,configFile:"serverDZ.cfg",
+    missionsTemplate:mission.template,requiresBackup:true,requiresStoppedServer:true,
+    updateServerFirst:key==="nasdara"?"DayZ 1.30+":null,applied:false,
+    snippet:'class Missions { class DayZ { template="'+mission.template+'"; }; };',
+    note:"Plan only. The official terrain is bundled with the updated DayZ dedicated server; no Workshop ID or world overwrite."};
+}
 const specs: readonly {match:RegExp;spec:InstallerSpec}[]=[
 {match:/^DayZ$/i,spec:{
  title:"DayZ Dedicated Server",installer:"steamcmd",steamServerAppId:"223350",os:["windows"],steamLogin:"anonymous",
  docs:"https://developer.valvesoftware.com/wiki/SteamCMD",
  expectedConfigFiles:["serverDZ.cfg","mpmissions/*/init.c","mpmissions/*/db/types.xml","mpmissions/*/db/events.xml"],
  startupBinary:"DayZServer_x64.exe",maps:"mission-template",mods:"steam-workshop",
- note:"Sakhal requires Frostline DLC. Modded terrain requires Workshop files, dependencies and a compatible mpmissions template; don't mix PC mods with Xbox/PlayStation."}},
+ note:"DayZ 1.30+ supports official Nasdara (Badlands), template dayzOffline.nasdara. Back up each mission folder before switching. Sakhal requires Frostline; Nasdara players need Badlands. Official terrain is not a Steam Workshop mod. Keep PC mods separate from Xbox/PlayStation."}},
 {match:/^ARK: Survival Ascended$/i,spec:{
  title:"ARK Survival Ascended Dedicated Server",installer:"steamcmd",steamServerAppId:"2430930",os:["windows"],steamLogin:"anonymous",
  docs:"https://ark.wiki.gg/wiki/Dedicated_Server_Setup",
