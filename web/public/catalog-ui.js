@@ -102,12 +102,20 @@ function openShop(){
 function modal(game){
  const overlay=document.createElement('div');overlay.className='cmd-shop-modal';overlay.setAttribute('role','presentation');
  const desc=game.id==='anomalia-cmd'?'ANOMALIA PRIMEVAL OUTBOUNDUN est en pré-alpha Windows. Le multijoueur, la construction et ANOMALIA Editor évoluent. La location de serveurs CMD Hosting pour ce jeu n’est pas encore disponible.':game.status==='dedicated'?'Une version serveur dédié existe pour ce titre. CMD Hosting doit encore préparer son installateur, son contrôle et sa machine avant de pouvoir le louer.':game.status==='restricted'?'Cet hébergement exige des droits, une infrastructure ou un fournisseur particulier. Cette version reste non commandable et n\'a pas de prix.':'Ce jeu est en cours de vérification technique ou contractuelle. Pas de location avant validation de son installation.';
+ const workshopButton=game.id==='anomalia-cmd'?'<button type="button" data-anomalia-workshop>ANOMALIA Workshop · Mods ↗</button>':'';
  const cover=game.cover?'<img src="'+escapeHTML(game.cover)+'" alt="Visuel du jeu '+escapeHTML(game.name)+'">':'';
  const link=game.storeUrl?'<a href="'+escapeHTML(game.storeUrl)+'" target="_blank" rel="noopener noreferrer">'+(game.id==='anomalia-cmd'?'Projet ANOMALIA sur GitHub ↗':'Page officielle sur Steam ↗')+'</a>':'';
- overlay.innerHTML='<div class="cmd-shop-dialog" role="dialog" aria-modal="true" aria-label="'+escapeHTML(game.name)+'">'+cover+'<div class="cmd-shop-dialog-content"><h3>'+escapeHTML(game.name)+'</h3><div class="cmd-shop-tags">'+game.platforms.map(p=>escapeHTML(platformName[p]||p)).join(' · ')+'</div><p>'+escapeHTML(desc)+'</p><p><strong>Prix :</strong> non affiché · <strong>Installation CMD :</strong> non disponible pour le moment.</p><div class="cmd-shop-actions">'+link+'<button type="button" data-close-dialog>Fermer</button></div></div></div>';
+ overlay.innerHTML='<div class="cmd-shop-dialog" role="dialog" aria-modal="true" aria-label="'+escapeHTML(game.name)+'">'+cover+'<div class="cmd-shop-dialog-content"><h3>'+escapeHTML(game.name)+'</h3><div class="cmd-shop-tags">'+game.platforms.map(p=>escapeHTML(platformName[p]||p)).join(' · ')+'</div><p>'+escapeHTML(desc)+'</p><p><strong>Prix :</strong> non affiché · <strong>Installation CMD :</strong> non disponible pour le moment.</p><div class="cmd-shop-actions">'+link+workshopButton+'<button type="button" data-close-dialog>Fermer</button></div></div></div>';
  const dismiss=()=>{overlay.remove();document.removeEventListener('keydown',onKey)};
  const onKey=e=>{if(e.key==='Escape')dismiss()};
  overlay.querySelector('[data-close-dialog]').onclick=dismiss;
+ overlay.querySelector('[data-anomalia-workshop]')?.addEventListener('click',()=>{
+  dismiss();
+  const button=document.querySelector('#cmdOriginalNav .links [data-page="cmdMods"]')||
+    document.querySelector('.links [data-page="cmdMods"]');
+  if(button)button.click();else window.location.hash='#cmdMods';
+ });
+
  overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss()});
  document.addEventListener('keydown',onKey);
  document.body.append(overlay);overlay.querySelector('[data-close-dialog]').focus();
