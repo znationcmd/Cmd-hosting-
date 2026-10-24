@@ -8,6 +8,7 @@ on:
       - "web/**"
       - "tests/premium-ui.test.mjs"
       - "tests/restored-web.test.mjs"
+      - "tests/anomalia-nasdara-catalog.test.mjs"
       - "scripts/recover-hosting-public.mjs"
       - ".github/workflows/cmd-hosting-ui-checks.yml"
   pull_request:
@@ -16,6 +17,7 @@ on:
       - "web/**"
       - "tests/premium-ui.test.mjs"
       - "tests/restored-web.test.mjs"
+      - "tests/anomalia-nasdara-catalog.test.mjs"
       - "scripts/recover-hosting-public.mjs"
       - ".github/workflows/cmd-hosting-ui-checks.yml"
 
@@ -32,7 +34,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate HTML/CSS/SVG UI additions without deploying
-        run: node --test tests/premium-ui.test.mjs tests/restored-web.test.mjs
+        run: node --test tests/premium-ui.test.mjs tests/restored-web.test.mjs tests/anomalia-nasdara-catalog.test.mjs
       - name: Parse public-source recovery script
         run: node --check scripts/recover-hosting-public.mjs
       - name: Validate snapshot origin and route safety offline
