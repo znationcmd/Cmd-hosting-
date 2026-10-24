@@ -93,6 +93,18 @@ function rpMapOptions(x){
  const title=rpIdentify(x),profile=rpProfile(x),platform=rpPlatform(x);
  const consoleGame=/ps[345]|playstation|xbox|switch|nintendo/.test(platform);
  let config=profile?.mapSelection||{mode:"none",choices:[],customAllowed:false,notes:"Aucune carte configurée pour ce jeu."};
+ // Add official DayZ maps without relying on stale catalogue/API profiles.
+ if(/^DayZ$/i.test(title||"")){
+  const official=[{name:"Chernarus",launchName:"dayzOffline.chernarusplus",kind:"official"},
+    {name:"Livonia",launchName:"dayzOffline.enoch",kind:"official"},
+    {name:"Sakhal (Frostline)",launchName:"dayzOffline.sakhal",kind:"official",dlc:"Frostline"},
+    {name:"Nasdara (Badlands · 1.30+)",launchName:"dayzOffline.nasdara",kind:"official",dlc:"Badlands"}];
+  const previous=Array.isArray(config.choices)?config.choices:[];
+  const names=new Set(previous.map(x=>x.launchName));
+  config={...config,mode:"mission-map",choices:[...previous,...official.filter(x=>!names.has(x.launchName))],
+    notes:"Sauvegarde avant changement. Serveur DayZ 1.30+ pour Nasdara. Mission template=dayzOffline.nasdara (serverDZ.cfg). La carte officielle Badlands n'est pas un mod Steam Workshop.",
+    customAllowed:platform==="pc"?!!config.customAllowed:false};
+ }
  const options=(config.choices||[]).filter(c=>!consoleGame||c.kind==="official");
  const custom=!!config.customAllowed&&!(consoleGame&&/^(DayZ|ARK: Survival Evolved)$/.test(title||''));
  const disabled=config.mode==='none';
