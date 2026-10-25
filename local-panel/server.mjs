@@ -50,8 +50,9 @@ function within(root,child){
  return rel===''||(!rel.startsWith('..'+path.sep)&&rel!=='..'&&!path.isAbsolute(rel));
 }
 async function pathChecked(root,rel,{exists=true,dir=false}={}){
+ const rootEntry=await lstat(root);
+ if(rootEntry.isSymbolicLink())throw bad(403,'Racine liée non autorisée');
  const realRoot=await realpath(root);
- if(realRoot!==path.resolve(root))throw bad(403,'Racine liée non autorisée');
  const parts=rel?rel.split('/'):[];
  let current=realRoot;
  for(let i=0;i<parts.length;i++){
@@ -112,6 +113,12 @@ async function selected(id){
  const item=(await instances()).find(x=>x.id===id);
  if(!item)throw bad(404,'Serveur non enregistré');
  if(!within(installRoot,path.resolve(item.root)))throw bad(403,'Installation hors du dossier autorisé');
+ // Windows realpath may canonicalize 8.3 short-directory names; compare canonical
+ // roots, not the original spelling, while rejecting junction escapes.
+ const actualRoot=await realpath(item.root);
+ const actualInstallRoot=await realpath(installRoot);
+ if(!within(actualInstallRoot,actualRoot)||actualRoot===actualInstallRoot)
+  throw bad(403,'Racine réelle du serveur hors du disque autorisé');
  const st=await lstat(item.root);
  if(!st.isDirectory()||st.isSymbolicLink())throw bad(400,'Dossier indisponible');
  await pathChecked(item.root,'',{dir:true});
