@@ -16,6 +16,9 @@ on:
       - "provisioning/file-verification.test.mjs"
       - "services/cloud-agents/index.ts"
       - "scripts/Install-CMDGameServer.ps1"
+      - "scripts/Installer-DayZ-PC-1-clic.ps1"
+      - "scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd"
+      - "tests/dayz-one-click-contract.mjs"
       - "provisioning/machine-detection.mjs"
       - "provisioning/machine-detection.test.mjs"
       - "scripts/Installer-CMDHostingPortableV2.ps1"
@@ -41,6 +44,9 @@ on:
       - "provisioning/file-verification.test.mjs"
       - "services/cloud-agents/index.ts"
       - "scripts/Install-CMDGameServer.ps1"
+      - "scripts/Installer-DayZ-PC-1-clic.ps1"
+      - "scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd"
+      - "tests/dayz-one-click-contract.mjs"
       - "provisioning/machine-detection.mjs"
       - "provisioning/machine-detection.test.mjs"
       - "scripts/Installer-CMDHostingPortableV2.ps1"
@@ -75,6 +81,17 @@ jobs:
         run: node --check provisioning/machine-fleet.mjs
       - name: Run cross-platform and multi-node placement tests
         run: node --test provisioning/file-verification.test.mjs provisioning/host-capability.test.mjs provisioning/machine-fleet.test.mjs provisioning/game-content.test.mjs provisioning/long-life-tokens.test.mjs provisioning/machine-detection.test.mjs
+      - name: Verify direct one-click DayZ PC installation contract
+        run: node --test tests/dayz-one-click-contract.mjs
+      - name: Parse one-click Windows DayZ installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $errors = $null
+          $tokens = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile('scripts/Installer-DayZ-PC-1-clic.ps1',[ref]$tokens,[ref]$errors)
+          if ($errors -and $errors.Count) { $errors | Format-List Message,Extent; exit 1 }
+          Write-Host 'One-click DayZ PowerShell syntax OK'
       - name: Read-only hardware diagnostic
         run: node provisioning/portable-host-agent.mjs --diagnose
 
