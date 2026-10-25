@@ -6,6 +6,7 @@
  * Localhost only by default. Do NOT port-forward HTTP to the public Internet.
  */
 import http from 'node:http';
+import {spawn} from 'node:child_process';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {readFile,readdir,writeFile,rename,mkdir,lstat,realpath,copyFile,open,stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
@@ -21,6 +22,23 @@ const manifestPath=path.join(stateDir,'servers.json');
 const keyFile=path.join(stateDir,'access-token.txt');
 const listenHost=process.env.CMD_FILES_LISTEN_HOST||'127.0.0.1';
 const port=Number(process.env.CMD_FILES_PORT||8788);
+const DAYZ_SCRIPT=path.resolve(HERE,'..','scripts','Installer-DayZ-PC-1-clic.ps1');
+let dayzSetup={state:'idle',startedAt:null,finishedAt:null,exitCode:null};
+const locallyRequested=req=>{
+ const ip=req.socket.remoteAddress||'';
+ return ip==='127.0.0.1'||ip==='::1'||ip==='::ffff:127.0.0.1';
+};
+async function dayzSetupStatus(){
+ let installerAvailable=false;
+ try{installerAvailable=(await stat(DAYZ_SCRIPT)).isFile()}catch{}
+ const gameDir=path.join(installRoot,'cmd-dayz-personnel','dayz');
+ let exeFound=false,manifestFound=false;
+ try{exeFound=(await stat(path.join(gameDir,'DayZServer_x64.exe'))).isFile()}catch{}
+ try{manifestFound=(await stat(path.join(gameDir,'steamapps','appmanifest_223350.acf'))).isFile()}catch{}
+ return {allowed:process.platform==='win32',installerAvailable,installRoot,gameDir,
+  filesPresent:exeFound&&manifestFound,realGameFilesOnly:true,...dayzSetup};
+}
+
 const MAX_TEXT=2*1024*1024,MAX_UPLOAD=25*1024*1024;
 const TEXT=/\.(?:cfg|json|xml|ini|txt|c|conf|config|yaml|yml|properties|log|rpt|adm|lua|toml|bat|ps1|md|csv)$/i;
 const SECURE=/^(?:\.env(?:\..*)?|auth\.json|credentials?\.(?:json|txt)|access-token\.txt|machine-token\.dpapi)$/i;
@@ -166,6 +184,41 @@ async function action(req,res,url){
  const route=url.pathname,method=req.method;
  if(route==='/api/status'&&method==='GET')return reply(res,200,{name:'CMD Hosting Fichiers',mode:'local-host',railway:false,defaultRoot:installRoot,bind:listenHost});
  if(route==='/api/servers'&&method==='GET')return reply(res,200,{servers:await listed(),catalogueNote:'Tous les jeux avec des fichiers sur un hôte peuvent être enregistrés; aucune arborescence fictive.'});
+ if(route==='/api/install/dayz'&&method==='GET'){
+  return reply(res,200,{...await dayzSetupStatus(),note:'Création DayZ PC : fichiers officiels installés sur CE Windows seulement.'});
+ }
+ if(route==='/api/install/dayz'&&method==='POST'){
+  // Owner-initiated installation requires physical approval on this Windows workstation.
+  // Never accept an install request across the local network or from a remote visitor.
+  if(!locallyRequested(req))throw bad(403,'Installation autorisée uniquement depuis le navigateur du PC hôte (127.0.0.1).');
+  if(process.platform!=='win32')throw bad(422,'Le programme de création DayZ est réservé à Windows.');
+  const request=await jsonBody(req,2048);
+  if(request?.confirmed!==true||request?.publisherTermsAccepted!==true)
+   throw bad(400,'Confirme l’installation des fichiers officiels et les conditions des éditeurs.');
+  const status=await dayzSetupStatus();
+  if(!status.installerAvailable)throw bad(503,'Installateur DayZ absent du paquet Windows. Extrais le ZIP complet.');
+  if(dayzSetup.state==='starting'||dayzSetup.state==='running')throw bad(409,'Une installation DayZ est déjà en cours sur ce PC.');
+  if(status.filesPresent)throw bad(409,'DayZ existe déjà dans CMD-Servers. Clique Actualiser pour voir ton serveur.');
+  dayzSetup={state:'starting',startedAt:new Date().toISOString(),finishedAt:null,exitCode:null};
+  try{
+   const child=spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',DAYZ_SCRIPT,'-NoStartPrompt'],{
+    cwd:path.dirname(DAYZ_SCRIPT),windowsHide:false,stdio:'ignore',detached:false
+   });
+   child.once('error',error=>{
+    dayzSetup={...dayzSetup,state:'error',finishedAt:new Date().toISOString(),error:'Impossible d’ouvrir PowerShell : '+error.code};
+   });
+   child.once('exit',(code)=>{
+    dayzSetup={...dayzSetup,state:code===0?'finished':'error',exitCode:code,finishedAt:new Date().toISOString()};
+   });
+   // No remote shell, arbitrary command, path, executable or game ID supplied by callers.
+   dayzSetup.state='running';
+   return reply(res,202,{ok:true,state:'running',message:'La fenêtre de confirmation DayZ doit apparaître sur ce PC. Les fichiers officiels ne seront installés qu’après validation.'});
+  }catch(e){
+   dayzSetup={...dayzSetup,state:'error',finishedAt:new Date().toISOString()};
+   throw bad(500,'Impossible de lancer le programme DayZ local.');
+  }
+ }
+
  if(route==='/api/register'&&method==='POST'){
   const {game,name,root}=await jsonBody(req);
   if(typeof game!=='string'||game.length>120||typeof name!=='string'||name.length>150||typeof root!=='string'||root.length>800)
