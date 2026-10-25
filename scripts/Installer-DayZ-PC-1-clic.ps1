@@ -67,8 +67,14 @@ try{
  if(!(Test-Path -LiteralPath $serverExe -PathType Leaf)){
   Say 'Installation du vrai serveur DayZ PC avec SteamCMD (appid 223350)...'
   Say 'Si Steam demande un compte proprietaire, utilise SteamCMD localement sans transmettre tes identifiants.'
-  $output=@(& $steamExe '+@ShutdownOnFailedCommand' '1' '+@NoPromptForPassword' '1' '+force_install_dir' $dir '+login' 'anonymous' '+app_update' '223350' 'validate' '+quit' 2>&1)
-  $code=$LASTEXITCODE
+  # Windows PowerShell 5.1 : SteamCMD writes diagnostics on stderr even on success.
+  # Do not promote a harmless native stderr line into a stopping exception.
+  $previousPreference=$ErrorActionPreference
+  try {
+   $ErrorActionPreference='Continue'
+   $output=@(& $steamExe '+@ShutdownOnFailedCommand' '1' '+@NoPromptForPassword' '1' '+force_install_dir' $dir '+login' 'anonymous' '+app_update' '223350' 'validate' '+quit' 2>&1)
+   $code=$LASTEXITCODE
+  }finally{$ErrorActionPreference=$previousPreference}
   $outText=($output|ForEach-Object{[string]$_}) -join [Environment]::NewLine
   $outText|Write-Host
   if($code -ne 0 -or $outText -notmatch "Success! App '223350' fully installed\."){
@@ -84,8 +90,15 @@ try{
  if($manifestText -notmatch '"appid"\s+"223350"' -or $manifestText -notmatch '"StateFlags"\s+"4"'){
   throw 'Manifeste Steam non valide : installation non certifiee.'
  }
- if(!(Test-Path -LiteralPath $mission -PathType Container)){
-  Say 'Mission officielle Chernarus manquante : telechargement Bohemia Interactive...'
+ $requiredMission=@('init.c','db\\types.xml','db\\events.xml')
+ $needsMission=!(Test-Path -LiteralPath $mission -PathType Container)
+ if(!$needsMission){
+  foreach($rel in $requiredMission){
+   if(!(Test-Path -LiteralPath (Join-Path $mission $rel) -PathType Leaf)){$needsMission=$true;break}
+  }
+ }
+ if($needsMission){
+  Say 'Verification des fichiers de la mission Chernarus depuis Bohemia Interactive...'
   $zip=Join-Path $temp 'central-economy.zip'
   Fetch 'https://github.com/BohemiaInteractive/DayZ-Central-Economy/archive/refs/heads/master.zip' $zip
   $extract=Join-Path $temp 'central-economy'
@@ -95,7 +108,19 @@ try{
    throw 'Fichiers de mission officiels incomplets.'
   }
   New-Item -ItemType Directory -Force -Path (Split-Path -Parent $mission)|Out-Null
-  Copy-Item -LiteralPath $src -Destination $mission -Recurse -ErrorAction Stop
+  if(!(Test-Path -LiteralPath $mission -PathType Container)){
+   Copy-Item -LiteralPath $src -Destination $mission -Recurse -ErrorAction Stop
+  }else{
+   # Repair missing publisher files only. Never overwrite admins' XML or mission scripts.
+   $sourceRoot=(Get-Item -LiteralPath $src).FullName
+   foreach($file in Get-ChildItem -LiteralPath $src -File -Recurse){
+    $rel=$file.FullName.Substring($sourceRoot.Length).TrimStart([char]'\\')
+    $dest=Join-Path $mission $rel
+    if(Test-Path -LiteralPath $dest){continue}
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dest)|Out-Null
+    Copy-Item -LiteralPath $file.FullName -Destination $dest
+   }
+  }
  }else{Say 'Mission existante conservee (aucun ecrasement).'}
  foreach($file in @('init.c','db\types.xml','db\events.xml')){
   if(!(Test-Path -LiteralPath (Join-Path $mission $file) -PathType Leaf)){throw ('Mission incomplete : '+$file)}
