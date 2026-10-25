@@ -1,0 +1,44 @@
+name: CMD Hosting - Real game files manager (no Railway)
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'local-panel/**'
+      - 'DEMARRER-CMD-HOSTING-FICHIERS.cmd'
+      - '.github/workflows/cmd-hosting-local-files.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: Real-file explorer ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate actual game file explorer JavaScript
+        run: |
+          node --check local-panel/server.mjs
+          node --check local-panel/app.js
+      - name: Run real filesystem and security contract tests
+        run: node --test local-panel/server.test.mjs
+      - name: Package double-click Windows app
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path distribution\local-panel | Out-Null
+          Copy-Item DEMARRER-CMD-HOSTING-FICHIERS.cmd distribution\
+          Copy-Item local-panel/server.mjs,local-panel/app.js,local-panel/index.html,local-panel/style.css,local-panel/README.md distribution\local-panel\
+      - name: Upload Windows ready-to-extract archive
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CMDHosting-Fichiers-Reels-Windows
+          path: distribution/
+          retention-days: 90
+          if-no-files-found: error
