@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1121"><title>CMD Hosting — Mes serveurs et fichiers réels</title>
+<link rel="stylesheet" href="/style.css"><script defer src="/app.js"></script></head>
+<body><header><div class="brand"><span class="brandIcon">CMD</span><div><b>CMD HOSTING</b><small>MES SERVEURS · FICHIERS RÉELS</small></div></div><span class="hostPill">HÉBERGEMENT LOCAL • SANS RAILWAY</span></header>
+<main>
+<section class="intro"><span class="eyebrow">EXPLORE TES VRAIES INSTALLATIONS</span><h1>Un jeu. Son serveur. Ses fichiers.</h1>
+<p>DayZ, ARK, Arma Reforger, ANOMALIA et tous les jeux disposant d'une installation autorisée. Les dossiers présentés sont lus directement sur la machine hôte. Aucun fichier fictif.</p></section>
+<section id="loginView" class="login card"><h2>Accès administrateur local</h2><p>Entre la clé affichée par CMD Hosting sur l'ordinateur où le panneau est lancé.</p><form id="loginForm"><input id="token" required autocomplete="off" type="password" placeholder="Clé administrateur de la machine"><button class="primary">Ouvrir mes serveurs</button></form><small>La clé reste dans cet onglet. Ne rends pas ce panneau accessible directement sur Internet.</small></section>
+<section id="workspace" hidden>
+<div class="layout">
+<aside class="sidebar card"><div class="blockTitle"><h2>Mes serveurs</h2><button id="refresh" class="quiet">↻</button></div><p class="muted">Tu ne verras que les installations détectées ou les dossiers que tu as associés.</p><div id="serverList" class="serverList"></div>
+<hr><details><summary>+ Associer un serveur existant</summary><form id="registerForm" class="register">
+<label>Jeu<input id="registerGame" required placeholder="dayz, ark-asa, arma-reforger…"></label>
+<label>Nom du serveur<input id="registerName" required placeholder="Mon serveur"></label>
+<label>Dossier réel de l'installation<input id="registerRoot" required placeholder="C:\CMD-Servers\MonServeur\dayz"></label>
+<button type="submit" class="primary">Associer ce dossier</button><small>Le dossier doit déjà exister dans le répertoire autorisé. Aucun téléchargement inventé.</small></form></details>
+</aside>
+<div class="content">
+<section class="card status"><div><span class="eyebrow">ÉTAT DU SERVEUR</span><h2 id="selectedName">Choisis un serveur à gauche</h2><p id="selectedState">Les jeux non installés n'ont pas de fichiers à afficher.</p><code id="selectedRoot"></code></div><span id="installedBadge" class="tag">AUCUN SERVEUR</span></section>
+<section id="explorer" class="card" hidden><div class="blockTitle"><div><span class="eyebrow">FICHIERS SUR DISQUE</span><h2>Explorateur de fichiers</h2></div><div class="tools"><button id="rootBtn" class="quiet">⌂ Racine</button><button id="upBtn" class="quiet">↑ Retour</button><button id="reloadFiles" class="quiet">↻ Actualiser</button></div></div>
+<nav id="crumbs" aria-label="Chemin du serveur"></nav>
+<div id="quickConfigs" class="quickConfigs"></div>
+<div class="filesHeader"><span>Nom</span><span>Taille</span><span>Modification</span><span>Action</span></div><div id="fileList" class="files"></div><p id="filesWarning" class="muted"></p>
+<details class="upload"><summary>+ Importer un nouveau fichier de configuration</summary><form id="uploadForm">
+<input type="file" id="uploadFile" required><label>Nom du fichier dans le dossier courant<input id="uploadName" placeholder="exemple.cfg" required></label><button class="primary">Importer sans écraser</button></form></details>
+</section>
+<section id="maps" class="card" hidden><div class="blockTitle"><div><span class="eyebrow">DAYZ PC</span><h2>Carte / mission installée</h2></div></div><p>Seules les missions réellement présentes dans <code>mpmissions</code> sont proposées. Arrête le serveur avant un changement.</p><label>Mission disponible<select id="mapSelect"></select></label><div class="mapActions"><button id="applyMap" class="primary">Appliquer à serverDZ.cfg avec sauvegarde</button><span id="mapCurrent"></span></div></section>
+<section id="editor" class="card" hidden><div class="blockTitle"><div><span class="eyebrow">ÉDITION DE CONFIGURATION</span><h2 id="editingPath">Configuration</h2></div><div class="tools"><button id="downloadEditor" class="quiet">↓ Télécharger</button><button id="closeEditor" class="quiet">Fermer</button></div></div>
+<p class="muted">Arrête ton serveur avant de sauvegarder. Une copie de sauvegarde est créée automatiquement à chaque modification.</p><textarea id="fileEditor" spellcheck="false" aria-label="Contenu du fichier"></textarea>
+<label class="confirm"><input type="checkbox" id="confirmStopped"> Je confirme avoir arrêté ce serveur avant de modifier ses fichiers.</label><button id="saveFile" class="primary">Sauvegarder avec copie de sécurité</button></section>
+</div></div>
+</section><div id="alert" role="status" aria-live="polite"></div></main>
+<footer>CMD HOSTING · Aucun stockage Railway · Aucun serveur fictif · Accès administrateur local</footer>
+</body></html>
