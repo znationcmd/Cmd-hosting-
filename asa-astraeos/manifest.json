@@ -1,0 +1,267 @@
+{
+  "schema": "cmd-hosting/asa-astraeos-v1",
+  "id": "cmd-valhalla-extinction-astraeos",
+  "game": "ARK Survival Ascended",
+  "name": "CMD Valhalla Extinction Astraeos",
+  "map": "Astraeos_WP",
+  "mode": "RP",
+  "crossplayRequested": true,
+  "crossplayVerified": false,
+  "maxPlayers": 100,
+  "localWindowsOnly": true,
+  "railway": false,
+  "exclusiveWithDayZ": true,
+  "serverSteamAppId": 2430930,
+  "timeZone": "Europe/Paris",
+  "restartLocalParis": [
+    "08:00",
+    "12:00",
+    "22:00"
+  ],
+  "mods": [
+    {
+      "group": "Dinos",
+      "name": "S-Dino Variants",
+      "curseForgeId": 912815,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/s-dino-variants",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Dinos",
+      "name": "Shiny! Dinos Ascended",
+      "curseForgeId": 928548,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/shiny-ascended",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Dinos",
+      "name": "Runic Wyverns",
+      "curseForgeId": 974884,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/runic-wyverns",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Dinos",
+      "name": "Moro's Indomitable Duo",
+      "curseForgeId": 928824,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/moros-indomitable-duo",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Dinos",
+      "name": "ARKOLOGY: OE - Desolatitan",
+      "curseForgeId": 1133222,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/arkology-oe-desolatitan",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Dinos",
+      "name": "Astraeos - Mythological Creatures",
+      "curseForgeId": 1122696,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/astraeos-mythological-creatures",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Dinos",
+      "name": "ARKOLOGY: OE - Hapipalus",
+      "curseForgeId": 1310904,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/arkology-oe-hapipalus",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Dinos",
+      "name": "Moro's Livyatan (Freemium)",
+      "curseForgeId": 956237,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/moros-livyatan",
+      "verification": "project_id_found",
+      "notes": "premium"
+    },
+    {
+      "group": "Gestion dinos",
+      "name": "Custom Dino Levels",
+      "curseForgeId": 928708,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/custom-dino-levels",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Gestion dinos",
+      "name": "Spawn Blocker",
+      "curseForgeId": 930442,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/spawn-blocker",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Gestion dinos",
+      "name": "Super Cryo Storage",
+      "curseForgeId": 933099,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/super-cryo-storage",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Construction",
+      "name": "Alfa Oceanic Platforms",
+      "curseForgeId": 933447,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/alfaoceanicplataforms",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Construction",
+      "name": "Wall'n'Floor Decor",
+      "curseForgeId": 940786,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/wallnfloor-decor",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Construction",
+      "name": "Thor's Hammer - Mjölnir - Monument",
+      "curseForgeId": 1009997,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/thors-hammer-mjolnir",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Roleplay",
+      "name": "RolePlay Additions: Jobs",
+      "curseForgeId": 1362939,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/roleplay-additions-jobs-medieval-rp-work-crafts-extra-economy-admin",
+      "verification": "project_id_found",
+      "notes": "possible_name_match"
+    },
+    {
+      "group": "Utilitaires",
+      "name": "AP: Death Recovery",
+      "curseForgeId": 929578,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/ap-death-recovery",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Utilitaires",
+      "name": "Auto Engrams!",
+      "curseForgeId": 953154,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/auto-engrams",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Utilitaires",
+      "name": "Super Spyglass Plus",
+      "curseForgeId": 929420,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/super-spyglass-plus",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Utilitaires",
+      "name": "Net Pro",
+      "curseForgeId": 1019389,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/net-projectile",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Utilitaires",
+      "name": "Template Hammer Importer",
+      "curseForgeId": 1498853,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/template-hammer-importer-wikily-gg",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Economie",
+      "name": "Resonant's Shop Mod",
+      "curseForgeId": 936660,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/resonants-shop-mod",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Potions",
+      "name": "Potions | Gaia Studios",
+      "curseForgeId": 928650,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/gaia-potions",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Administration",
+      "name": "Awesome ARK Tools",
+      "curseForgeId": 941450,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/awesome-admin-tools",
+      "verification": "project_id_found",
+      "notes": null
+    },
+    {
+      "group": "Administration",
+      "name": "Admin Commands | Gaia Studios",
+      "curseForgeId": 936457,
+      "projectUrl": "https://www.curseforge.com/ark-survival-ascended/mods/admin-commands",
+      "verification": "project_id_found",
+      "notes": null
+    }
+  ],
+  "settings": {
+    "xp": 10,
+    "harvest": 3,
+    "stackPerItemRequested": 30000,
+    "tamingSpeed": 1000,
+    "maturation": 900,
+    "resourceRespawn": 0.5,
+    "daytimeMultiplier": 10,
+    "structureAutoDecay": false,
+    "dinoInactivityDays": 7,
+    "weightRequested": "infinite",
+    "fallDamageMultiplier": 0,
+    "transferElementViaSCS": "mod_required",
+    "difficultyOffsetRequested": 10,
+    "difficultyOffsetEffective": 1,
+    "overrideOfficialDifficulty": 10,
+    "wildMax": 300,
+    "tekMax": 360,
+    "wyvernDrakeEggMax": 380,
+    "dinoSpeedLeveling": true,
+    "playerStatPerPoint": {
+      "health": 100,
+      "stamina": 100,
+      "oxygen": 1000,
+      "food": 100,
+      "water": 100,
+      "weight": "infinite",
+      "melee": 25,
+      "speedMultiplier": 3,
+      "crafting": "infinite",
+      "fortitude": 20
+    },
+    "dinoStatPerPoint": {
+      "health": 100,
+      "stamina": 100,
+      "oxygen": 1000,
+      "food": 100,
+      "weight": "infinite",
+      "melee": 25,
+      "speedMultiplier": 3,
+      "torpor": 20
+    }
+  },
+  "notes": [
+    "Server presets are generated only; no game/mod assets downloaded by this change.",
+    "Infinity cannot be represented literally in vanilla ASA, local config uses large finite multipliers.",
+    "Requested exact stat increases are not guaranteed by generic multipliers without calibration on a real server.",
+    "100 slot capacity depends on actual Windows host hardware and game limits.",
+    "Moro Livyatan is Premium: no purchase or entitlement is bypassed.",
+    "Role Play Jobs mapped to RolePlay Additions: Jobs, verify desired mod.",
+    "Element travel via SCS requires in-game mod configuration and tests."
+  ]
+}
