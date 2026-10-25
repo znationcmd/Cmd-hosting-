@@ -39,3 +39,14 @@ footer{text-align:center;border-top:1px solid #2b3756;padding:17px;color:#7e91b4
 [hidden]{display:none!important}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.sidebar{position:static}.serverList{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}.card{padding:15px}.intro{padding-top:0}}
 @media(max-width:590px){header{padding:12px}.hostPill{font-size:8px}.filesHeader,.fileRow{grid-template-columns:minmax(0,1fr) 60px 77px}.filesHeader span:nth-child(3),.fileRow .fileMeta:nth-child(3){display:none}.fileActions{grid-column:3}.fileRow{gap:4px}.fileActions button{font-size:10px}.intro h1{font-size:28px}}
+
+
+/* Dedicated game creation is distinct from associating existing folders. */
+.dayzCreate{display:grid;gap:9px;padding:14px 12px;margin:12px 0;background:linear-gradient(130deg,#193757,#251f48);
+ border:1px solid #4d6792;border-radius:9px}
+.dayzCreate h3{margin:0;font-size:17px;color:#f5f3ff}
+.dayzCreate p{margin:0;font-size:12px;line-height:1.6}
+.dayzCreate .confirm{display:flex;align-items:flex-start;gap:9px;font-size:12px;line-height:1.5}
+.dayzCreate .confirm input{flex:none;margin-top:3px}
+.dayzCreate button{width:100%;min-height:38px}
+.dayzCreate small{font-size:11px;color:#a7bdd8;line-height:1.5}
