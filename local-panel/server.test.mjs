@@ -46,7 +46,7 @@ test('host-only server, railway false, mandatory auth and protected headers',asy
  r=await call('/api/status');assert.equal(r.status,200);
  assert.equal(r.data.railway,false);assert.equal(r.data.mode,'local-host');
  r=await call('/');assert.equal(r.status,200);assert.match(r.body,/Un jeu. Son serveur. Ses fichiers/);
- assert.match(r.headers.get('content-security-policy')||'','frame-ancestors');
+ assert.match(r.headers.get('content-security-policy')||'',/frame-ancestors/);
 });
 test('auto-detect genuine root folders for DayZ, ARK and Arma from disk, never generated demo folders',async()=>{
  const r=await call('/api/servers');assert.equal(r.status,200);
