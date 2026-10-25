@@ -121,7 +121,7 @@ function dayzMessage(message,problem=false){
 }
 async function refreshDayzInstall(){
  const status=await api('/api/install/dayz');
- const canInstall=status.allowed&&status.installerAvailable&&!status.filesPresent&&
+ const canInstall=status.allowed&&status.localBrowser&&status.installerAvailable&&!status.filesPresent&&
   status.state!=='running'&&status.state!=='starting';
  $('createDayz').disabled=!canInstall||!$('dayzTerms').checked;
  if(status.filesPresent){
@@ -130,6 +130,8 @@ async function refreshDayzInstall(){
   previousDayzState='installed';
  }else if(!status.allowed){
   dayzMessage('Création disponible uniquement depuis le panneau lancé sur Windows.',true);
+ }else if(!status.localBrowser){
+  dayzMessage('Pour installer DayZ, ouvre ce panneau directement sur le PC : http://127.0.0.1:8788. La consultation depuis le téléphone reste possible.',true);
  }else if(!status.installerAvailable){
   dayzMessage('Installateur manquant : récupère le paquet Windows complet, avec le dossier scripts.',true);
  }else if(status.state==='running'||status.state==='starting'){
