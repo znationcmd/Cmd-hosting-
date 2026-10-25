@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CMD Hosting — Fichiers locaux de serveurs</title>
+<style>
+:root{color-scheme:dark;font:14px system-ui,Segoe UI,Arial;background:#09101d;color:#edf3ff}
+*{box-sizing:border-box}body{margin:0}header{padding:20px 3vw;background:linear-gradient(120deg,#123b61,#29205d);
+border-bottom:1px solid #5567b5}h1{margin:0;font-size:22px}header p{color:#bdd5f8;margin:6px 0 0}
+main{max-width:1450px;margin:auto;padding:23px 3vw;display:grid;grid-template-columns:minmax(280px,1fr) minmax(340px,1.2fr);gap:18px}
+section{background:#131e31;border:1px solid #334567;border-radius:13px;padding:17px;min-width:0}
+button{background:#2f66bc;color:white;padding:9px 13px;border:1px solid #578dea;border-radius:7px;cursor:pointer;font:inherit}
+button:disabled{opacity:.4;cursor:not-allowed}button.secondary{background:#1b2e48}
+#files{display:flex;flex-direction:column;gap:4px;max-height:65vh;overflow:auto;margin-top:12px}
+.file{display:flex;width:100%;text-align:left;justify-content:space-between;gap:10px;background:#1b2a44;border-color:#344e74}
+.file:hover{background:#2b4568}.file small{color:#aac1df}
+#path{overflow-wrap:anywhere;color:#b5c9e8}textarea{width:100%;min-height:48vh;background:#090f1d;color:#eaf0ff;
+border:1px solid #3c5276;padding:13px;font:12px/1.5 Consolas,monospace;resize:vertical;border-radius:8px}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:12px 0}
+#notice{min-height:35px;line-height:1.6;color:#c5d5ed}#notice[data-error="true"]{color:#ffb6ae}
+#fileName{overflow-wrap:anywhere;color:#d5cbff;font-weight:700}
+#meta{color:#a8bddc}.hint{color:#adbed8;font-size:12px;line-height:1.6;margin-top:12px}
+@media(max-width:850px){main{grid-template-columns:1fr}textarea{min-height:35vh}}
+</style></head><body>
+<header><h1>CMD HOSTING <span style="color:#b4a6ff">/ FICHIERS RÉELS</span></h1>
+<p>DayZ · ARK · Arma Reforger · autres serveurs PC — dossiers réellement présents sur ce Windows</p></header>
+<main>
+<section>
+<h2>Explorateur de dossiers</h2>
+<p class="hint">Choisis un dossier installé (par exemple C:\CMD-Servers). Le navigateur te demande la permission avant toute lecture ou modification. Aucun contenu n'est envoyé sur Internet.</p>
+<div class="actions"><button id="pick">Ouvrir les fichiers de mon serveur</button><button id="up" class="secondary" disabled>↑ Dossier parent</button><button id="refresh" class="secondary" disabled>Actualiser</button></div>
+<div id="path">Aucun dossier sélectionné.</div><div id="files"></div>
+</section>
+<section>
+<h2>Éditeur protégé</h2><div id="fileName">Sélectionne un fichier existant</div><div id="meta"></div>
+<div class="actions"><button id="save" disabled>Enregistrer avec sauvegarde</button><button id="download" class="secondary" disabled>Exporter une copie</button></div>
+<textarea id="editor" spellcheck="false" disabled placeholder="Seuls les fichiers texte réels (INI, CFG, XML, JSON, TXT, C) peuvent être édités."></textarea>
+<p id="notice" role="status" aria-live="polite">Aucune modification effectuée.</p>
+<p class="hint">Les exécutables, archives, sauvegardes de monde et fichiers binaires restent consultables dans la liste, mais ne peuvent pas être modifiés ici. Chaque enregistrement autorisé génère une sauvegarde locale distincte avant d'écrire.</p>
+</section>
+</main>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+let root=null,current=null,stack=[],selected=null,original='',revision=null;
+const editable=/\.(ini|cfg|xml|json|txt|c)$/i;
+const privateFile=/(^\.env$|^auth\.json$|\.key$|\.pem$|\.pfx$|\.dpapi$|^machine-token)/i;
+function notice(message,error=false){$('notice').textContent=message;$('notice').dataset.error=String(error)}
+function clearFile(){selected=null;original='';revision=null;$('fileName').textContent='Sélectionne un fichier existant';$('meta').textContent='';$('editor').value='';$('editor').disabled=true;$('save').disabled=true;$('download').disabled=true}
+function itemButton(name,type,size,onClick){
+const button=document.createElement('button');button.type='button';button.className='file';
+const label=document.createElement('span');label.textContent=(type==='directory'?'📁 ':'📄 ')+name;
+const badge=document.createElement('small');badge.textContent=type==='directory'?'Dossier':size.toLocaleString('fr-FR')+' octets';
+button.append(label,badge);button.addEventListener('click',onClick);return button;
+}
+async function render(){
+ if(!current)return;
+ clearFile();$('files').replaceChildren();$('path').textContent=[root.name,...stack.map(x=>x.name)].join(' / ');
+ $('up').disabled=!stack.length;$('refresh').disabled=false;
+ const entries=[];for await(const [name,handle] of current.entries()){
+   if(entries.length>=600){notice('Affichage limité à 600 éléments dans ce dossier.');break}
+   if(privateFile.test(name))continue;
+   try{const size=handle.kind==='file'?(await handle.getFile()).size:0;entries.push({name,handle,size});}
+   catch{entries.push({name,handle,size:0})}
+ }
+ entries.sort((a,b)=>(a.handle.kind==='directory'?0:1)-(b.handle.kind==='directory'?0:1)||a.name.localeCompare(b.name,'fr'));
+ for(const item of entries){
+   $('files').append(itemButton(item.name,item.handle.kind,item.size,async()=>{
+      if(item.handle.kind==='directory'){stack.push({name:item.name,handle:current});current=item.handle;await render()}
+      else await openFile(item.handle,item.name,current);
+   }));
+ }
+ if(!entries.length)notice('Dossier vide sur cet ordinateur. Aucun fichier inventé.');
+}
+async function openFile(handle,name,parent){
+ clearFile();selected={handle,name,parent};$('fileName').textContent=name;
+ const file=await handle.getFile();revision={lastModified:file.lastModified,size:file.size};
+ $('meta').textContent=file.size.toLocaleString('fr-FR')+' octets — fichier local existant';
+ $('download').disabled=false;
+ if(!editable.test(name)||privateFile.test(name)){notice('Fichier binaire ou sensible : lecture et modification désactivées.');return}
+ if(file.size>60000){notice('Lecture limitée aux configurations de 60 Ko. Export possible.',true);return}
+ try{
+  const bytes=new Uint8Array(await file.arrayBuffer());
+  original=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+  $('editor').value=original;$('editor').disabled=false;$('save').disabled=false;
+  notice('Fichier réel ouvert. Aucune modification enregistrée.');
+ }catch{notice('Fichier non UTF-8 : modification bloquée pour éviter de le corrompre.',true)}
+}
+$('pick').onclick=async()=>{
+ if(typeof window.showDirectoryPicker!=='function'){
+   notice('Ce navigateur ne permet pas l’accès direct aux dossiers. Utilise Chrome ou Edge sur Windows. Sur iPhone, une liaison à un agent CMD Hosting authentifié est nécessaire.',true);return;
+ }
+ try{root=await window.showDirectoryPicker({mode:'readwrite'});current=root;stack=[];await render();notice('Dossier local autorisé par Windows, aucun transfert réseau.')}
+ catch(e){if(e.name!=='AbortError')notice('Ouverture refusée : '+e.message,true)}
+};
+$('up').onclick=async()=>{if(!stack.length)return;const item=stack.pop();current=item.handle;await render()};
+$('refresh').onclick=render;
+$('save').onclick=async()=>{
+ if(!selected||$('editor').disabled)return;
+ try{
+  const file=await selected.handle.getFile();
+  if(file.lastModified!==revision.lastModified||file.size!==revision.size)
+    throw Error('Fichier modifié depuis son ouverture. Actualise-le avant d’enregistrer.');
+  const content=$('editor').value;
+  if(content.length>60000||content.includes('\0'))throw Error('Configuration trop grande ou non autorisée.');
+  if(/\.json$/i.test(selected.name))JSON.parse(content);
+  if(/\.xml$/i.test(selected.name)){
+    const doc=new DOMParser().parseFromString(content,'application/xml');
+    if(doc.querySelector('parsererror'))throw Error('XML incorrect : sauvegarde annulée.');
+  }
+  const stamp=new Date().toISOString().replace(/[^0-9]/g,'').slice(0,17);
+  const backup=await selected.parent.getFileHandle(selected.name+'.cmdhosting-'+stamp+'.bak',{create:true});
+  if((await backup.getFile()).size!==0)throw Error('Sauvegarde déjà existante. Réessayer.');
+  const backupWriter=await backup.createWritable();
+  await backupWriter.write(await file.arrayBuffer());await backupWriter.close();
+  const writer=await selected.handle.createWritable();await writer.write(content);await writer.close();
+  original=content;const newer=await selected.handle.getFile();
+  revision={lastModified:newer.lastModified,size:newer.size};
+  notice('Enregistré sur ce PC. Sauvegarde créée : '+selected.name+'.cmdhosting-'+stamp+'.bak');
+ }catch(e){notice('Aucune écriture confirmée : '+e.message,true)}
+};
+$('download').onclick=async()=>{
+ if(!selected)return;
+ const f=await selected.handle.getFile();
+ if(f.size>150*1024*1024){notice('Téléchargement limité à 150 Mo dans le navigateur.',true);return}
+ const url=URL.createObjectURL(f),a=document.createElement('a');a.href=url;a.download=selected.name;
+ document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+</script></body></html>
