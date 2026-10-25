@@ -34,7 +34,13 @@ export async function makeConfig(){
 }
 async function steamInstall(){
  if(process.platform!=='win32')throw Error('ARK Survival Ascended serveur officiel : Windows requis.');
- if(!(await fileExists(STEAM)))throw Error('SteamCMD non installe dans '+STEAM+'. Installe SteamCMD officiel avant.');
+ if(!(await fileExists(STEAM))){
+  console.log('SteamCMD absent : installation officielle Valve depuis ce PC Windows (aucun Railway).');
+  const setup=spawnSync('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',path.join(DIR,'Install-SteamCMD-Officiel.ps1')],
+    {stdio:'inherit',timeout:8*60*1000,windowsHide:false});
+  if(setup.error||setup.status!==0||!(await fileExists(STEAM)))
+   throw Error('Impossible de recuperer SteamCMD officiel. Verifie le message Windows.');
+ }
  if(await fileExists(MAIN))return {installed:true,unchanged:true};
  const reply=spawnSync(STEAM,['+@ShutdownOnFailedCommand','1','+force_install_dir',INSTANCE,
   '+login','anonymous','+app_update','2430930','validate','+quit'],
