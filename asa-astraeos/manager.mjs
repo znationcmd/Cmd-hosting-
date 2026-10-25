@@ -110,9 +110,9 @@ export function launchArgs(m){
  if(!Number.isInteger(m.maxPlayers)||m.maxPlayers!==100)throw Error('Profil 100 slots attendu.');
  if(m.map!=='Astraeos_WP'||m.mods.some(x=>!MOD_OK.test(String(x.curseForgeId))))throw Error('Carte ou mods invalides');
  const ids=[...new Set(m.mods.map(x=>String(x.curseForgeId)))];
- return [m.map+'?SessionName='+m.name+'?Port=7777?QueryPort=27015?RCONPort=27020',
-  '-ServerPlatform=ALL','-WinLiveMaxPlayers=100','-mods='+ids.join(','),
-  '-log','-NoBattlEye'];
+ return [m.map+'?listen?RCONEnabled=True?RCONPort=27020',
+  '-port=7777','-QueryPort=27015','-ServerPlatform=ALL','-WinLiveMaxPlayers=100','-mods='+ids.join(','),
+  '-server','-log','-NoBattlEye'];
 }
 function rconPacket(id,type,body){
  const value=Buffer.from(body,'utf8'),b=Buffer.alloc(value.length+14);
