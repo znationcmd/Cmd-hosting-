@@ -90,7 +90,7 @@ try{
  if($manifestText -notmatch '"appid"\s+"223350"' -or $manifestText -notmatch '"StateFlags"\s+"4"'){
   throw 'Manifeste Steam non valide : installation non certifiee.'
  }
- $requiredMission=@('init.c','db\\types.xml','db\\events.xml')
+ $requiredMission=@('init.c','db\types.xml','db\events.xml')
  $needsMission=!(Test-Path -LiteralPath $mission -PathType Container)
  if(!$needsMission){
   foreach($rel in $requiredMission){
@@ -114,7 +114,7 @@ try{
    # Repair missing publisher files only. Never overwrite admins' XML or mission scripts.
    $sourceRoot=(Get-Item -LiteralPath $src).FullName
    foreach($file in Get-ChildItem -LiteralPath $src -File -Recurse){
-    $rel=$file.FullName.Substring($sourceRoot.Length).TrimStart([char]'\\')
+    $rel=$file.FullName.Substring($sourceRoot.Length).TrimStart([char]92)
     $dest=Join-Path $mission $rel
     if(Test-Path -LiteralPath $dest){continue}
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $dest)|Out-Null
