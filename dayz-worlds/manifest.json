@@ -1,0 +1,1084 @@
+{
+  "schema": "cmd-hosting/dayz-four-worlds-v1",
+  "hosting": "local-windows-only",
+  "railway": false,
+  "oneAtATime": true,
+  "baseDayZServer": "C:\\CMD-Servers\\cmd-dayz-personnel\\dayz",
+  "profiles": [
+    {
+      "id": "cmd-lux",
+      "name": "CMD Lux",
+      "game": "DayZ PC",
+      "slots": 100,
+      "port": 2302,
+      "map": {
+        "name": "Lux Redux",
+        "mission": null,
+        "steamWorkshopId": "3371742728"
+      },
+      "photo": "IMG_7693.jpeg",
+      "mods": [
+        {
+          "name": "CF",
+          "workshopId": "1559212036",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Dabs Framework",
+          "workshopId": "2545327648",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Lux Redux",
+          "workshopId": "3371742728",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Zens Core Mod",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Licensed",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Core",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Bundle",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-AI",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-BaseBuilding",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Groups",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Market",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Weapons",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Vehicles",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Navigation",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Personal-Storage",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "AdvancedBanking V2",
+          "workshopId": "3065185420",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ Editor Loader",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "VPPAdminTools",
+          "workshopId": "1828439124",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Zens Sleeping Mod",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MoreFood V2",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "CarPack",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "[CrSk] BMW 525i E34",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_HondaCRF450R",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_SuzukiGSXR750",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_Polaris500XC",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_BMWAlpina",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Dog",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Nomadbackpack",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "[FREE] Advanced Battle Pass v2",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Survivor Animations",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Namalsk Island",
+          "workshopId": "2289456201",
+          "enabled": false,
+          "photo": true,
+          "verifyCompatibility": "listed on Lux poster but Namalsk-only; disabled to avoid incompatible map"
+        },
+        {
+          "name": "Namalsk Survival",
+          "workshopId": "2289461232",
+          "enabled": false,
+          "photo": true,
+          "verifyCompatibility": "listed on Lux poster but Namalsk-only; disabled to avoid incompatible map"
+        },
+        {
+          "name": "Namalsk Tourist Map",
+          "workshopId": null,
+          "enabled": false,
+          "photo": true,
+          "verifyCompatibility": "listed on Lux poster but Namalsk-only; disabled to avoid incompatible map"
+        },
+        {
+          "name": "IAT Crafting Plus",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MaharikaPH_MilitaryPack",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MaharikaPH_Boats",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_CanAm",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_YamahaYZF450",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        }
+      ]
+    },
+    {
+      "id": "cmd-namalsk",
+      "name": "CMD Namalsk",
+      "game": "DayZ PC",
+      "slots": 100,
+      "port": 2302,
+      "map": {
+        "name": "Namalsk Island",
+        "mission": "regular.namalsk",
+        "steamWorkshopId": "2289456201"
+      },
+      "photo": "IMG_7695.jpeg",
+      "mods": [
+        {
+          "name": "CF",
+          "workshopId": "1559212036",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Dabs Framework",
+          "workshopId": "2545327648",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Namalsk Island",
+          "workshopId": "2289456201",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Zens Core Mod",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Licensed",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Core",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Bundle",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-AI",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-BaseBuilding",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Groups",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Market",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Weapons",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Vehicles",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Navigation",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Personal-Storage",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "AdvancedBanking V2",
+          "workshopId": "3065185420",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ Editor Loader",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "VPPAdminTools",
+          "workshopId": "1828439124",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Zens Sleeping Mod",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MoreFood V2",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "CarPack",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "[CrSk] BMW 525i E34",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_HondaCRF450R",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_SuzukiGSXR750",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_Polaris500XC",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_BMWAlpina",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Dog",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Nomadbackpack",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "[FREE] Advanced Battle Pass v2",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Survivor Animations",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Namalsk Survival",
+          "workshopId": "2289461232",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Namalsk Tourist Map",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        }
+      ]
+    },
+    {
+      "id": "cmd-deer-isle",
+      "name": "CMD Deer Isle",
+      "game": "DayZ PC",
+      "slots": 100,
+      "port": 2302,
+      "map": {
+        "name": "DeerIsle",
+        "mission": null,
+        "steamWorkshopId": "1602372402"
+      },
+      "photo": "IMG_7696.jpeg",
+      "mods": [
+        {
+          "name": "CF",
+          "workshopId": "1559212036",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Dabs Framework",
+          "workshopId": "2545327648",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DeerIsle",
+          "workshopId": "1602372402",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Zens Core Mod",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Licensed",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Core",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Bundle",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-AI",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-BaseBuilding",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Groups",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Market",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Weapons",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Vehicles",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Navigation",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Personal-Storage",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "AdvancedBanking V2",
+          "workshopId": "3065185420",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ Editor Loader",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "VPPAdminTools",
+          "workshopId": "1828439124",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Zens Sleeping Mod",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MoreFood V2",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "CarPack",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "[CrSk] BMW 525i E34",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_HondaCRF450R",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_SuzukiGSXR750",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_Polaris500XC",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_BMWAlpina",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Dog",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Nomadbackpack",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "[FREE] Advanced Battle Pass v2",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Survivor Animations",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Code Lock",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Code Lock Craft",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Code Lock Craft Expansion",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MoreDinos",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "dbo_raptors_123",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Crocodile",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Odyssey Mutants",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "LMs Semi Truck & Trailer - Vehicle",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "LMs Planes",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Moving AI Convoy",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Static Military Planes Vehicles & Equipment",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ Horse",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Xandors Season Pass v2",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "F1",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MuchCarKey_NewKeyz",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        }
+      ]
+    },
+    {
+      "id": "cmd-takistan-plus",
+      "name": "CMD Takistan Plus",
+      "game": "DayZ PC",
+      "slots": 100,
+      "port": 2302,
+      "map": {
+        "name": "TakistanPlus",
+        "mission": "Offline.TakistanPlus",
+        "steamWorkshopId": "2563233742"
+      },
+      "photo": "IMG_7698.jpeg",
+      "mods": [
+        {
+          "name": "CF",
+          "workshopId": "1559212036",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Dabs Framework",
+          "workshopId": "2545327648",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "TakistanPlus",
+          "workshopId": "2563233742",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Zens Core Mod",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Licensed",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Core",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Bundle",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-AI",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-BaseBuilding",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Groups",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Market",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Weapons",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Vehicles",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Navigation",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Expansion-Personal-Storage",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "AdvancedBanking V2",
+          "workshopId": "3065185420",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ Editor Loader",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "VPPAdminTools",
+          "workshopId": "1828439124",
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Zens Sleeping Mod",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MoreFood V2",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "CarPack",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "[CrSk] BMW 525i E34",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_HondaCRF450R",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_SuzukiGSXR750",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_Polaris500XC",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "MBM_BMWAlpina",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "DayZ-Dog",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Nomadbackpack",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "[FREE] Advanced Battle Pass v2",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        },
+        {
+          "name": "Survivor Animations",
+          "workshopId": null,
+          "enabled": true,
+          "photo": true,
+          "verifyCompatibility": null
+        }
+      ]
+    }
+  ]
+}
