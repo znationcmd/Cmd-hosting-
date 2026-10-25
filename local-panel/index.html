@@ -10,6 +10,16 @@
 <section id="workspace" hidden>
 <div class="layout">
 <aside class="sidebar card"><div class="blockTitle"><h2>Mes serveurs</h2><button id="refresh" class="quiet">↻</button></div><p class="muted">Tu ne verras que les installations détectées ou les dossiers que tu as associés.</p><div id="serverList" class="serverList"></div>
+<hr><section id="dayzCreate" class="dayzCreate">
+<span class="eyebrow">SERVEUR DAYZ PC · CHERNARUS</span>
+<h3>Créer mon serveur DayZ</h3>
+<p class="muted">Installation officielle sur ce PC Windows, sans location ni dossier fictif. Le serveur pourra ensuite apparaître automatiquement dans « Mes serveurs ».</p>
+<label class="confirm"><input type="checkbox" id="dayzTerms"> J'autorise le téléchargement depuis Valve et Bohemia, après avoir accepté leurs conditions.</label>
+<button type="button" id="createDayz" class="primary" disabled>Installer DayZ sur ce PC</button>
+<button type="button" id="checkDayz" class="quiet">Vérifier mon installation</button>
+<p class="muted" id="dayzSetupStatus" role="status">Contrôle des fichiers en attente.</p>
+<small>Sur ce PC seulement : une confirmation Windows s'affichera. Pour créer depuis un téléphone, il faut un agent d'installation associé et autorisé.</small>
+</section>
 <hr><details><summary>+ Associer un serveur existant</summary><form id="registerForm" class="register">
 <label>Jeu<input id="registerGame" required placeholder="dayz, ark-asa, arma-reforger…"></label>
 <label>Nom du serveur<input id="registerName" required placeholder="Mon serveur"></label>
