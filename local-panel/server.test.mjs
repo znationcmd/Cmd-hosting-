@@ -136,12 +136,13 @@ test('DayZ creator shows actual Windows eligibility and never invents a running 
  assert.equal(r.data.installerAvailable,true);
  assert.equal(r.data.realGameFilesOnly,true);
  assert.equal(r.data.filesPresent,false);
+ const beforeCount=(await call('/api/servers')).data.servers.length;
  const noAuth=await call('/api/install/dayz',{method:'POST',auth:'',headers:{'content-type':'application/json'},body:'{}'});
  assert.equal(noAuth.status,401);
  const refusal=await call('/api/install/dayz',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({confirmed:false,publisherTermsAccepted:false})});
  assert.equal(refusal.status,process.platform==='win32'?400:422);
  const after=await call('/api/servers');
- assert.equal(after.data.servers.length,3);
+ assert.equal(after.data.servers.length,beforeCount);
 });
 test('actual create action appears in the user interface with conditional consent',async()=>{
  const [ui,js]=await Promise.all([
