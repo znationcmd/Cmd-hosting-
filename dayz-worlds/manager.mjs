@@ -5,6 +5,7 @@ import {readFile,writeFile,mkdir,open,unlink,readdir,cp,copyFile,stat} from 'nod
 import {existsSync} from 'node:fs';
 import {spawn,spawnSync} from 'node:child_process';
 import {createInterface} from 'node:readline/promises';
+import {acquireGameLock,releaseGameLock,gameProcessesRunning} from '../local-panel/exclusive-game-lock.mjs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const HERE=path.dirname(fileURLToPath(import.meta.url));
@@ -110,17 +111,22 @@ async function existingLock(){
  }catch(e){if(e.code==='ENOENT')return null;return {stale:true}}
 }
 async function createLock(profile){
+ // Shared across all five profiles, including ARK Ascended. Never run both servers.
+ await acquireGameLock('dayz-'+profile.id);
+ try{
  await mkdir(base,{recursive:true});
- if(await runningWindowsDayZ())throw Error('Un DayZ est deja en cours : arrete-le proprement avant de changer de carte.');
+ if(gameProcessesRunning())throw Error('Un DayZ ou ARK est deja en cours : arrete-le proprement avant de changer de carte.');
  const old=await existingLock();
  if(old&&!old.stale)throw Error('Profil '+old.profile+' deja en cours. Un seul serveur a la fois.');
  if(old?.stale){if(await runningWindowsDayZ())throw Error('Processus DayZ encore actif.');await unlink(lockfile)}
  const handle=await open(lockfile,'wx');
  try{await handle.writeFile(JSON.stringify({pid:process.pid,profile:profile.id,startedAt:new Date().toISOString()}))}
  finally{await handle.close()}
+ }catch(error){await releaseGameLock();throw error}
 }
 async function releaseLock(){
  try{const state=JSON.parse(await readFile(lockfile,'utf8'));if(state.pid===process.pid)await unlink(lockfile)}catch{}
+ finally{await releaseGameLock()}
 }
 async function start(id){
  if(process.platform!=='win32')throw Error('Un serveur DayZ PC ne peut demarrer que sous Windows.');
