@@ -185,7 +185,7 @@ async function action(req,res,url){
  if(route==='/api/status'&&method==='GET')return reply(res,200,{name:'CMD Hosting Fichiers',mode:'local-host',railway:false,defaultRoot:installRoot,bind:listenHost});
  if(route==='/api/servers'&&method==='GET')return reply(res,200,{servers:await listed(),catalogueNote:'Tous les jeux avec des fichiers sur un hôte peuvent être enregistrés; aucune arborescence fictive.'});
  if(route==='/api/install/dayz'&&method==='GET'){
-  return reply(res,200,{...await dayzSetupStatus(),note:'Création DayZ PC : fichiers officiels installés sur CE Windows seulement.'});
+  return reply(res,200,{...await dayzSetupStatus(),localBrowserRequired:true,localBrowser:locallyRequested(req),note:'Création DayZ PC : fichiers officiels installés sur CE Windows seulement.'});
  }
  if(route==='/api/install/dayz'&&method==='POST'){
   // Owner-initiated installation requires physical approval on this Windows workstation.
@@ -202,7 +202,7 @@ async function action(req,res,url){
   dayzSetup={state:'starting',startedAt:new Date().toISOString(),finishedAt:null,exitCode:null};
   try{
    const child=spawn('powershell.exe',['-NoProfile','-ExecutionPolicy','Bypass','-File',DAYZ_SCRIPT,'-NoStartPrompt'],{
-    cwd:path.dirname(DAYZ_SCRIPT),windowsHide:false,stdio:'ignore',detached:false
+    cwd:path.dirname(DAYZ_SCRIPT),windowsHide:false,stdio:'inherit',detached:false
    });
    child.once('error',error=>{
     dayzSetup={...dayzSetup,state:'error',finishedAt:new Date().toISOString(),error:'Impossible d’ouvrir PowerShell : '+error.code};
