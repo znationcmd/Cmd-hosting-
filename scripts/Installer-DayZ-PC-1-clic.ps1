@@ -153,7 +153,7 @@ class Missions
  };
 };
 '@
- [IO.File]::WriteAllText($cfg,$serverConfig+"\r\n",([Text.UTF8Encoding]::new($false)))
+ [IO.File]::WriteAllText($cfg,$serverConfig+[Environment]::NewLine,([Text.UTF8Encoding]::new($false)))
  }else{Say 'serverDZ.cfg existant conserve : aucun ecrasement.'}
  $launch=Join-Path $dir 'Demarrer-DayZ-CMD-Hosting.cmd'
  if(!(Test-Path -LiteralPath $launch)){
