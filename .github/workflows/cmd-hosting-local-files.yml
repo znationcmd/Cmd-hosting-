@@ -5,6 +5,8 @@ on:
     paths:
       - 'local-panel/**'
       - 'DEMARRER-CMD-HOSTING-FICHIERS.cmd'
+      - 'scripts/Installer-DayZ-PC-1-clic.ps1'
+      - 'scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd'
       - '.github/workflows/cmd-hosting-local-files.yml'
 permissions:
   contents: read
@@ -33,6 +35,8 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path distribution\local-panel | Out-Null
           Copy-Item DEMARRER-CMD-HOSTING-FICHIERS.cmd distribution\
+          New-Item -ItemType Directory -Force -Path distribution\scripts | Out-Null
+          Copy-Item scripts/Installer-DayZ-PC-1-clic.ps1,scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd distribution\scripts\
           Copy-Item local-panel/server.mjs,local-panel/app.js,local-panel/index.html,local-panel/style.css,local-panel/README.md distribution\local-panel\
       - name: Upload Windows ready-to-extract archive
         if: runner.os == 'Windows'
