@@ -139,6 +139,17 @@ jobs:
         shell: pwsh
         run: ./tests/windows-steamcmd-contract.ps1
 
+      - name: Publish one-click DayZ PC scripts as downloadable ZIP
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CMDHosting-DayZ-PC-Installation-1-Clic
+          path: |
+            scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd
+            scripts/Installer-DayZ-PC-1-clic.ps1
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Verify SteamCMD stderr handling on Windows PowerShell 5.1
         if: runner.os == 'Windows'
         shell: powershell
