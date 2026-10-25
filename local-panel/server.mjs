@@ -268,6 +268,10 @@ async function start(){
     const html=await readFile(path.join(HERE,'index.html'));
     res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});return res.end(html);
    }
+   if(url.pathname==='/style.css'&&req.method==='GET'){
+    const css=await readFile(path.join(HERE,'style.css'));
+    res.writeHead(200,{'content-type':'text/css; charset=utf-8','cache-control':'no-store'});return res.end(css);
+   }
    if(url.pathname==='/app.js'&&req.method==='GET'){
     const js=await readFile(path.join(HERE,'app.js'));
     res.writeHead(200,{'content-type':'text/javascript; charset=utf-8','cache-control':'no-store'});return res.end(js);
