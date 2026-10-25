@@ -1,0 +1,42 @@
+name: CMD Hosting - 4 DayZ worlds local Windows
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'dayz-worlds/**'
+      - 'scripts/Installer-DayZ-PC-1-clic.ps1'
+      - 'scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd'
+      - '.github/workflows/cmd-dayz-four-worlds.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Windows DayZ manager source
+        run: |
+          node --check dayz-worlds/manager.mjs
+          node --test dayz-worlds/worlds.test.mjs
+      - name: Package one-click 4-worlds local Windows manager
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path distribution\dayz-worlds,distribution\scripts | Out-Null
+          Copy-Item dayz-worlds/manifest.json,dayz-worlds/manager.mjs,dayz-worlds/CMD-4-SERVEURS-DAYZ.cmd,dayz-worlds/README.md distribution\dayz-worlds\
+          Copy-Item scripts/Installer-DayZ-PC-1-clic.ps1,scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd distribution\scripts\
+      - name: Upload downloadable Windows ZIP
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: CMDHosting-4-DayZ-100-Slots-One-At-A-Time
+          path: distribution/
+          if-no-files-found: error
+          retention-days: 90
