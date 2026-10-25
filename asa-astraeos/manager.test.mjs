@@ -27,7 +27,10 @@ test('all 24 requested mod IDs are sourced and passed to ASA not DayZ Workshop',
  assert.ok(ids.includes(1122696));assert.ok(ids.includes(933099));assert.ok(ids.includes(928708));
  assert.ok(m.mods.some(x=>x.name.includes('Livyatan')&&x.notes==='premium'));
  const args=launchArgs(m);
- assert.ok(args[0].startsWith('Astraeos_WP?SessionName=CMD Valhalla Extinction Astraeos'));
+ assert.ok(args[0].startsWith('Astraeos_WP?listen?RCONEnabled=True?RCONPort=27020'));
+ assert.ok(args.includes('-port=7777'));
+ assert.ok(args.includes('-QueryPort=27015'));
+ assert.ok(args.includes('-server'));
  assert.ok(args.includes('-WinLiveMaxPlayers=100'));
  assert.ok(args.includes('-ServerPlatform=ALL'));
  assert.equal(args.find(x=>x.startsWith('-mods=')),'-mods='+ids.join(','));
