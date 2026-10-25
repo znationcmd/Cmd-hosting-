@@ -125,3 +125,32 @@ test('upload new configuration only and preserve existing config',async()=>{
  assert.equal(r.status,409);
  assert.equal(await readFile(join(dayz,'custom.cfg'),'utf8'),'created = true;');
 });
+
+
+test('DayZ creator shows actual Windows eligibility and never invents a running server',async()=>{
+ const r=await call('/api/install/dayz');
+ assert.equal(r.status,200);
+ assert.equal(r.data.allowed,process.platform==='win32');
+ assert.equal(r.data.localBrowserRequired,true);
+ assert.equal(r.data.localBrowser,true);
+ assert.equal(r.data.installerAvailable,true);
+ assert.equal(r.data.realGameFilesOnly,true);
+ assert.equal(r.data.filesPresent,false);
+ const noAuth=await call('/api/install/dayz',{method:'POST',auth:'',headers:{'content-type':'application/json'},body:'{}'});
+ assert.equal(noAuth.status,401);
+ const refusal=await call('/api/install/dayz',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({confirmed:false,publisherTermsAccepted:false})});
+ assert.equal(refusal.status,process.platform==='win32'?400:422);
+ const after=await call('/api/servers');
+ assert.equal(after.data.servers.length,3);
+});
+test('actual create action appears in the user interface with conditional consent',async()=>{
+ const [ui,js]=await Promise.all([
+  readFile(new URL('./index.html',import.meta.url),'utf8'),
+  readFile(new URL('./app.js',import.meta.url),'utf8')
+ ]);
+ assert.match(ui,/id="createDayz"/);
+ assert.match(ui,/id="dayzTerms"/);
+ assert.match(js,/api\/install\/dayz/);
+ assert.match(js,/publisherTermsAccepted:true/);
+ assert.match(js,/status\.localBrowser/);
+});
