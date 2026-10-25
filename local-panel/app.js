@@ -112,8 +112,49 @@ async function refreshMaps(){
 }
 $('loginForm').addEventListener('submit',e=>{e.preventDefault();safe(async()=>{
  token=$('token').value.trim();await api('/api/servers');$('token').value='';
- show('loginView',false);show('workspace',true);await refresh();notice('Connecté au gestionnaire de fichiers de cette machine.');
+ show('loginView',false);show('workspace',true);await refresh();await refreshDayzInstall();notice('Connecté au gestionnaire de fichiers de cette machine.');
 })});
+let previousDayzState='';
+function dayzMessage(message,problem=false){
+ const field=$('dayzSetupStatus');field.textContent=message;
+ field.style.color=problem?'#ffada9':'#b7d7fa';
+}
+async function refreshDayzInstall(){
+ const status=await api('/api/install/dayz');
+ const canInstall=status.allowed&&status.installerAvailable&&!status.filesPresent&&
+  status.state!=='running'&&status.state!=='starting';
+ $('createDayz').disabled=!canInstall||!$('dayzTerms').checked;
+ if(status.filesPresent){
+  dayzMessage('Fichiers DayZ détectés dans '+status.gameDir+'. Ouvre maintenant ton serveur dans la liste.');
+  if(previousDayzState!=='installed')await refresh();
+  previousDayzState='installed';
+ }else if(!status.allowed){
+  dayzMessage('Création disponible uniquement depuis le panneau lancé sur Windows.',true);
+ }else if(!status.installerAvailable){
+  dayzMessage('Installateur manquant : récupère le paquet Windows complet, avec le dossier scripts.',true);
+ }else if(status.state==='running'||status.state==='starting'){
+  dayzMessage('Installation lancée. Confirme dans la fenêtre Windows, puis laisse SteamCMD télécharger les fichiers.');
+ }else if(status.state==='error'){
+  dayzMessage('Installation DayZ interrompue ou refusée. Regarde le message dans la fenêtre de l’installateur, puis réessaie.',true);
+ }else if(status.state==='finished'){
+  dayzMessage('Programme terminé mais fichiers DayZ non vérifiés. Vérifie le dossier '+status.gameDir+'.',true);
+ }else{
+  dayzMessage('DayZ n’est pas encore installé. Accepte les conditions puis clique sur Installer DayZ sur ce PC.');
+ }
+ return status;
+}
+$('dayzTerms').addEventListener('change',()=>safe(refreshDayzInstall));
+$('checkDayz').onclick=()=>safe(async()=>{await refreshDayzInstall();await refresh()});
+$('createDayz').onclick=()=>safe(async()=>{
+ if(!$('dayzTerms').checked)throw Error('Accepte d’abord les conditions des éditeurs.');
+ if(!confirm('Télécharger et installer le vrai serveur DayZ PC (SteamCMD 223350) sur CET ordinateur ? Tu devras aussi confirmer dans la fenêtre Windows.'))return;
+ $('createDayz').disabled=true;
+ const result=await api('/api/install/dayz',{method:'POST',headers:{'content-type':'application/json'},
+  body:JSON.stringify({confirmed:true,publisherTermsAccepted:true})});
+ dayzMessage(result.message||'Installation DayZ demandée sur ce PC.');
+ await refreshDayzInstall();
+});
+
 $('refresh').onclick=()=>safe(refresh);
 $('rootBtn').onclick=()=>safe(()=>files(''));
 $('upBtn').onclick=()=>safe(()=>files(folder.split('/').slice(0,-1).join('/')));
@@ -156,3 +197,4 @@ $('uploadForm').addEventListener('submit',e=>{e.preventDefault();safe(async()=>{
  });
  await files(folder);notice('Nouveau fichier réel importé : '+rel);
 })});
+setInterval(()=>{if(!$('workspace').hidden && token)void refreshDayzInstall().catch(()=>{})},9000);
