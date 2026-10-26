@@ -171,7 +171,14 @@ function rentalsPage(){if(!$('rentals'))return $('cmdrpStatus').textContent='Loc
 
 /*CMD_RENTER_WIRING_FIX_V1*/
 function modsPage(x=chosen()){
-  if(!x?.g?.id){$('cmdrpStatus').textContent='Mods : ce serveur doit être relié à un profil jeu CMD Hosting.';return;}
+  if(!x?.g?.id){
+    if(rpIdentify(x)==='Palworld'&&typeof window.CMDHostingOpenPalworldWorkshop==='function'){
+      window.CMDHostingOpenPalworldWorkshop();
+      return;
+    }
+    $('cmdrpStatus').textContent='Mods : associe un profil de jeu à ce serveur pour accéder aux mods compatibles.';
+    return;
+  }
   if(!$('cmdMods')){$('cmdrpStatus').textContent='Le gestionnaire Mods & Workshop n’est pas disponible.';return;}
   try{sessionStorage.setItem('cvServer',String(x.g.id));}catch(e){}
   const sel=$('cvServer');if(sel)sel.value='';
@@ -211,7 +218,7 @@ else if(tab==='Mods')c.append(btn('Ouvrir les mods du serveur',()=>modsPage(x)))
 else if(!['Joueurs','Réinstaller'].includes(tab))c.append(btn('Ouvrir le panneau serveur',host));
 p.append(c)}
 function draw(){let a=list(),x=chosen(),sel=$('cmdrpSelect');sel.replaceChildren();for(const z of a)sel.add(new Option(z.name+' · '+z.type,z.id));if(x)sel.value=x.id;$('cmdrpBrief').replaceChildren();if(x){const img=rpArtwork(x);if(img){const tag=mk('img');tag.src=img;tag.alt='Image du jeu '+(rpIdentify(x)||x.name);tag.loading='lazy';$('cmdrpBrief').append(tag)}}$('cmdrpBrief').append(mk('span',state(x)));$('cmdrpTitle').textContent=x?.name||'Mon profil loueur';$('cmdrpDescription').textContent=x?x.type+' · '+state(x):'Mes serveurs CMD Hosting';$('cmdrpBanner').style.backgroundImage=x?art(x):'linear-gradient(110deg,#16365e,#28264c)';controls(x);
-for(const[id,names]of[['cmdrpSettings',cats],['cmdrpAdmin',admins]]){let el=$(id);el.replaceChildren();for(const n of names){let b=btn(n,()=>{tab=n;if(n==='Mods'){modsPage();return;}if(n==='Changer de jeu'){switchGamePage();return;}draw()});if(n===tab)b.className='cmdrp-on';el.append(b)}}content(x)}
+for(const[id,names]of[['cmdrpSettings',cats],['cmdrpAdmin',admins]]){let el=$(id);el.replaceChildren();for(const n of names){let b=btn(n,()=>{tab=n;if(n==='Mods'){modsPage(chosen());return;}if(n==='Changer de jeu'){switchGamePage();return;}draw()});if(n===tab)b.className='cmdrp-on';el.append(b)}}content(x)}
 async function load(){$('cmdrpStatus').textContent='Chargement des serveurs…';
 try{let m=await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json());if(!m.user){leases=[];library=[];pc=null;$('cmdrpUser').textContent='Non connecté';draw();$('cmdrpStatus').textContent='Connecte-toi pour consulter tes serveurs.';$('cmdrpDetails').prepend(btn('Se connecter',()=>location.href='/connexion'));return}
 $('cmdrpUser').textContent=m.user.displayName||m.user.display_name||m.user.username||'Compte CMD';
