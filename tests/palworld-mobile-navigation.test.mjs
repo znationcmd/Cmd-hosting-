@@ -34,8 +34,9 @@ test('Palworld workshop visible even when mods API has no provider or existing g
 test('Profile retains Mods access; duplicate standalone menus only are suppressed',()=>{
  assert.match(profile,/const cats=\['Vue générale'.*?'Mods'/);
  assert.match(nav,/cmdPrimary button/);
- assert.match(nav,/Mods\\s\*/);
- assert.match(nav,/Jeux/);
+ assert.match(nav,/const duplicate=/);
+ assert.match(nav,/mods/i);
+ assert.match(nav,/jeux/i);
  assert.doesNotMatch(nav,/\.remove\(\)/);
  assert.doesNotMatch(nav,/\.page button/);
 });
