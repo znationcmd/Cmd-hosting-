@@ -57,7 +57,7 @@ test('no false real server claims or unsafe editor payments/launch from V7',()=>
 
 test('Palworld button follows the SELECTED game and never appears inside an FS25 profile',()=>{
  const {runInNewContext}=requireVm();
- const selection={textContent:'CMD Valhalla FS25 — Farming Simulator 25'};
+ const selection={textContent:'CMD Valhalla FS25 — Farming Simulator 25',dataset:{cmdGame:'farming simulator 25'}};
  const palworldButton={id:'cmdrpPalworldWorkshop',textContent:'Palworld · Steam Workshop',dataset:{},hidden:false,disabled:false,title:''};
  const hint={textContent:'',hidden:false};
  const sidebar={querySelector:()=>palworldButton};
@@ -80,15 +80,25 @@ test('Palworld button follows the SELECTED game and never appears inside an FS25
  runInNewContext(js,context);
  assert.equal(palworldButton.hidden,true,'FS25 should not show the Palworld button');
  assert.equal(palworldButton.disabled,true);
- selection.textContent='Mon serveur Palworld · Steam';
- map.cmdrpTitle.textContent='Mon serveur Palworld';
+ selection.textContent='Mon serveur sans indication du jeu';
+ selection.dataset.cmdGame='palworld';
+ map.cmdrpTitle.textContent='Un nom personnalisé';
  handlers.change({target:{id:'cmdrpSelect'}});
  assert.equal(palworldButton.hidden,false,'Palworld should show the official Workshop entry');
  assert.equal(palworldButton.disabled,false);
  selection.textContent='CMD Namalsk — DayZ';
+ selection.dataset.cmdGame='dayz';
  map.cmdrpTitle.textContent='CMD Namalsk';
  handlers.change({target:{id:'cmdrpSelect'}});
  assert.equal(palworldButton.hidden,true,'DayZ should not inherit Palworld-specific controls');
  assert.ok(css.includes('cmdrpPalworldWorkshop[hidden]'));
 });
 function requireVm(){return {runInNewContext:(source,context)=>new Script(source).runInNewContext(context)}}
+
+test('the selected server game identity comes from game key rather than the custom server name',()=>{
+ assert.match(profile,/option\.dataset\.cmdGame/);
+ assert.match(js,/option\?\.dataset\?\.cmdGame/);
+ assert.match(css,/#cmdIntegratedGames \.cmdg-card img/);
+ assert.match(css,/max-block-size:100px!important/);
+ assert.match(js,/hideRedundancies\(\)/);
+});
