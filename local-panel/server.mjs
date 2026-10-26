@@ -7,6 +7,8 @@
  */
 import http from 'node:http';
 import {spawn} from 'node:child_process';
+import {PROFILES,knownProfile,profileChecks,prepareProfile} from './game-profiles.mjs';
+import {gameProcessesRunning} from './exclusive-game-lock.mjs';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {readFile,readdir,writeFile,rename,mkdir,lstat,realpath,copyFile,open,stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
@@ -24,6 +26,24 @@ const listenHost=process.env.CMD_FILES_LISTEN_HOST||'127.0.0.1';
 const port=Number(process.env.CMD_FILES_PORT||8788);
 const DAYZ_SCRIPT=path.resolve(HERE,'..','scripts','Installer-DayZ-PC-1-clic.ps1');
 let dayzSetup={state:'idle',startedAt:null,finishedAt:null,exitCode:null};
+const profileSessions=new Map();
+const profileManagerPaths=new Map([
+ ['dayz',path.resolve(HERE,'..','dayz-worlds','manager.mjs')],
+ ['ark-asa',path.resolve(HERE,'..','asa-astraeos','manager.mjs')]
+]);
+function activeSession(){
+ for(const [id,item] of profileSessions)if(item.state==='démarrage'||item.state==='processus-actif')return {id,...item};
+ return null;
+}
+async function gameProfileStatus(){
+ const checked=await profileChecks(),active=activeSession();
+ return checked.map(p=>({...p,
+  localOnly:true,startedByThisPanel:active?.id===p.id,
+  processState:profileSessions.get(p.id)?.state||'arrêté',
+  processId:profileSessions.get(p.id)?.pid||null,
+  // A running launcher is NOT proof the actual game is reachable from the Internet.
+  publiclyReachableVerified:false}));
+}
 const locallyRequested=req=>{
  const ip=req.socket.remoteAddress||'';
  return ip==='127.0.0.1'||ip==='::1'||ip==='::ffff:127.0.0.1';
@@ -184,6 +204,49 @@ async function action(req,res,url){
  const route=url.pathname,method=req.method;
  if(route==='/api/status'&&method==='GET')return reply(res,200,{name:'CMD Hosting Fichiers',mode:'local-host',railway:false,defaultRoot:installRoot,bind:listenHost});
  if(route==='/api/servers'&&method==='GET')return reply(res,200,{servers:await listed(),catalogueNote:'Tous les jeux avec des fichiers sur un hôte peuvent être enregistrés; aucune arborescence fictive.'});
+ if(route==='/api/profiles'&&method==='GET'){
+  return reply(res,200,{profiles:await gameProfileStatus(),localBrowser:locallyRequested(req),
+   oneGameAtATime:true,railway:false,activeProfile:activeSession()?.id||null,
+   notice:'Un profil enregistré n’est pas un serveur installé ni joignable. Le démarrage exige les exécutables et mods officiels sur cette machine.'});
+ }
+ if(route==='/api/profiles/prepare'&&method==='POST'){
+  if(!locallyRequested(req)||process.platform!=='win32')
+   throw bad(403,'Préparation de serveurs autorisée depuis le PC Windows hôte uniquement.');
+  const data=await jsonBody(req,2048);
+  if(data?.confirmLocal!==true||!knownProfile(data?.id))throw bad(400,'Profil inconnu ou préparation locale non confirmée.');
+  const output=await prepareProfile(data.id);
+  return reply(res,200,{prepared:true,profile:data.id,output,
+   gameInstalled:false,note:'Configurations créées ou conservées ; téléchargement du jeu et connexion restent séparés.'});
+ }
+ if(route==='/api/profiles/start'&&method==='POST'){
+  if(!locallyRequested(req)||process.platform!=='win32')
+   throw bad(403,'Démarrage réservé au PC hôte. Depuis un téléphone, seul l’état est consultable.');
+  const data=await jsonBody(req,2048);
+  const profile=knownProfile(data?.id);
+  if(data?.confirmLocal!==true||!profile)throw bad(400,'Sélectionne et confirme un profil autorisé.');
+  if(activeSession())throw bad(409,'Un serveur CMD est déjà lancé dans ce panneau ; un seul à la fois.');
+  if(gameProcessesRunning())throw bad(409,'DayZ ou ARK fonctionne déjà sur Windows. Arrête-le normalement avant de changer de serveur.');
+  const found=(await profileChecks()).find(x=>x.id===profile.id);
+  if(!found?.ready)throw bad(409,'Fichiers ou mods non prêts : '+(found?.blockers?.slice(0,4).join(' ; ')||'installation manquante'));
+  const executable=profileManagerPaths.get(profile.game);
+  if(!(await stat(executable)).isFile())throw bad(503,'Gestionnaire officiel absent du paquet Windows.');
+  profileSessions.set(profile.id,{state:'démarrage',pid:null,at:new Date().toISOString()});
+  try{
+   const args=[executable,'start',...(profile.game==='dayz'?[profile.id]:[])];
+   const child=spawn(process.execPath,args,{cwd:path.dirname(executable),stdio:'inherit',windowsHide:false,env:process.env});
+   child.once('error',err=>{profileSessions.set(profile.id,{state:'erreur',error:err.code||'spawn failed',pid:null})});
+   child.once('exit',(code,signal)=>{profileSessions.set(profile.id,{state:code===0?'arrêté':'erreur',
+     exitCode:code,signal,pid:null,endedAt:new Date().toISOString()})});
+   profileSessions.set(profile.id,{state:'processus-actif',pid:child.pid||null,at:new Date().toISOString()});
+   return reply(res,202,{requested:true,profile:profile.id,
+    state:'lancement demandé',localWindows:true,gameRunningVerified:false,publiclyReachableVerified:false,
+    note:'Le programme natif effectue encore ses propres contrôles. Vérifier son journal Windows et la connexion en jeu.'});
+  }catch(error){
+   profileSessions.set(profile.id,{state:'erreur',error:String(error.code||'launch failed')});
+   throw bad(500,'Impossible de lancer le gestionnaire Windows. Consulter le terminal local.');
+  }
+ }
+
  if(route==='/api/install/dayz'&&method==='GET'){
   return reply(res,200,{...await dayzSetupStatus(),localBrowserRequired:true,localBrowser:locallyRequested(req),note:'Création DayZ PC : fichiers officiels installés sur CE Windows seulement.'});
  }
