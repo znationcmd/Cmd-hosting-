@@ -533,6 +533,10 @@ async function start(){
     const css=await readFile(path.join(HERE,'style.css'));
     res.writeHead(200,{'content-type':'text/css; charset=utf-8','cache-control':'no-store'});return res.end(css);
    }
+   if(url.pathname==='/profile-unified.js'&&req.method==='GET'){
+    const js=await readFile(path.join(HERE,'profile-unified.js'));
+    res.writeHead(200,{'content-type':'text/javascript; charset=utf-8','cache-control':'no-store'});return res.end(js);
+   }
    if(url.pathname==='/app.js'&&req.method==='GET'){
     const js=await readFile(path.join(HERE,'app.js'));
     res.writeHead(200,{'content-type':'text/javascript; charset=utf-8','cache-control':'no-store'});return res.end(js);
