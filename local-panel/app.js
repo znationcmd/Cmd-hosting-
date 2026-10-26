@@ -21,7 +21,7 @@ async function safe(job){try{await job()}catch(e){notice(e.message,true)}}
 async function refresh(){
  const doc=await api('/api/servers');servers=doc.servers;
  const list=$('serverList');list.replaceChildren();
- if(!servers.length){list.append(element('p','empty','Aucun serveur encore installé ni associé sur cette machine.'));show('explorer',false);show('maps',false);show('editor',false);return}
+ if(!servers.length){list.append(element('p','empty','Aucun serveur encore installé ni associé sur cette machine.'));show('explorer',false);show('maps',false);show('palworldWorkshop',false);show('editor',false);return}
  for(const x of servers){
   const b=element('button','serverItem'+(current?.id===x.id?' active':''));
   const name=element('b','',x.name),info=element('small','',x.installed?'Dossiers réels · serveur trouvé':'Dossier associé · installation non vérifiée');
@@ -42,17 +42,18 @@ async function select(id,restart=true){
  $('selectedState').textContent=current.note;
  $('installedBadge').textContent=current.installed?'FICHIERS DÉTECTÉS':'INSTALLATION NON VÉRIFIÉE';
  $('installedBadge').className='tag '+(current.installed?'online':'offline');
- show('explorer',true);show('maps',current.game==='dayz');show('editor',false);
+ show('explorer',true);show('maps',current.game==='dayz');show('palworldWorkshop',current.game==='palworld');show('editor',false);
  $('quickConfigs').replaceChildren();
  for(const config of current.configFiles){
   const b=element('button','chip',config);b.onclick=()=>safe(async()=>{
-   if(/\/$/.test(config)||config==='mpmissions'){await files(config)}else await openText(config);
+   if(/\/$/.test(config)||config==='mpmissions'||config==='Mods/Workshop'){await files(config)}else await openText(config);
   });
   $('quickConfigs').append(b);
  }
  if(restart)folder='';
  await files(folder);
  if(current.game==='dayz')await refreshMaps();
+ if(current.game==='palworld')await refreshPalworld();
 }
 async function files(sub=''){
  if(!current)return;
@@ -98,6 +99,24 @@ async function download(rel){
  try{const link=element('a');link.href=url;link.download=rel.split('/').at(-1);document.body.append(link);link.click();link.remove();}
  finally{setTimeout(()=>URL.revokeObjectURL(url),30000)}
 }
+async function refreshPalworld(){
+ if(!current||current.game!=='palworld')return;
+ const result=await api('/api/palworld/workshop?id='+encodeURIComponent(current.id));
+ const list=$('palworldModList');list.replaceChildren();
+ $('palworldWorkshopStatus').textContent=result.installedMods.length+' mod(s) trouvé(s) sur le disque. '+
+   (result.enabledGlobal?'Chargement global activé.':'Chargement global non activé.');
+ if(!result.installedMods.length){
+  list.append(element('p','empty','Aucun mod serveur détecté. Installe d’abord les vrais fichiers Workshop dans Mods/Workshop, puis ouvre PalModSettings.ini.'));
+ }
+ for(const mod of result.installedMods){
+  const row=element('article','serverItem');
+  row.append(element('strong','',mod.packageName),
+    element('small','',mod.serverCompatible?(mod.enabled?'Compatible serveur · activé':'Compatible serveur · inactif'):
+      'Mod non confirmé compatible avec un serveur dédié'));
+  list.append(row);
+ }
+}
+$('palworldRefresh').onclick=()=>safe(refreshPalworld);
 async function refreshMaps(){
  const r=await api('/api/maps?id='+encodeURIComponent(current.id));
  const select=$('mapSelect');select.replaceChildren();
