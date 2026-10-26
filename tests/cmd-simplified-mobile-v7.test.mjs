@@ -89,6 +89,6 @@ test('Palworld button follows the SELECTED game and never appears inside an FS25
  map.cmdrpTitle.textContent='CMD Namalsk';
  handlers.change({target:{id:'cmdrpSelect'}});
  assert.equal(palworldButton.hidden,true,'DayZ should not inherit Palworld-specific controls');
- assert.match(css,/cmdrpPalworldWorkshop\\[hidden\\]/);
+ assert.ok(css.includes('cmdrpPalworldWorkshop[hidden]'));
 });
 function requireVm(){return {runInNewContext:(source,context)=>new Script(source).runInNewContext(context)}}
