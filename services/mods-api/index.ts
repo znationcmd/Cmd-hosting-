@@ -108,7 +108,7 @@ const OTHER_GAME_MOD_PROVIDERS=[
 [/^Rust$/i,"Rust","local","https://umod.org/games/rust",0,"Plugins uMod/Oxide seulement si le chargeur est présent."],
 [/^Satisfactory$/i,"Satisfactory","local","https://ficsit.app/",0,"Contrôler SML, le jeu et le support serveur dédié."],
 [/^V Rising$/i,"V Rising","thunderstore-guided","https://thunderstore.io/c/v-rising/",0,"Chargeur et version du serveur à contrôler avant import."],
-[/^Palworld$/i,"Palworld","local","https://www.pocketpair.jp/",0,"Support serveur du mod à vérifier; pas d'activation automatique."],
+[/^Palworld$/i,"Palworld","local","https://steamcommunity.com/app/1623730/workshop/",1623730,"Workshop Palworld officiel. Mods serveur Windows uniquement : Mods/Workshop/<dossier>/Info.json et Mods/PalModSettings.ini ActiveModList=PackageName. Installation et support client/console non garantis."],
 [/^Core Keeper$/i,"Core Keeper","local","https://mod.io/",0,"Support mod et serveur à vérifier avec l'éditeur."],
 [/^Enshrouded$/i,"Enshrouded","publisher-review","https://enshrouded.com/",0,"Aucune intégration de mods serveur validée sans accord/support éditeur."],
 [/^Farming Simulator 19$/i,"Farming Simulator 19","modhub-native","https://www.farming-simulator.com/mods.php",0,"ModHub FS19 natif, archives ZIP conformes à la version serveur."],
@@ -155,6 +155,12 @@ async function otherGameModLookup(profile,q,page,origin){
 if(!profile.eligible)return answer({error:profile.reason,profile},422,origin);
 if(q.length>100)return answer({error:"invalid_search_query"},400,origin);
 const empty=()=>answer({profile,items:[],mode:"open_official_manager_or_authorized_import",note:profile.note,autoInstall:false},200,origin);
+if(profile.provider==="modhub-native"){
+ const title=/25/.test(profile.game)?"fs2025":/22/.test(profile.game)?"fs2022":"fs2019";
+ const browseUrl="https://www.farming-simulator.com/mods.php?"+new URLSearchParams({title,lang:"fr",searchMod:q,platform:"pc"}).toString();
+ return answer({profile,items:[],browseUrl,searchTerm:q,mode:"official_modhub_search",
+  note:"Ouvre le ModHub GIANTS pour les vrais résultats ; aucun ZIP n'a été installé sur le serveur.",autoInstall:false},200,origin);
+}
 if(!["modrinth","factorio","steam"].includes(profile.provider))return empty();
 if(profile.provider==="modrinth"){
 const facets=JSON.stringify([["project_type:mod"],["environment:server_only","environment:server_only_client_optional","environment:client_and_server","environment:dedicated_server_only"]]);
