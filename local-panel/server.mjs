@@ -221,10 +221,40 @@ async function atomicSave(instance,rel,content,{create=false}={}){
   try{const {unlink}=await import('node:fs/promises');await unlink(tmp)}catch{}
  }
 }
+const workshopSources=Object.freeze({
+ dayz:{name:'Steam Workshop DayZ PC',url:'https://steamcommunity.com/app/221100/workshop/'},
+ 'ark-asa':{name:'CurseForge ARK Survival Ascended',url:'https://www.curseforge.com/ark-survival-ascended/mods'},
+ 'ark-ase':{name:'Steam Workshop ARK Survival Evolved',url:'https://steamcommunity.com/app/346110/workshop/'},
+ 'arma-reforger':{name:'Arma Reforger Workshop',url:'https://reforger.armaplatform.com/workshop'},
+ palworld:{name:'Steam Workshop Palworld',url:'https://steamcommunity.com/app/1623730/workshop/'}
+});
+async function profileModView(id){
+ const known=knownProfile(id);
+ const personal=known?null:(await lifetime.list()).find(x=>x.id===id);
+ if(!known&&!personal)throw bad(404,'Profil introuvable.');
+ const game=known?.game||personal.gameKey;
+ let mods=[],map=known?.map||personal?.map||'';
+ if(known){
+  const manifestFile=path.resolve(HERE,'..',known.game==='dayz'?'dayz-worlds':'asa-astraeos','manifest.json');
+  const raw=JSON.parse(await readFile(manifestFile,'utf8'));
+  const snapshot=known.game==='dayz'?raw.profiles.find(x=>x.id===id):raw;
+  if(!snapshot)throw bad(404,'Profil de mods introuvable.');
+  mods=(snapshot.mods||[]).map(m=>({
+   name:m.name,sourceId:m.workshopId||m.curseForgeId||null,
+   enabled:m.enabled!==false,installedVerified:false,
+   state:'prévu — installation à vérifier'
+  }));
+ }
+ return {id,game,map,mods,workshop:workshopSources[game]||null,
+  filesInstalledNotAssumed:true,source:'manifest local sur le PC',
+  note:mods.length?'Liste demandée : aucune installation de mod affirmée sans contrôle disque.':
+  'Les mods disponibles dépendent des fichiers du serveur installé et des conditions du jeu.'};
+}
 async function action(req,res,url){
  const route=url.pathname,method=req.method;
  if(route==='/api/status'&&method==='GET')return reply(res,200,{name:'CMD Hosting Fichiers',mode:'local-host',railway:false,defaultRoot:installRoot,bind:listenHost,pcOnline:true,lanEnabled:listenHost==='0.0.0.0',lanAddresses:localNetworkAddresses(),remoteInternetEnabled:false,phoneRequiresSameWifi:true,gameServerInstalledNotImplied:true});
  if(route==='/api/servers'&&method==='GET')return reply(res,200,{servers:await listed(),catalogueNote:'Tous les jeux avec des fichiers sur un hôte peuvent être enregistrés; aucune arborescence fictive.'});
+ if(route==='/api/profile/workshop'&&method==='GET')return reply(res,200,await profileModView(url.searchParams.get('id')));
  if(route==='/api/library/catalogue'&&method==='GET'){
   return reply(res,200,{suggestions:GAME_SUGGESTIONS,freeGameName:true,serverSoftwareMayBeUnavailable:true,
    note:'Choisis un jeu ou saisis le nom de n’importe quel jeu du catalogue. Profil sans échéance ; logiciel serveur officiel nécessaire pour jouer.'});
