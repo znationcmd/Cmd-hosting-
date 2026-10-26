@@ -27,6 +27,6 @@ test('handoff is a manifest-only plan and never claims to deploy a server',()=>{
 test('ANOMALIA shop card links to real CMD Hosting Workshop',()=>{
  const s=read('../web/public/catalog-ui.js');
  assert.match(s,/data-anomalia-workshop/);
- assert.match(s,/data-page="cmdMods"/);
+ assert.match(s,/CMDHostingOpenMods/);
  assert.match(s,/La location de serveurs CMD Hosting pour ce jeu n’est pas encore disponible/);
 });
