@@ -17,7 +17,7 @@ const sha=b=>createHash('sha256').update(b).digest('hex');
 export function allowed(filename){
  if(typeof filename!=='string'||filename.length>230||EXCLUDE.test(filename))return false;
  const bits=filename.split('/');
- if(bits.some(p=>!p||p==='..'||p==='.'||!/^[a-zA-Z0-9_.-]+$/.test(p)))return false;
+ if(bits.some(p=>!p||p==='..'||p==='.'||p.startsWith('.')||!/^[a-zA-Z0-9_.-]+$/.test(p)))return false;
  return LAUNCHERS.includes(filename)||(HEADS.some(p=>filename.startsWith(p))&&/\.(?:cmd|ps1|mjs|js|html|css|json|ini|md)$/.test(filename));
 }
 export function validate(manifest){
