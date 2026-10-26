@@ -34,7 +34,7 @@ test('Palworld workshop visible even when mods API has no provider or existing g
 test('Profile retains Mods access; duplicate standalone menus only are suppressed',()=>{
  assert.match(profile,/const cats=\['Vue générale'.*?'Mods'/);
  assert.match(nav,/cmdPrimary button/);
- assert.match(nav,/const duplicate=/);
+ assert.match(nav,/const globalRedundancies=/);
  assert.match(nav,/mods/i);
  assert.match(nav,/jeux/i);
  assert.doesNotMatch(nav,/\.remove\(\)/);
@@ -59,7 +59,7 @@ test('iPhone game catalogue loads bounded covers, legible titles, and same UI fo
  assert.match(mobile,/\.cmd-shop-name/);
  assert.match(html,/cmd-mobile-catalog-fix\.css\?v=20261026/);
  assert.match(html,/cmd-navigation-cleanup\.js\?v=20261026/);
- assert.match(html,/mod-v2-ui\.js\?v=20261026-palworld-2/);
+ assert.match(html,/mod-v2-ui\.js\?v=20261026-palworld-3/);
 });
 
 test('Workshop Palworld is a first-class server-mod source and the mobile cards stay compact',()=>{
@@ -74,4 +74,15 @@ test('Workshop Palworld is a first-class server-mod source and the mobile cards 
  assert.match(css,/max-height:104px!important/);
  assert.match(css,/\.cmd-shop-cover img/);
  assert.match(html,/mobile-catalog-compact\.css/);
+});
+
+
+test('new mobile catalog override remains loaded after old style and bounds both catalogue views',()=>{
+  const override=read('web/public/ui/cmd-hosting-mobile-catalog-v3.css');
+  assert.match(override,/#jeux #game-list/);
+  assert.match(override,/#cmdCatalogSection \.cmd-shop-cover img/);
+  assert.match(override,/max-height:84px!important/);
+  assert.match(override,/grid-template-columns:minmax\(0,1fr\)!important/);
+  assert.match(override,/object-fit:cover!important/);
+  assert.match(html,/cmd-hosting-mobile-catalog-v3\.css\?v=20261026-mobile3/);
 });
