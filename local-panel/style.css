@@ -81,3 +81,32 @@ padding:13px;margin:14px 0 18px;min-width:0}
  text-align:center;color:#effaff;border:1px solid #7194c7;border-radius:8px;background:#234d86;
  padding:9px 11px;overflow-wrap:anywhere}
 .cmdPalworldQuick a:hover{background:#376eb1}
+
+
+/* Unified local PC connection and per-server game actions; mobile-safe, no duplicate global menus. */
+.pcConnection{margin-bottom:17px;background:linear-gradient(130deg,#13344a,#211d4c)}
+.pcConnection h2{margin:0 0 5px}
+.pcConnection .connectionAddresses{display:flex;gap:9px;flex-wrap:wrap;margin:13px 0}
+.pcConnection .connectionAddresses a,.modSourceLink{color:#f1f8ff;display:inline-flex;padding:10px 12px;
+ border:1px solid #648bb4;border-radius:9px;background:#24518b;text-decoration:none;font-size:12px;
+ font-weight:700;overflow-wrap:anywhere}
+.pcConnection .connectionAddresses a:hover,.modSourceLink:hover{background:#346db4}
+.profileWorkspace{background:linear-gradient(145deg,#172a47,#241e47)}
+.profileWorkspace .profileActions{gap:9px;margin:16px 0}
+.profileWorkspace .profileActions button{flex:1 1 110px;min-width:0;min-height:40px}
+.profileMods{border-top:1px solid #49628b;padding-top:14px}
+.profileModsList{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:7px;
+ margin:12px 0}
+.profileModRow{display:flex;flex-direction:column;gap:5px;border:1px solid #435575;border-radius:8px;
+ background:#15223a;padding:10px;overflow-wrap:anywhere}
+.profileModRow b{font-size:12px;color:#f5f7ff}
+.profileModRow small{font-size:11px;color:#bdceec}
+.profileModRow .tag{align-self:flex-start}
+#profileModsSource{margin:14px 0}
+@media(max-width:600px){
+ .pcConnection{padding:15px;margin:0 0 13px}
+ .pcConnection .connectionAddresses a{width:100%}
+ .profileWorkspace .profileActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .profileWorkspace .profileActions button{min-width:0}
+ #cmdProfileList{max-height:none}
+}
