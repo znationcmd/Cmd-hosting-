@@ -1,0 +1,26 @@
+name: CMD Hosting — Capture public UI asset for safe update
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/cmd-hosting-live-asset-capture.yml'
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch public Railway /catalog-compat.js, no credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --show-error --location --max-time 25 --retry 2 \
+            -H 'Cache-Control: no-cache' \
+            -o /tmp/catalog-live.js 'https://cmd-hosting-web-production.up.railway.app/catalog-compat.js'
+          test "$(wc -c </tmp/catalog-live.js)" -gt 1000
+          node --check /tmp/catalog-live.js
+          echo "Live public script bytes: $(wc -c </tmp/catalog-live.js)"
+          echo 'CMD_HOSTING_LIVE_JS_BEGIN'
+          base64 -w0 /tmp/catalog-live.js
+          echo ''
+          echo 'CMD_HOSTING_LIVE_JS_END'
