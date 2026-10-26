@@ -42,8 +42,22 @@
   if(scheduled)return;scheduled=true;
   queueMicrotask(()=>{scheduled=false;clean();});
  };
+ function openFullCatalog(event){
+  const nav=event.target?.closest?.('[data-page="jeux"],[href="#jeux"]');
+  if(!nav||!isGlobalNav(nav)||!document.getElementById('cmdCatalogSection'))return;
+  if(typeof window.show!=='function')return;
+  // The original "Jeux" links to only a few static images. Use the full
+  // catalog page without deleting the old form or losing any server action.
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  window.show('cmdCatalogSection');
+  for(const button of document.querySelectorAll('[data-page].active'))button.classList.remove('active');
+  nav.classList.add('active');
+  try{history.replaceState(null,'','#cmdCatalogSection')}catch{}
+ }
  function start(){
   clean();
+  document.addEventListener('click',openFullCatalog,{capture:true});
   if(typeof MutationObserver==='undefined')return;
   new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
  }
