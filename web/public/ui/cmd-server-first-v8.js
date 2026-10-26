@@ -56,7 +56,7 @@
   if(native){
    const selected=$('cmdrpSelect')?.selectedOptions?.[0];
    const name=(selected?.dataset.cmdGame||selected?.textContent||'');
-   const available=/\\bpalworld\\b/i.test(name)||!selected;
+   const available=/\bpalworld\b/i.test(name)||!selected;
    if(native.hidden!==!available)native.hidden=!available;
    if(native.disabled!==!available)native.disabled=!available;
   }
