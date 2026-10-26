@@ -54,3 +54,41 @@ test('no false real server claims or unsafe editor payments/launch from V7',()=>
  assert.match(profile,/type:'prepared'/);
  assert.match(profile,/Préparé · non installé/);
 });
+
+test('Palworld button follows the SELECTED game and never appears inside an FS25 profile',()=>{
+ const {runInNewContext}=requireVm();
+ const selection={textContent:'CMD Valhalla FS25 — Farming Simulator 25'};
+ const palworldButton={id:'cmdrpPalworldWorkshop',textContent:'Palworld · Steam Workshop',dataset:{},hidden:false,disabled:false,title:''};
+ const hint={textContent:'',hidden:false};
+ const sidebar={querySelector:()=>palworldButton};
+ const profile={querySelector:selector=>selector==='.cmdrp-sidebar'?sidebar:null};
+ const primary={append:()=>{}};
+ const map={
+  cmdPrimary:primary,cmdv7Catalog:{},cmdv7Account:{},cmdv7Help:{},
+  cmdRenterProfile:profile,cmdrpPalworldWorkshop:palworldButton,
+  cmdrpSelect:{selectedOptions:[selection]},cmdrpTitle:{textContent:'CMD Valhalla FS25'},
+ };
+ const handlers={};
+ const context={
+  window:{},
+  document:{readyState:'complete',body:{},getElementById:id=>map[id]||null,
+    querySelector:()=>null,querySelectorAll:()=>[],addEventListener:(name,handler)=>{handlers[name]=handler}},
+  requestAnimationFrame:fn=>fn(),
+  MutationObserver:undefined,
+  URL,console
+ };
+ runInNewContext(js,context);
+ assert.equal(palworldButton.hidden,true,'FS25 should not show the Palworld button');
+ assert.equal(palworldButton.disabled,true);
+ selection.textContent='Mon serveur Palworld · Steam';
+ map.cmdrpTitle.textContent='Mon serveur Palworld';
+ handlers.change({target:{id:'cmdrpSelect'}});
+ assert.equal(palworldButton.hidden,false,'Palworld should show the official Workshop entry');
+ assert.equal(palworldButton.disabled,false);
+ selection.textContent='CMD Namalsk — DayZ';
+ map.cmdrpTitle.textContent='CMD Namalsk';
+ handlers.change({target:{id:'cmdrpSelect'}});
+ assert.equal(palworldButton.hidden,true,'DayZ should not inherit Palworld-specific controls');
+ assert.match(css,/cmdrpPalworldWorkshop\\[hidden\\]/);
+});
+function requireVm(){return {runInNewContext:(source,context)=>new Script(source).runInNewContext(context)}}
