@@ -20,11 +20,12 @@ test('redundant global menu removed, not real per-server Mods/FTP/Console',()=>{
  assert.match(js,/#cmdRenterProfile,#cmdMods,#hostingPanel/);
  assert.doesNotMatch(js,/server\.running\s*=|servers\.push\(|api\/pc\/command|POST.*server/i);
 });
-test('Palworld workshop is available in server profile and Mods without machine and uses correct official source',()=>{
- assert.match(js,/cmdV8PalworldProfile/);
- assert.match(js,/cmdV8Palworld/);
+test('V8 does not inject duplicate Palworld navigation; native server-profile shortcut is preserved',()=>{
+ assert.match(js,/cmdrpPalworldWorkshop/);
+ assert.match(js,/keepWorkshopWithinServer/);
  assert.match(js,/steamcommunity\.com\/app\/1623730\/workshop/);
  assert.match(js,/CMDHostingOpenPalworldWorkshop/);
+ assert.doesNotMatch(js,/create\.before\(b\)|id='cmdV8Palworld'/);
  assert.doesNotMatch(js,/workshop_download_item|SteamCMD|createServer/i);
 });
 test('phone images cannot occupy full-height cards and text stays visible',()=>{
