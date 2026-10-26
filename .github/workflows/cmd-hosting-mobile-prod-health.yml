@@ -1,0 +1,26 @@
+name: CMD Hosting — Verify live mobile patch safely
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/cmd-hosting-mobile-prod-health.yml'
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify actual online public catalogue, UI and auth-safe backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://cmd-hosting-web-production.up.railway.app'
+          for index in 1 2 3 4 5; do
+            if curl -LfsS --max-time 20 -o /tmp/cmd-live.js "${base}/catalog-compat.js" &&
+               curl -LfsS --max-time 20 -o /tmp/cmd-catalog.json "${base}/api/catalog"; then break; fi
+            sleep 8
+          done
+          node --check /tmp/cmd-live.js
+          node -e "const s=require('fs').readFileSync('/tmp/cmd-live.js','utf8');const p=require('fs').readFileSync('/tmp/cmd-catalog.json','utf8');const cat=JSON.parse(p);console.log('Live catalogue entries:',(cat.games||[]).length);console.log('Live script bytes:',Buffer.byteLength(s));console.log('Palworld fixed:',s.includes('cmdrpRailwayPalworld'));console.log('Mobile compact:',s.includes('cmdRailwayCssV10'));if((cat.games||[]).length<100||!s.includes('cmdrpRailwayPalworld')||!s.includes('cmdRailwayCssV10'))process.exit(3)"
+          curl -LfsS --max-time 20 -o /tmp/hosting-status.json "${base}/api/status"
+          echo 'CMD Hosting public routes responded; no sessions, credentials or user data fetched.'
