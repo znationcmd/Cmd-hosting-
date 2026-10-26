@@ -1,0 +1,36 @@
+/* CMD Hosting — real mobile catalogue size and readable game titles.
+   The phone must show several games at once instead of full-height poster images. */
+#jeux #game-list{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))!important;gap:12px!important;align-items:stretch}
+#jeux #game-list>.game{display:flex!important;flex-direction:column!important;align-items:stretch!important;overflow:hidden!important;min-width:0!important;width:100%!important;height:auto!important;max-height:none!important;padding:0!important}
+#jeux #game-list>.game>.real-game-image,
+#jeux #game-list>.game>img{display:block!important;width:100%!important;height:145px!important;min-height:0!important;max-height:145px!important;object-fit:cover!important;aspect-ratio:16/9!important;flex:0 0 145px!important}
+#jeux #game-list>.game>.game-body{display:flex!important;flex-direction:column!important;gap:7px!important;padding:13px!important;min-width:0!important}
+#jeux #game-list>.game>.game-body>h3{font-size:16px!important;line-height:1.35!important;min-height:0!important;color:#f2f8ff!important;overflow-wrap:anywhere!important}
+#jeux #game-list>.game>.game-body>p{font-size:12px!important;line-height:1.5!important;flex:1!important}
+#cmdCatalogSection #cmdShopGrid{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(165px,1fr))!important;gap:12px!important}
+#cmdCatalogSection .cmd-shop-card{min-width:0!important;max-width:100%!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:0!important}
+#cmdCatalogSection .cmd-shop-cover{position:relative!important;width:100%!important;height:112px!important;min-height:0!important;max-height:112px!important;overflow:hidden!important}
+#cmdCatalogSection .cmd-shop-cover img{display:block!important;width:100%!important;height:100%!important;max-height:112px!important;object-fit:cover!important}
+#cmdCatalogSection .cmd-shop-text{display:flex!important;flex-direction:column!important;gap:5px!important;padding:12px!important;min-height:94px!important}
+#cmdCatalogSection .cmd-shop-name{color:#f6f8ff!important;font-size:14px!important;font-weight:800!important;line-height:1.4!important;min-height:0!important;white-space:normal!important;overflow-wrap:anywhere!important}
+#cmdCatalogSection .cmd-shop-tags,#cmdCatalogSection .cmd-shop-state{font-size:11px!important}
+#cmdRenterProfile{overflow:visible!important}
+#cmdRenterProfile .cmdrp{min-width:0!important}
+#cmdRenterProfile .cmdrp-sidebar{max-height:none!important}
+#cmdRenterProfile #cmdrpSettings,#cmdRenterProfile #cmdrpAdmin{scrollbar-width:thin}
+@media(max-width:740px){
+ #jeux #game-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ #jeux #game-list>.game>.real-game-image,#jeux #game-list>.game>img{height:100px!important;max-height:100px!important;flex-basis:100px!important}
+ #jeux #game-list>.game>.game-body{padding:10px!important}
+ #jeux #game-list>.game>.game-body>h3{font-size:13px!important}
+ #cmdCatalogSection #cmdShopGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+ #cmdCatalogSection .cmd-shop-cover{height:92px!important;max-height:92px!important}
+ #cmdCatalogSection .cmd-shop-cover img{max-height:92px!important}
+ #cmdCatalogSection .cmd-shop-name{font-size:13px!important}
+ #cmdCatalogSection .cmd-shop-text{padding:10px!important;min-height:96px!important}
+ #cmdCatalogSection .cmd-shop-feature{max-height:195px!important}
+}
+@media(max-width:370px){
+ #cmdCatalogSection #cmdShopGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #jeux #game-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
