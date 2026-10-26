@@ -46,7 +46,11 @@ jobs:
           Copy-Item asa-astraeos distribution\asa-astraeos -Recurse
           New-Item -ItemType Directory -Force -Path distribution\scripts | Out-Null
           Copy-Item scripts/Installer-DayZ-PC-1-clic.ps1,scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd distribution\scripts\
-          Copy-Item local-panel/server.mjs,local-panel/app.js,local-panel/index.html,local-panel/style.css,local-panel/README.md,local-panel/exclusive-game-lock.mjs,local-panel/game-profiles.mjs distribution\local-panel\
+          # Include every local runtime module (persistent-profiles and rental-policy were missing from old ZIP).
+          Copy-Item local-panel/*.mjs,local-panel/*.js,local-panel/*.html,local-panel/*.css,local-panel/README.md distribution\local-panel\
+          # Import the DISTRIBUTION COPY, not the source tree: fail before upload if any module is missing.
+          node --input-type=module -e "import('./distribution/local-panel/server.mjs').then(() => console.log('Distributed CMD Hosting boots: all imports resolved'))"
+          if ($LASTEXITCODE -ne 0) { throw 'Windows ZIP would not start: missing dependency' }
       - name: Upload Windows ready-to-extract archive
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
