@@ -64,12 +64,12 @@
   // Never hide server-profile Mods/Fichiers/Console/Cartes actions.
   const other=$('cmdOtherSpaces');
   if(other){const summary=other.querySelector(':scope>summary');
-   if(summary)summary.textContent='Autres rubriques · administration avancée';
+   if(summary&&summary.textContent!=='Autres rubriques · administration avancée')summary.textContent='Autres rubriques · administration avancée';
    if(!other.dataset.cmdv7Initialized){other.open=false;other.dataset.cmdv7Initialized='1'}
   }
   const advanced=$('cmdAdvancedServerTools');
   if(advanced){const summary=advanced.querySelector(':scope>summary');
-   if(summary)summary.textContent='Options techniques · sauvegardes et planification';
+   if(summary&&summary.textContent!=='Options techniques · sauvegardes et planification')summary.textContent='Options techniques · sauvegardes et planification';
    if(!advanced.dataset.cmdv7Initialized){advanced.open=false;advanced.dataset.cmdv7Initialized='1'}
   }
   const shopButtons=[...document.querySelectorAll('#cmdSidebar a,#cmdSidebar button')];
@@ -87,7 +87,7 @@
   let button=$('cmdrpPalworldWorkshop')||$('cmdrpPalworldOpenV6');
   if(button){
     button.onclick=showPalworld;
-    button.textContent='Palworld · Steam Workshop';
+    if(button.textContent!=='Palworld · Steam Workshop')button.textContent='Palworld · Steam Workshop';
     button.title='Parcourir le vrai Steam Workshop officiel de Palworld, sans installation fictive';
     button.hidden=false;
     button.dataset.cmdv7Palworld='1';
@@ -98,7 +98,7 @@
     const before=$('cmdrpCreate');if(before)before.before(button);else sidebar.append(button);
   }
   const p=root.querySelector('.cmdrp-palworld-hint');
-  if(p)p.textContent='Workshop officiel Palworld. Les mods de serveur demandent un hôte Windows et un fichier PalModSettings.ini.';
+  if(p&&p.textContent!=='Workshop officiel Palworld. Les mods de serveur demandent un hôte Windows et un fichier PalModSettings.ini.')p.textContent='Workshop officiel Palworld. Les mods de serveur demandent un hôte Windows et un fichier PalModSettings.ini.';
  }
  function catalogScreen(){
   // Make the full dynamic catalogue the only "Jeux" page. Legacy twelve-game cards
