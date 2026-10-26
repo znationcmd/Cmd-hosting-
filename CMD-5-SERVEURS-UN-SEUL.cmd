@@ -2,6 +2,12 @@
 setlocal EnableExtensions
 chcp 65001 >nul
 title CMD HOSTING - 5 SERVEURS - UN SEUL A LA FOIS
+echo [CMD Hosting] Recherche des mises a jour automatiques officielles...
+if exist "%~dp0local-panel\updater.mjs" (
+ where node.exe >nul 2>nul
+ if not errorlevel 1 node.exe "%~dp0local-panel\updater.mjs" auto
+)
+
 :menu
 cls
 echo =================================================
