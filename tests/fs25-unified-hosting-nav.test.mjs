@@ -39,7 +39,7 @@ test('image heights capped on mobile screens and front-end cache revision increm
  assert.match(css,/height:112px!important/);
  assert.match(css,/max-width:740px/);
  assert.match(html,/mod-v2-ui\.js\?v=20261026-palworld-3/);
- assert.match(html,/catalog-ui\.js\?v=20261026-menu-1/);
+ assert.match(html,/catalog-ui\.js\?v=20261026-menu-4/);
 });
 test('no loss of official DayZ and ARK provider search behavior',()=>{
  const mods=read('../web/public/mod-v2-ui.js');
@@ -47,4 +47,15 @@ test('no loss of official DayZ and ARK provider search behavior',()=>{
  assert.match(mods,/isArk=provider===\'curseforge\'/);
  assert.match(mods,/\/api\/mods\/dayz\/search\?/);
  assert.match(mods,/\/api\/mods\/curseforge\/search\?/);
+});
+
+test('reduced sidebar keeps the real server actions inside an advanced menu',()=>{
+ const consoleUi=read('../web/public/console-ui.js');
+ const nav=read('../web/public/ui/cmd-navigation-cleanup.js');
+ assert.match(consoleUi,/cmdAdvancedServerTools/);
+ assert.match(consoleUi,/Autres espaces · outils secondaires/);
+ assert.doesNotMatch(consoleUi,/<details open><summary>Tous les espaces CMD/);
+ assert.match(nav,/jeux et decors hd/);
+ assert.match(nav,/mods & workshop/);
+ assert.match(read('../web/public/catalog-ui.js'),/const gamesNav=/);
 });
