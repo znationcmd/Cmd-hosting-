@@ -225,7 +225,13 @@ function content(x){let p=$('cmdrpDetails');p.replaceChildren();if(!x){
  const ul=mk('ul',undefined,'cmdrp-prepared-list');
  for(const name of names){const li=mk('li');li.append(mk('strong',name),mk('small','À installer sur Windows · 0 joueur connecté'));ul.append(li)}
  prepared.append(ul,mk('p','Les cinq configurations sont préparées dans CMD Hosting, mais aucune machine Windows n’a confirmé leur installation. DayZ : un seul démarrage à la fois. Pas de serveur fictif.','cmdrp-prepared-help'));
- p.append(prepared,btn('Parcourir les jeux',shop));return
+ const quick=box('Mods Palworld · Steam Workshop officiel');
+  quick.append(mk('p','Si Palworld est déjà sur ton PC, tu peux consulter son Workshop même avant d’associer PalServer.exe. Les mods serveur compatibles sont configurés depuis Mes serveurs → Palworld → Mods.'));
+  quick.append(btn('Ouvrir le Workshop Palworld',()=>{
+    if(typeof window.CMDHostingOpenPalworldWorkshop==='function')window.CMDHostingOpenPalworldWorkshop();
+    else window.open('https://steamcommunity.com/app/1623730/workshop/','_blank','noopener,noreferrer');
+  }));
+  p.append(prepared,quick,btn('Parcourir les jeux',shop));return
 }
 if(tab===cats[0]){const stats=mk('div',undefined,'cmdrp-stats');for(const[k,v]of[[x.s?'STATUT':'LOCATION',state(x)],['JOUEURS',x.s?.players??'Non mesuré'],['RAM','Non mesurée'],['CARTE',x.s?.map??(rpDraft(x)?.name?rpDraft(x).name+' · brouillon':'À choisir')]]){const c=mk('div',undefined,'cmdrp-box');c.append(mk('small',k),mk('strong',v));if(k==='CARTE'){c.append(btn('Choisir une carte',()=>rpOpenMap(x))) }stats.append(c)}p.append(stats);
 let two=mk('div',undefined,'cmdrp-cols'),access=box('🔗 Accès au serveur'),quick=box('⚡ Commandes rapides');for(const[k,v]of[['Nom',x.name],['Plateforme',x.g?.platform||x.s?.platform||'À confirmer'],['Slots',x.g?.slots??x.s?.slots],['IP',x.s?.address||'Non vérifiée']])access.append(line(k,v));quick.append(btn('Panneau de gestion',host),btn('Locations du compte',rentalsPage));two.append(access,quick);p.append(two);
