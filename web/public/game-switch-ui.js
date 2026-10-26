@@ -49,8 +49,7 @@ try{const res=await post('/api/game-switch/request',{gameId:quote.serverId,targe
 message(res.requestSaved?'Demande de changement enregistrée. Aucun paiement et aucun changement de jeu effectués.':res.message||'Demande en attente.');
 }catch(e){message(e.message)}finally{b.disabled=false}};
 function open(){if(typeof pages!=='undefined'&&Array.isArray(pages)&&!pages.includes('cmdGameSwitch'))pages.push('cmdGameSwitch');if(typeof show==='function')show('cmdGameSwitch');else{document.querySelectorAll('.page').forEach(p=>p.classList.add('hide'));sec.classList.remove('hide')}sec.classList.remove('hide');location.hash='cmdGameSwitch';load()}
-const nav=document.querySelector('#cmdOriginalNav .links')||document.querySelector('.links');
-if(nav){const b=document.createElement('button');b.type='button';b.dataset.page='cmdGameSwitch';b.textContent='🔄 Changer de jeu';b.onclick=open;nav.prepend(b)}
-const sidebar=$('cmdPrimary');if(sidebar){const b=document.createElement('button');b.type='button';b.className='cmd-nav';const icon=document.createElement('span');icon.textContent='🔄';const label=document.createElement('span');label.textContent='Changer de jeu';b.append(icon,label);b.onclick=open;sidebar.prepend(b)}
+// Changer de jeu is opened from the chosen server's profile only.
+window.CMDHostingOpenGameSwitch=open;
 if(location.hash==='#cmdGameSwitch')open();
 })();
