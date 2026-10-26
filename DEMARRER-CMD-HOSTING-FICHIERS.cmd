@@ -22,6 +22,12 @@ if not exist "%~dp0local-panel\server.mjs" (
  exit /b 1
 )
 set "CMD_SERVERS_ROOT=C:\CMD-Servers"
+echo [CMD Hosting] Recherche des mises a jour automatiques officielles...
+if exist "%~dp0local-panel\updater.mjs" (
+ where node.exe >nul 2>nul
+ if not errorlevel 1 node.exe "%~dp0local-panel\updater.mjs" auto
+)
+
 echo Choisir un mode :
 echo [1] PC uniquement - recommande
 echo [2] Reseau prive local Wi-Fi - pour ouvrir depuis un telephone sur le MEME reseau
