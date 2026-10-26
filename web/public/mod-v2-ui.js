@@ -22,6 +22,12 @@ function officialUrl(){return palworldProfile?palworldSteamWorkshop:provider==='
 function link(href,label){const a=document.createElement('a');a.href=href;a.textContent=label;a.target='_blank';a.rel='noopener noreferrer';return a}
 function enter(){if(typeof show==='function')show('cmdMods');else document.querySelectorAll('.page').forEach(x=>x.classList.add('hide'));panel.classList.remove('hide');location.hash='cmdMods';loadServers()}
 window.CMDHostingOpenMods=enter;
+window.CMDHostingOpenPalworldWorkshop=()=>{
+ if(typeof show==='function')show('cmdMods');else {document.querySelectorAll('.page').forEach(p=>p.classList.add('hide'));panel.classList.remove('hide')}
+ palworldProfile=true;fs25Profile=false;provider='steam';steamAppId=1623730;
+ game=null;mods=[];rights=[];activeList();palworldBrowser();
+ $('cvServer').value='';$('cvSearch').value='';
+};
 if(typeof pages!=='undefined'&&Array.isArray(pages)&&!pages.includes('cmdMods'))pages.push('cmdMods');
 // Mods & Workshop is accessible from Mes serveurs → selected server → Mods.
 // No standalone duplicate sidebar/menu entry.
@@ -61,7 +67,7 @@ function palworldBrowser(){
  const doc=link('https://docs.palworldgame.com/settings-and-operation/mod/','Guide officiel serveur ↗');
  actions.append(official,doc);
  const instructions=document.createElement('p');
- instructions.textContent='Pour un serveur Windows : placer chaque mod compatible dans PalServer.exe/Mods/Workshop/<dossier>/Info.json, puis activer son PackageName avec ActiveModList dans Mods/PalModSettings.ini. Redémarrage requis. Ne pas installer un mod réservé au client.';
+ instructions.textContent='Pour un serveur Windows : placer chaque mod compatible dans Mods/Workshop/<dossier>/Info.json, à côté de PalServer.exe, puis activer son PackageName avec ActiveModList dans Mods/PalModSettings.ini. Redémarrage requis. Ne pas installer un mod réservé au client.';
  body.append(heading,description,actions,instructions);
  card.append(body);results.append(card);
  $('cvCatalogTitle').textContent='Palworld — Steam Workshop officiel';
