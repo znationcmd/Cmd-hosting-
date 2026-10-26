@@ -69,7 +69,7 @@ const profiles={
  'arma-reforger':{name:'Arma Reforger',landmark:'ArmaReforgerServer.exe',configs:['config.json']},
  'arma-3':{name:'Arma 3',landmark:'arma3server_x64.exe',configs:['server.cfg','basic.cfg','mpmissions']},
  '7dtd':{name:'7 Days to Die',landmark:'7DaysToDieServer.exe',configs:['serverconfig.xml']},
- palworld:{name:'Palworld',landmark:'PalServer.exe',configs:['Pal/Saved/Config/WindowsServer/PalWorldSettings.ini']},
+ palworld:{name:'Palworld',landmark:'PalServer.exe',configs:['Pal/Saved/Config/WindowsServer/PalWorldSettings.ini','Mods/PalModSettings.ini','Mods/Workshop']},
  satisfactory:{name:'Satisfactory',landmark:'FactoryServer.exe',configs:['FactoryGame/Saved/Config/WindowsServer/Game.ini']},
  anomalia:{name:'ANOMALIA PRIMEVAL OUTBOUNDUN',landmark:'AnomaliaServer.exe',configs:[]}
 };
@@ -299,6 +299,38 @@ async function action(req,res,url){
  const id=url.searchParams.get('id');if(!validId(id))throw bad(400,'Identifiant de serveur invalide');
  const instance=await selected(id);
  const rel=normRel(url.searchParams.get('path'),{root:true});
+ if(route==='/api/palworld/workshop'&&method==='GET'){
+  if(instance.game!=='palworld')throw bad(422,'Choisis un vrai serveur Palworld.');
+  const workshop='Mods/Workshop',settings='Mods/PalModSettings.ini';
+  let entries=[],active=[],enabledGlobal=false;
+  try{
+   const cfg=await readFile(await pathChecked(instance.root,settings),'utf8');
+   enabledGlobal=/^\s*bGlobalEnableMod\s*=\s*true\s*$/mi.test(cfg);
+   active=[...cfg.matchAll(/^\s*ActiveModList\s*=\s*([^\r\n#;]+)/gmi)].map(m=>m[1].trim());
+  }catch(e){if(e.code!=='ENOENT')throw e}
+  try{
+   const folder=await pathChecked(instance.root,workshop,{dir:true});
+   const packages=await readdir(folder,{withFileTypes:true});
+   for(const item of packages.slice(0,250)){
+    if(!item.isDirectory()||item.isSymbolicLink()||SECURE.test(item.name))continue;
+    try{
+     const info=await pathChecked(instance.root,workshop+'/'+item.name+'/Info.json');
+     const details=await lstat(info);
+     if(!details.isFile()||details.size>32768)continue;
+     const data=JSON.parse(await readFile(info,'utf8'));
+     const name=typeof data.PackageName==='string'?data.PackageName:'';
+     if(!/^[A-Za-z0-9_.-]{1,100}$/.test(name))continue;
+     const compatible=Array.isArray(data.InstallRules)&&data.InstallRules.some(rule=>rule?.IsServer===true);
+     entries.push({folder:item.name,packageName:name,serverCompatible:compatible,
+      enabled:enabledGlobal&&active.includes(name),exists:true});
+    }catch{/* No fake mods from absent/broken manifests */}
+   }
+  }catch(e){if(e.code!=='ENOENT')throw e}
+  return reply(res,200,{game:'palworld',installedMods:entries,activePackageNames:active,
+   enabledGlobal,workshop:'https://steamcommunity.com/app/1623730/workshop/',
+   publisherGuide:'https://docs.palworldgame.com/settings-and-operation/mod/',
+   note:'Seuls les vrais dossiers Mods/Workshop/Info.json sont affichés. Windows dédié requis pour les mods serveur.'});
+ }
  if(route==='/api/files'&&method==='GET'){
   const folder=await pathChecked(instance.root,rel,{dir:true});
   const entries=await readdir(folder,{withFileTypes:true}),files=[];
