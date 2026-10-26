@@ -165,7 +165,7 @@ async function rpOpenMap(x=chosen()){
 
 const btn=(name,fn)=>{let b=mk('button',name);b.type='button';b.onclick=fn;return b};
 function page(id){if(typeof show==='function')show(id);else{document.querySelectorAll('.page').forEach(x=>x.classList.add('hide'));$(id)?.classList.remove('hide')}}
-function shop(){page($('cmdIntegratedGames')?'cmdIntegratedGames':'cmdCatalogSection')}
+function shop(){page('cmdCatalogSection')}
 function host(){if(!$('hostingPanel'))return $('cmdrpStatus').textContent='Panneau PC indisponible.';page('hostingPanel');document.querySelector('[data-page="hostingPanel"]')?.click()}
 function rentalsPage(){if(!$('rentals'))return $('cmdrpStatus').textContent='Locations indisponibles.';page('rentals');document.querySelector('[data-page="rentals"]')?.click()}
 
@@ -175,14 +175,14 @@ function modsPage(x=chosen()){
   if(!$('cmdMods')){$('cmdrpStatus').textContent='Le gestionnaire Mods & Workshop n’est pas disponible.';return;}
   try{sessionStorage.setItem('cvServer',String(x.g.id));}catch(e){}
   const sel=$('cvServer');if(sel)sel.value='';
-  const nav=document.querySelector('#cmdOriginalNav [data-page="cmdMods"]');
-  if(nav)nav.click();else{page('cmdMods');$('cvRefresh')?.click();}
+  if(typeof window.CMDHostingOpenMods==='function')window.CMDHostingOpenMods();
+  else{page('cmdMods');$('cvRefresh')?.click();}
 }
 function switchGamePage(x=chosen()){
   if(!x?.g?.id){$('cmdrpStatus').textContent='Changer de jeu : profil de serveur non trouvé.';return;}
   if(!$('cmdGameSwitch')){$('cmdrpStatus').textContent='Le gestionnaire de changement de jeu n’est pas disponible.';return;}
-  const nav=document.querySelector('#cmdOriginalNav [data-page="cmdGameSwitch"]');
-  if(nav)nav.click();else page('cmdGameSwitch');
+  if(typeof window.CMDHostingOpenGameSwitch==='function')window.CMDHostingOpenGameSwitch();
+  else page('cmdGameSwitch');
   const wanted=String(x.g.id);let attempts=0;
   const sync=()=>{const select=$('switchServer');if(select&&[...select.options].some(o=>String(o.value)===wanted)){select.value=wanted;select.dispatchEvent(new Event('change',{bubbles:true}));return;}if(++attempts<5)setTimeout(sync,280)};
   sync();
@@ -223,8 +223,8 @@ if(!list().some(v=>v.id===key))key=list()[0]?.id||'';draw();$('cmdrpStatus').tex
 function open(){page(pid);if($('cmdTitle'))$('cmdTitle').textContent='Profil loueur';history.replaceState(null,'','#'+pid);load()}
 $('cmdrpSelect').onchange=e=>{key=e.target.value;tab=cats[0];draw()};$('cmdrpServers').onclick=()=>{tab=cats[0];draw()};$('cmdrpStore').onclick=shop;$('cmdrpCreate').onclick=shop;$('cmdrpReload').onclick=load;
 function nav(parent,label,klass){if(!parent)return;let b=btn(label,open);b.dataset.page=pid;if(klass)b.className=klass;parent.prepend(b)}
-nav(document.querySelector('#cmdOriginalNav .links')||document.querySelector('.links'),'👤 Profil loueur');
-nav($('cmdPrimary'),'👤 Mes serveurs · Profil','cmd-nav');
+// Profile is reached through Mes serveurs; remove its duplicate global menu entry.
+nav($('cmdPrimary'),'Mes serveurs','cmd-nav');
 let account=$('compte')||$('account')||$('monCompte');if(account)nav(account,'👤 Gérer mes serveurs','ghost');
 if(location.hash==='#'+pid)open();
 })();
