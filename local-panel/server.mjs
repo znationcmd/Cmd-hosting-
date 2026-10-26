@@ -50,6 +50,20 @@ const locallyRequested=req=>{
  const ip=req.socket.remoteAddress||'';
  return ip==='127.0.0.1'||ip==='::1'||ip==='::ffff:127.0.0.1';
 };
+function localNetworkAddresses(){
+ if(listenHost==='127.0.0.1'||listenHost==='::1')return [];
+ const found=[];
+ for(const items of Object.values(os.networkInterfaces())){
+  for(const info of items||[]){
+   if(info.internal||info.family!=='IPv4')continue;
+   const addr=info.address;
+   // Display private LAN addresses only, never publish public network interfaces.
+   if(!(/^10\\./.test(addr)||/^192\\.168\\./.test(addr)||/^172\\.(1[6-9]|2[0-9]|3[01])\\./.test(addr)))continue;
+   found.push('http://'+addr+':'+port);
+  }
+ }
+ return [...new Set(found)];
+}
 async function dayzSetupStatus(){
  let installerAvailable=false;
  try{installerAvailable=(await stat(DAYZ_SCRIPT)).isFile()}catch{}
@@ -209,7 +223,7 @@ async function atomicSave(instance,rel,content,{create=false}={}){
 }
 async function action(req,res,url){
  const route=url.pathname,method=req.method;
- if(route==='/api/status'&&method==='GET')return reply(res,200,{name:'CMD Hosting Fichiers',mode:'local-host',railway:false,defaultRoot:installRoot,bind:listenHost});
+ if(route==='/api/status'&&method==='GET')return reply(res,200,{name:'CMD Hosting Fichiers',mode:'local-host',railway:false,defaultRoot:installRoot,bind:listenHost,pcOnline:true,lanEnabled:listenHost==='0.0.0.0',lanAddresses:localNetworkAddresses(),remoteInternetEnabled:false,phoneRequiresSameWifi:true,gameServerInstalledNotImplied:true});
  if(route==='/api/servers'&&method==='GET')return reply(res,200,{servers:await listed(),catalogueNote:'Tous les jeux avec des fichiers sur un hôte peuvent être enregistrés; aucune arborescence fictive.'});
  if(route==='/api/library/catalogue'&&method==='GET'){
   return reply(res,200,{suggestions:GAME_SUGGESTIONS,freeGameName:true,serverSoftwareMayBeUnavailable:true,
