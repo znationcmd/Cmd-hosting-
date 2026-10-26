@@ -35,7 +35,7 @@ const hostingIndex=readFileSync(new URL('../web/public/index.html',import.meta.u
 test('blue-violet 3D visual layer loads without replacing existing backend or handlers',()=>{
  assert.doesNotThrow(()=>new Script(hostingJs,{filename:'web/public/ui/hosting-blue-violet-3d.js'}));
  assert.match(hostingIndex,/src="\/ui\/premium-16k\.js"/);
- assert.match(hostingIndex,/src="\/ui\/hosting-blue-violet-3d\.js\?v=20261019-1"/);
+ assert.match(hostingIndex,/src="\/ui\/hosting-blue-violet-3d\.js\?v=20261026-menu-1"/);
  assert.match(hostingCss,/html\.cmd16-enabled/);
  assert.match(hostingCss,/#55c6ff/);
  assert.match(hostingCss,/#a573ff/);
