@@ -112,7 +112,7 @@ async function refreshMaps(){
 }
 $('loginForm').addEventListener('submit',e=>{e.preventDefault();safe(async()=>{
  token=$('token').value.trim();await api('/api/servers');$('token').value='';
- show('loginView',false);show('workspace',true);await refresh();await refreshDayzInstall();notice('Connecté au gestionnaire de fichiers de cette machine.');
+ show('loginView',false);show('workspace',true);await refresh();await refreshDayzInstall();await refreshProfiles();notice('Connecté au gestionnaire de fichiers de cette machine.');
 })});
 let previousDayzState='';
 function dayzMessage(message,problem=false){
@@ -157,6 +157,55 @@ $('createDayz').onclick=()=>safe(async()=>{
  await refreshDayzInstall();
 });
 
+// Unified launcher: the profile is visible before installation, but only real Windows game executables may start.
+async function refreshProfiles(){
+ const data=await api('/api/profiles');
+ const list=$('cmdProfileList');list.replaceChildren();
+ const ready=data.profiles.filter(p=>p.ready).length;
+ const initiated=data.profiles.filter(p=>p.startedByThisPanel).length;
+ $('cmdProfileSummary').textContent=data.profiles.length+' profils enregistrés · '+ready+
+  ' prêts à tenter un démarrage · '+initiated+' gestionnaire actif · '+(data.activeProfile?'un profil en cours':'aucun serveur actif confirmé');
+ for(const item of data.profiles){
+  const card=element('article','cmdProfileCard');
+  const heading=element('strong','',item.title);
+  const desc=element('small','',item.map+' · '+item.slots+' slots · '+item.game.toUpperCase());
+  const stat=element('span','tag '+(item.ready?'online':'offline'),item.startedByThisPanel?'GESTIONNAIRE ACTIF':item.ready?'FICHIERS VÉRIFIÉS':'À INSTALLER');
+  const summary=element('p','muted',item.state);
+  const blockers=element('details','');
+  const top=element('summary','','Manques ('+item.blockers.length+')');blockers.append(top);
+  const issues=element('ul');for(const text of item.blockers.slice(0,35))issues.append(element('li','',text));blockers.append(issues);
+  const actions=element('div','cmdProfileButtons');
+  const prepare=element('button','quiet','Préparer');
+  prepare.disabled=!data.localBrowser||item.startedByThisPanel;
+  prepare.onclick=()=>safe(async()=>{
+   if(!confirm('Préparer les fichiers de configuration de '+item.title+' sur CE PC Windows sans écraser les sauvegardes ?'))return;
+   await api('/api/profiles/prepare',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({id:item.id,confirmLocal:true})});
+   notice('Configurations '+item.title+' préparées. Installer le serveur officiel et les mods avant de démarrer.');
+   await refreshProfiles();
+  });
+  const start=element('button','primary','▶ Démarrer');
+  start.disabled=!data.localBrowser||!item.ready||!!data.activeProfile||item.activeGameDetected;
+  start.title=!data.localBrowser?'Lancement autorisé depuis le PC Windows uniquement':
+    !item.ready?'Fichiers officiels, missions ou mods incomplets':
+    item.activeGameDetected?'Un DayZ ou ARK tourne déjà sur Windows':'Démarrer ce profil en local';
+  start.onclick=()=>safe(async()=>{
+   if(!confirm('Démarrer réellement '+item.title+' sur CET ordinateur ? Un seul serveur DayZ ou ARK à la fois.'))return;
+   const result=await api('/api/profiles/start',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({id:item.id,confirmLocal:true})});
+   notice(result.note||'Lancement demandé. Vérifier la console Windows et le jeu.');
+   await refreshProfiles();
+  });
+  actions.append(prepare,start);
+  card.append(heading,desc,stat,summary,blockers,actions);
+  list.append(card);
+ }
+ if(!data.localBrowser){
+  list.prepend(element('p','muted','Sur téléphone : état consultable. Pour installer ou démarrer un vrai serveur, ouvre ce même panneau sur ton PC hôte : http://127.0.0.1:8788.'));
+ }
+}
+$('refreshProfiles').onclick=()=>safe(refreshProfiles);
+
 $('refresh').onclick=()=>safe(refresh);
 $('rootBtn').onclick=()=>safe(()=>files(''));
 $('upBtn').onclick=()=>safe(()=>files(folder.split('/').slice(0,-1).join('/')));
@@ -200,3 +249,5 @@ $('uploadForm').addEventListener('submit',e=>{e.preventDefault();safe(async()=>{
  await files(folder);notice('Nouveau fichier réel importé : '+rel);
 })});
 setInterval(()=>{if(!$('workspace').hidden && token)void refreshDayzInstall().catch(()=>{})},9000);
+
+setInterval(()=>{if(!$('workspace').hidden&&token)void refreshProfiles().catch(()=>{})},20000);
