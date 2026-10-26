@@ -82,13 +82,19 @@
  }
  function selectedPalworldProfile(){
   const select=$('cmdrpSelect');
-  const selected=select?.selectedOptions?.[0]?.textContent||'';
+  const option=select?.selectedOptions?.[0];
+  const game=option?.dataset?.cmdGame||'';
+  if(game)return /\bpalworld\b/i.test(game);
+  const selected=option?.textContent||'';
   const selectedTitle=$('cmdrpTitle')?.textContent||'';
   return /\bpalworld\b/i.test(selected+' '+selectedTitle);
  }
  function selectedFs25Profile(){
   const select=$('cmdrpSelect');
-  const selected=select?.selectedOptions?.[0]?.textContent||'';
+  const option=select?.selectedOptions?.[0];
+  const game=option?.dataset?.cmdGame||'';
+  if(game)return /\bfs[ -]?25\b|farming\s*simulator\s*25/i.test(game);
+  const selected=option?.textContent||'';
   const selectedTitle=$('cmdrpTitle')?.textContent||'';
   return /\bfs[ -]?25\b|farming\s*simulator\s*25/i.test(selected+' '+selectedTitle);
  }
