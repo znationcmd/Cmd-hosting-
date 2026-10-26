@@ -216,23 +216,34 @@ async function action(req,res,url){
    note:'Choisis un jeu ou saisis le nom de n’importe quel jeu du catalogue. Profil sans échéance ; logiciel serveur officiel nécessaire pour jouer.'});
  }
  if(route==='/api/library/profiles'&&method==='GET'){
-  const saved=await lifetime.list(),available=await listed();
+  const saved=await lifetime.rentalView(),available=await listed();
   return reply(res,200,{profiles:saved.map(p=>({...p,linkedFilesAvailable:available.some(x=>x.id===p.id),
    gameInstalledVerified:available.some(x=>x.id===p.id&&x.installed),runningVerified:false})),
    oneGameRunningAtATime:true,autoDelete:false,expiryDays:null,
+   rentalPeriodsDays:[3,30,90,365],rentalExpiryAction:'suspend-without-deletion',dataRetention:'until-owner-explicit-deletion',billingConnected:false,
    serverCreatedDoesNotMeanInstalled:true});
  }
  if(route==='/api/library/profiles/export'&&method==='GET')return reply(res,200,await lifetime.snapshot());
  if(route==='/api/library/profiles'&&method==='POST'){
   const data=await jsonBody(req,4096),created=await lifetime.create(data);
   return reply(res,201,{created:true,profile:created,gameInstalled:false,
-   note:'Profil enregistré sans paiement ni expiration. Installation officielle du serveur à effectuer séparément.'});
+   note:'Profil conservé sans date de suppression. Location de 30 jours en attente de paiement vérifié ; aucun serveur activé automatiquement.'});
  }
  if(route==='/api/library/profiles'&&method==='PATCH'){
   const data=await jsonBody(req,4096);
   if(!validId(data.id))throw bad(400,'Identifiant de profil invalide.');
   const updated=await lifetime.modify(data.id,data);
   return reply(res,200,{updated:true,profile:updated});
+ }
+ if(route==='/api/library/profiles/rental'&&method==='POST'){
+  const data=await jsonBody(req,2048);
+  if(!validId(data.id))throw bad(400,'Profil de location invalide.');
+  const periodDays=Number(data.periodDays);
+  if(![3,30,90,365].includes(periodDays))throw bad(400,'Durée autorisée : 3, 30, 90 ou 365 jours.');
+  const updated=await lifetime.configurePeriod(data.id,periodDays);
+  return reply(res,200,{updated:true,profile:updated,paymentCaptured:false,
+   autoDelete:false,expiredAction:'suspend',renewalRequiresVerifiedPayment:true,
+   note:'Durée enregistrée. Aucun paiement encaissé ni serveur activé. À expiration, fichiers, cartes, mods et sauvegardes conservés.'});
  }
  if(route==='/api/library/profiles/link'&&method==='POST'){
   if(!locallyRequested(req))throw bad(403,'Association de dossiers réels autorisée depuis le PC hôte uniquement.');
