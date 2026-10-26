@@ -11,7 +11,9 @@ const files=[
  ['/ui/cmd-simplified-mobile-v7.css','web/public/ui/cmd-simplified-mobile-v7.css'],
  ['/catalog-compat.js','web/public/catalog-compat.js'],
  ['/ui/cmd-server-first-v8.js','web/public/ui/cmd-server-first-v8.js'],
- ['/ui/cmd-server-first-v8.css','web/public/ui/cmd-server-first-v8.css']
+ ['/ui/cmd-server-first-v8.css','web/public/ui/cmd-server-first-v8.css'],
+ ['/ui/cmd-server-first-v9.js','web/public/ui/cmd-server-first-v9.js'],
+ ['/ui/cmd-server-first-v9.css','web/public/ui/cmd-server-first-v9.css']
 ];
 async function get(route){
  const control=new AbortController();
