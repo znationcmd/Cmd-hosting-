@@ -10,13 +10,15 @@ style.textContent='#cmdMods{color:#eaf6ff;max-width:1400px;margin:auto}#cmdMods 
 document.head.append(style);
 const $=id=>document.getElementById(id);
 const sourceLabel={arma:'Arma Reforger · Bohemia Workshop',curseforge:'CurseForge',steam:'Steam Workshop',fs25:'FS25 · ModHub officiel GIANTS'};
-let game=null,mods=[],rights=[],provider='',mode='free',sort='popular',term='',page=1,steamAppId=null,serial=0,fs25Profile=false;
+const palworldSteamWorkshop='https://steamcommunity.com/app/1623730/workshop/';
+const isPalworld=p=>/\bpalworld\b/i.test([p?.game_key,p?.game_name,p?.display_name,p?.server_label,p?.name].filter(Boolean).join(' '));
+let game=null,mods=[],rights=[],provider='',mode='free',sort='popular',term='',page=1,steamAppId=null,serial=0,fs25Profile=false,palworldProfile=false;
 const officialFs25Url='https://www.farming-simulator.com/mods.php?lang=fr&title=fs2025&platform=pc';
 const isFs25=p=>/\bfs[ -]?25\b|farming\s*simulator\s*25|farming.simulator.2025/i.test([p?.game_key,p?.display_name,p?.game_name,p?.server_label,p?.name].filter(Boolean).join(' '));
 function say(v){$('cvStatus').textContent=v}
 async function fetchJson(path,opts={}){const r=await fetch(path,{credentials:'include',cache:'no-store',...opts});let d={};try{d=await r.json()}catch{}if(!r.ok){const e=new Error(d.message||'Indisponible');e.browseUrl=d.browseUrl;throw e}return d}
 function post(path,data){return fetchJson(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}
-function officialUrl(){return provider==='fs25'?officialFs25Url:provider==='arma'?'https://reforger.armaplatform.com/workshop':provider==='curseforge'&&['ark','g-ark-survival-ascended'].includes(game?.game_key)?'https://www.curseforge.com/ark-survival-ascended':provider==='curseforge'?'https://www.curseforge.com/minecraft':provider==='steam'?'https://steamcommunity.com/workshop/browse/?appid='+steamAppId:''}
+function officialUrl(){return palworldProfile?palworldSteamWorkshop:provider==='fs25'?officialFs25Url:provider==='arma'?'https://reforger.armaplatform.com/workshop':provider==='curseforge'&&['ark','g-ark-survival-ascended'].includes(game?.game_key)?'https://www.curseforge.com/ark-survival-ascended':provider==='curseforge'?'https://www.curseforge.com/minecraft':provider==='steam'?'https://steamcommunity.com/workshop/browse/?appid='+steamAppId:''}
 function link(href,label){const a=document.createElement('a');a.href=href;a.textContent=label;a.target='_blank';a.rel='noopener noreferrer';return a}
 function enter(){if(typeof show==='function')show('cmdMods');else document.querySelectorAll('.page').forEach(x=>x.classList.add('hide'));panel.classList.remove('hide');location.hash='cmdMods';loadServers()}
 window.CMDHostingOpenMods=enter;
@@ -46,14 +48,42 @@ function fs25Browser(){
  help.textContent='Le fichier ZIP officiel doit être ajouté au dossier mods du serveur FS25. Les fichiers non installés ne seront jamais affichés comme actifs.';
  body.append(help);
 }
+
+function palworldBrowser(){
+ const results=$('cvResults');results.replaceChildren();
+ const card=document.createElement('article');card.className='cmdv-card cmdv-palworld-official';
+ const body=document.createElement('div');body.className='cmdv-cardbody';
+ const heading=document.createElement('h4');heading.textContent='Palworld — Steam Workshop officiel';
+ const description=document.createElement('p');
+ description.textContent='Workshop officiel disponible pour la version Steam. Un serveur dédié Windows peut charger les mods compatibles depuis Mods/Workshop et Mods/PalModSettings.ini.';
+ const actions=document.createElement('div');actions.className='cmdv-cardbuttons';
+ const official=link(palworldSteamWorkshop,'Parcourir le Workshop Palworld ↗');
+ const doc=link('https://docs.palworldgame.com/settings-and-operation/mod/','Guide officiel serveur ↗');
+ actions.append(official,doc);
+ const instructions=document.createElement('p');
+ instructions.textContent='Pour un serveur Windows : placer chaque mod compatible dans PalServer.exe/Mods/Workshop/<dossier>/Info.json, puis activer son PackageName avec ActiveModList dans Mods/PalModSettings.ini. Redémarrage requis. Ne pas installer un mod réservé au client.';
+ body.append(heading,description,actions,instructions);
+ card.append(body);results.append(card);
+ $('cvCatalogTitle').textContent='Palworld — Steam Workshop officiel';
+ $('cvProviderName').textContent='WORKSHOP STEAM · PALWORLD';
+ $('cvOfficial').hidden=false;$('cvOfficial').href=palworldSteamWorkshop;
+ $('cvOfficial').textContent='Ouvrir Workshop Palworld ↗';
+ $('cvDescription').textContent='Les mods Steam Workshop doivent être compatibles avec les serveurs Windows. Aucun mod n’est téléchargé ou installé tant que le PC n’est pas associé.';
+ $('cvResultsCount').textContent='Catalogue officiel Steam · installation à vérifier sur la machine';
+ $('cvPages').hidden=true;
+ $('cvAppLabel').hidden=true;
+ $('cvSearch').placeholder='Rechercher sur le Workshop Palworld…';
+ $('cvSearchForm').querySelector('button').textContent='⌕ Chercher sur Steam';
+ say('Palworld : Workshop officiel accessible. Source serveur disponible sous Windows uniquement. Le profil ne prouve pas que les mods sont installés.');
+}
 function activeList(){const box=$('cvActive');box.replaceChildren();$('cvActiveCount').textContent=String(mods.length);
 if(!mods.length){const p=document.createElement('p');p.className='cmdv-muted';p.textContent='Aucun mod ajouté. Utilise la recherche ci-dessous.';box.append(p);return}
 const known=new Map(rights.map(r=>[r.id,r]));for(const m of mods){const row=document.createElement('div');row.className='cmdv-active-item';const name=document.createElement('div');const strong=document.createElement('strong');strong.textContent=m.title||m.item_id;const small=document.createElement('small');small.textContent=(known.get(m.id)?.category==='premium'?'Premium · ':'')+'En attente de la machine';name.append(strong,small);const del=document.createElement('button');del.type='button';del.textContent='×';del.title='Retirer ce mod';del.onclick=async()=>{del.disabled=true;try{await post('/api/mods/remove',{id:m.id});await config();say('Mod retiré.')}catch(e){say(e.message);del.disabled=false}};row.append(name,del);box.append(row)}}
-async function loadServers(){try{const d=await fetchJson('/api/game-library');const list=d.items||[],select=$('cvServer'),last=select.value||sessionStorage.getItem('cvServer');select.replaceChildren();const first=document.createElement('option');first.value='';first.textContent='Sélectionne un serveur';select.append(first);for(const g of list){const o=document.createElement('option');o.value=g.id;o.textContent=g.display_name||g.game_key;select.append(o)}select.value=list.some(g=>g.id===last)?last:list[0]?.id||'';fs25Profile=isFs25(list.find(g=>String(g.id)===String(select.value)));await config()}catch(e){say(e.message+' Connecte-toi à CMD Hosting.')}} 
+async function loadServers(){try{const d=await fetchJson('/api/game-library');const list=d.items||[],select=$('cvServer'),last=select.value||sessionStorage.getItem('cvServer');select.replaceChildren();const first=document.createElement('option');first.value='';first.textContent='Sélectionne un serveur';select.append(first);for(const g of list){const o=document.createElement('option');o.value=g.id;o.textContent=g.display_name||g.game_key;select.append(o)}select.value=list.some(g=>g.id===last)?last:list[0]?.id||'';const chosen=list.find(g=>String(g.id)===String(select.value));fs25Profile=isFs25(chosen);palworldProfile=isPalworld(chosen);await config()}catch(e){say(e.message+' Connecte-toi à CMD Hosting.')}} 
 async function config(){const id=$('cvServer').value;game=null;mods=[];rights=[];provider='';activeList();if(!id){say('Crée un profil serveur dans CMD Hosting pour commencer.');$('cvResults').replaceChildren();return}
-try{const [d,a]=await Promise.all([fetchJson('/api/mods?gameId='+encodeURIComponent(id)),fetchJson('/api/mods/access?gameId='+encodeURIComponent(id))]);game=d.game;mods=d.mods||[];rights=a.mods||[];fs25Profile=fs25Profile||isFs25(game);provider=fs25Profile?'fs25':d.providers?.[0]||'';steamAppId=d.steamAppId||null;sessionStorage.setItem('cvServer',id);$('cvApp').value=steamAppId||'';$('cvAppLabel').hidden=provider!=='steam';$('cvAuto').checked=!!d.preferences.enabled;$('cvBackup').checked=!!d.preferences.backup_before_update;$('cvInterval').value=String(d.preferences.frequency_minutes||60);$('cvArmaJson').hidden=provider!=='arma';
-activeList();$('cvCatalogTitle').textContent=sourceLabel[provider]||'Aucune source de mods validée';$('cvProviderName').textContent=sourceLabel[provider]||'CATALOGUE EN PRÉPARATION';$('cvOfficial').hidden=!provider;$('cvOfficial').href=officialUrl();$('cvDescription').textContent=mode==='premium'?'Les achats premium se font dans le jeu ou sur la plateforme. Aucune clé requise.':'Ajoute les mods depuis le catalogue, avec vérification du statut de licence.';$('cvPaidLabel').hidden=mode!=='premium';if(fs25Profile)fs25Browser();else if(provider)await searchMods();else{say('Ce jeu ne possède pas encore de catalogue de mods vérifié.');$('cvResults').replaceChildren()}}
-catch(e){if(fs25Profile){fs25Browser();say('FS25 : la machine n’a pas de source ModHub intégrée à l’API. La recherche officielle est accessible ci-dessous. Aucun mod installé automatiquement.')}else say(e.message)}}
+try{const [d,a]=await Promise.all([fetchJson('/api/mods?gameId='+encodeURIComponent(id)),fetchJson('/api/mods/access?gameId='+encodeURIComponent(id))]);game=d.game;mods=d.mods||[];rights=a.mods||[];fs25Profile=fs25Profile||isFs25(game);palworldProfile=palworldProfile||isPalworld(game);provider=fs25Profile?'fs25':palworldProfile?'steam':d.providers?.[0]||'';steamAppId=palworldProfile?1623730:d.steamAppId||null;sessionStorage.setItem('cvServer',id);$('cvApp').value=steamAppId||'';$('cvAppLabel').hidden=provider!=='steam';$('cvAuto').checked=!!d.preferences.enabled;$('cvBackup').checked=!!d.preferences.backup_before_update;$('cvInterval').value=String(d.preferences.frequency_minutes||60);$('cvArmaJson').hidden=provider!=='arma';
+activeList();$('cvCatalogTitle').textContent=sourceLabel[provider]||'Aucune source de mods validée';$('cvProviderName').textContent=sourceLabel[provider]||'CATALOGUE EN PRÉPARATION';$('cvOfficial').hidden=!provider;$('cvOfficial').href=officialUrl();$('cvDescription').textContent=mode==='premium'?'Les achats premium se font dans le jeu ou sur la plateforme. Aucune clé requise.':'Ajoute les mods depuis le catalogue, avec vérification du statut de licence.';$('cvPaidLabel').hidden=mode!=='premium';if(fs25Profile)fs25Browser();else if(palworldProfile)palworldBrowser();else if(provider)await searchMods();else{say('Ce jeu ne possède pas encore de catalogue de mods vérifié.');$('cvResults').replaceChildren()}}
+catch(e){if(fs25Profile){fs25Browser();say('FS25 : la machine n’a pas de source ModHub intégrée à l’API. La recherche officielle est accessible ci-dessous. Aucun mod installé automatiquement.')}else if(palworldProfile){palworldBrowser();say('Palworld : Workshop officiel accessible même si l’API de mods n’est pas encore configurée. Aucun mod installé automatiquement.')}else say(e.message)}}
 async function providerSearch(){
  const base='https://cmd-hosting-mods-api-production.up.railway.app';
  const key=game?.game_key||'';
@@ -68,7 +98,7 @@ async function providerSearch(){
  const pagination=data.pagination||{};
  return {items:(data.data||[]).map(m=>({id:String(m.id),title:m.name,description:m.summary,imageUrl:m.logo?.thumbnailUrl||m.logo?.url,url:m.links?.websiteUrl,author:(m.authors||[]).map(a=>a.name).join(', '),downloads:m.downloadCount,premiumStatus:m.isPremium===true?'premium':m.isPremium===false?'free':'unknown'})),total:pagination.totalCount,hasMore:Number(pagination.index||0)+Number(pagination.resultCount||0)<Number(pagination.totalCount||0)};
 }
-async function searchMods(){if(fs25Profile){fs25Browser();return}if(!game||!provider)return;const id=++serial;const box=$('cvResults');box.replaceChildren();$('cvPages').hidden=true;say('Chargement du catalogue…');const q=new URLSearchParams({gameId:game.id,provider,q:term,sort,page:String(page)});
+async function searchMods(){if(fs25Profile){fs25Browser();return}if(palworldProfile){palworldBrowser();return}if(!game||!provider)return;const id=++serial;const box=$('cvResults');box.replaceChildren();$('cvPages').hidden=true;say('Chargement du catalogue…');const q=new URLSearchParams({gameId:game.id,provider,q:term,sort,page:String(page)});
 try{const d=await providerSearch();if(id!==serial)return;let count=0;for(const item of d.items||[]){const paid=item.premiumStatus==='premium';if(mode==='premium'&&!paid||mode==='free'&&paid)continue;modCard(item);count++}
 $('cvResultsCount').textContent=count+' mods affichés'+(d.total?' · '+Number(d.total).toLocaleString('fr-FR')+' résultats':'');say(count?mode==='premium'?'Mods premium : achat et droits vérifiés par le jeu.':'Clique sur Ajouter pour préparer les mods du serveur.':mode==='premium'?'Aucun mod premium confirmé sur cette page. Consulte le catalogue officiel ou ajoute-le par ID.':'Aucun mod trouvé, essaie un autre mot-clé.');$('cvPages').hidden=!(page>1||d.hasMore);$('cvPrev').disabled=page<=1;$('cvNext').disabled=!d.hasMore;$('cvPageNum').textContent='Page '+page}
 catch(e){if(id!==serial)return;say(e.message);if(e.browseUrl?.startsWith('https://')){$('cvStatus').append(' · ');$('cvStatus').append(link(e.browseUrl,'Voir le catalogue officiel ↗'))}}}
@@ -77,14 +107,23 @@ const label=document.createElement('span');label.className='cmdv-pill';label.cla
 const actions=document.createElement('div');actions.className='cmdv-cardbuttons';if(mod.url?.startsWith('https://'))actions.append(link(mod.url,'Voir la fiche ↗'));const button=document.createElement('button');button.type='button';const present=()=>mods.some(m=>m.provider===provider&&m.item_id===id);function refresh(){button.disabled=present();button.textContent=present()?'✓ Ajouté':'+ Ajouter'}refresh();
 button.onclick=async()=>{button.disabled=true;button.textContent='Ajout…';try{const result=await post('/api/mods',{gameId:game.id,provider,itemId:id,title:mod.title||id,appId:provider==='steam'?(mod.appId||steamAppId):null,version:'',autoUpdate:true,required:true});if(result.modId&&['premium','free'].includes(mod.premiumStatus)){await post('/api/mods/access',{modId:result.modId,category:mod.premiumStatus,purchaseDeclared:false})}await config();say('Mod ajouté à la configuration. Installation en attente.')}catch(e){say(e.message);button.disabled=false;button.textContent='+ Ajouter'}};
 actions.append(button);body.append(actions);card.append(picture,body);$('cvResults').append(card)}
-$('cvServer').onchange=()=>{page=1;term='';fs25Profile=isFs25([...$('cvServer').options].find(o=>o.selected)?.textContent?{display_name:$('cvServer').selectedOptions[0].textContent}:{});$('cvSearch').value='';config()};
+$('cvServer').onchange=()=>{page=1;term='';fs25Profile=isFs25([...$('cvServer').options].find(o=>o.selected)?.textContent?{display_name:$('cvServer').selectedOptions[0].textContent}:{});palworldProfile=isPalworld({display_name:$('cvServer').selectedOptions[0]?.textContent||''});$('cvSearch').value='';config()};
 $('cvMode').onchange=()=>{mode=$('cvMode').value;page=1;$('cvPaidLabel').hidden=mode!=='premium';config()};
 $('cvRefresh').onclick=loadServers;
-$('cvSearchForm').onsubmit=e=>{e.preventDefault();term=$('cvSearch').value.trim();page=1;searchMods()};
+$('cvSearchForm').onsubmit=e=>{
+ e.preventDefault();term=$('cvSearch').value.trim();page=1;
+ if(palworldProfile){
+  const destination=term?palworldSteamWorkshop+'browse/?searchtext='+encodeURIComponent(term):palworldSteamWorkshop;
+  const a=document.createElement('a');a.href=destination;a.target='_blank';a.rel='noopener noreferrer';
+  a.style.display='none';document.body.append(a);a.click();a.remove();
+  palworldBrowser();return;
+ }
+ searchMods();
+};
 for(const b of panel.querySelectorAll('.cmdv-tabs button'))b.onclick=()=>{sort=b.dataset.sort;page=1;for(const other of panel.querySelectorAll('.cmdv-tabs button'))other.classList.toggle('active',other===b);searchMods()};
 $('cvPrev').onclick=()=>{if(page>1){page--;searchMods()}};
 $('cvNext').onclick=()=>{page++;searchMods()};
-$('cvManualForm').onsubmit=async e=>{e.preventDefault();if(!game||!provider)return;let id=$('cvId').value.trim();if(provider==='steam'){const m=id.match(/[?&]id=(\d+)/);if(m)id=m[1]}if(provider==='curseforge'){const m=id.match(/\/(\d{2,12})(?:\/|[?#]|$)/);if(m)id=m[1]}if(fs25Profile){say('FS25 : installe les fichiers ZIP officiels dans le gestionnaire de fichiers du serveur. Ce formulaire n’est pas un installateur ModHub.');return;}const button=$('cvManualForm').querySelector('button');button.disabled=true;try{const result=await post('/api/mods',{gameId:game.id,provider,itemId:id,title:$('cvName').value.trim(),appId:provider==='steam'?Number($('cvApp').value):null,version:'',autoUpdate:true,required:true});if(result.modId&&mode==='premium')await post('/api/mods/access',{modId:result.modId,category:'premium',purchaseDeclared:$('cvPurchased').checked});$('cvId').value='';$('cvName').value='';$('cvPurchased').checked=false;await config();say('Mod enregistré. Licences premium non vérifiées.')}catch(e){say(e.message)}finally{button.disabled=false}};
+$('cvManualForm').onsubmit=async e=>{e.preventDefault();if(!game||!provider)return;let id=$('cvId').value.trim();if(provider==='steam'){const m=id.match(/[?&]id=(\d+)/);if(m)id=m[1]}if(provider==='curseforge'){const m=id.match(/\/(\d{2,12})(?:\/|[?#]|$)/);if(m)id=m[1]}if(fs25Profile){say('FS25 : installe les fichiers ZIP officiels dans le gestionnaire de fichiers du serveur. Ce formulaire n’est pas un installateur ModHub.');return;}if(palworldProfile){say('Palworld : installe les mods compatibles depuis Steam sur Windows, puis configure PalModSettings.ini avec le PackageName officiel. L’ajout par ID dans CMD Hosting n’est pas encore relié au PC.');return;}const button=$('cvManualForm').querySelector('button');button.disabled=true;try{const result=await post('/api/mods',{gameId:game.id,provider,itemId:id,title:$('cvName').value.trim(),appId:provider==='steam'?Number($('cvApp').value):null,version:'',autoUpdate:true,required:true});if(result.modId&&mode==='premium')await post('/api/mods/access',{modId:result.modId,category:'premium',purchaseDeclared:$('cvPurchased').checked});$('cvId').value='';$('cvName').value='';$('cvPurchased').checked=false;await config();say('Mod enregistré. Licences premium non vérifiées.')}catch(e){say(e.message)}finally{button.disabled=false}};
 $('cvSaveSettings').onclick=async()=>{if(!game)return;try{await post('/api/mods/preferences',{gameId:game.id,enabled:$('cvAuto').checked,backupBeforeUpdate:$('cvBackup').checked,frequencyMinutes:Number($('cvInterval').value)});say('Préférences sauvegardées. Installation inactive jusqu’à la mise en service.')}catch(e){say(e.message)}};
 $('cvSteamConnect').onclick=async()=>{try{const d=await post('/api/mods/steam/start',{});location.assign(d.url)}catch(e){say(e.message)}};
 $('cvArmaJson').onclick=async()=>{if(!game)return;try{const d=await fetchJson('/api/mods/export/arma?gameId='+encodeURIComponent(game.id));const u=URL.createObjectURL(new Blob([JSON.stringify(d.game,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=u;a.download='arma-reforger-mods.json';a.click();setTimeout(()=>URL.revokeObjectURL(u),1500);say('Fragment JSON téléchargé, à fusionner dans le fichier serveur.')}catch(e){say(e.message)}};
