@@ -1,44 +1,52 @@
-/* CMD Hosting — single navigation, no duplicated Mods / Workshop or gallery.
-   Keep the existing server profile, mods, settings and user data intact. */
+/* CMD Hosting — menu unifié. Conserve les fonctions dans « Mes serveurs → Profil ».
+   Cette couche ne modifie jamais les permissions, locations, sauvegardes ou serveurs. */
 (()=>{'use strict';
- if(window.__cmdNavCleanup)return;window.__cmdNavCleanup=true;
- const NAV_SELECTORS=[
-   '#cmdPrimary button','#cmdPrimary a','#cmdSidebar button','#cmdSidebar a',
-   '#nav button','#nav a','nav.links button','nav.links a',
-   '.side-nav button','.side-nav a','.side-menu button','.side-menu a',
-   '.sidebar button','.sidebar a','.app-sidebar button','.app-sidebar a','#sidebar button','#sidebar a',
-   '.navigation button','.navigation a','.cmd-menu button','.cmd-menu a',
-   '.menu-sidebar button','.menu-sidebar a','[data-cmd16="navigation"] button'
- ].join(',');
- const duplicate=/^(?:mods\s*(?:&|et|\+|and)\s*workshop|jeux\s*et\s*decors?\s*hd)$/i;
- function cleaned(node){
-  return String(node.getAttribute('aria-label')||node.textContent||'')
-   .replace(/[\p{Extended_Pictographic}\uFE0F\u200D\uFE0E]/gu,'')
-   .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
-   .replace(/[^a-zA-Z0-9&+]+/g,' ').trim().replace(/\s+/g,' ');
+ if(window.__cmdNavCleanup)return;
+ window.__cmdNavCleanup=true;
+ const normalize=value=>String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+  .replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu,'')
+  .replace(/[^a-zA-Z0-9&+ ]/g,' ').trim().replace(/\s+/g,' ').toLowerCase();
+ const globalRedundancies=new Set([
+  'mods & workshop','mods et workshop','mods workshop',
+  'jeux et decors hd','jeux et decor hd','jeux & decors hd','jeux et decors',
+  'boutique des jeux','boutique de jeux'
+ ]);
+ const profileSelectors='#cmdRenterProfile,#cmdMods,.cmdrp,#cmdv,.cmdv-toolbar,.cmdv-block,'+
+  '[data-server-profile],#hostingPanel,#cmdGameSwitch';
+ function isGlobalNav(element){
+  if(element.closest(profileSelectors))return false;
+  if(element.matches('#cmdPrimary button,#cmdPrimary a,#cmdSidebar button,#cmdSidebar a'))return true;
+  const zone=element.closest('nav,aside,[role="navigation"],.side-menu,.side-nav,.sidebar,'+
+   '.side-menu,.menu-sidebar,.navigation,#sidebar,#nav,#cmdNav,.cmd-menu');
+  if(!zone)return false;
+  // Never hide a genuine action inside a file manager or game card.
+  if(element.closest('.game,.card,.tile,.server-card,.host-block,.cmd-shop-card'))return false;
+  return true;
  }
- function hideDuplicateEntries(){
-  for(const element of document.querySelectorAll(NAV_SELECTORS)){
-   // Hide only standalone global navigation. Never hide controls inside a profile.
-   if(element.closest('#cmdRenterProfile,.cmdrp,#cmdMods,.cmdv-toolbar,.cmdv-block,[data-server-profile]'))continue;
-   if(!duplicate.test(cleaned(element)))continue;
-   element.classList.add('cmd-nav-duplicate-hidden');
-   element.dataset.cmdNavSuppressed='1';
+ function clean(){
+  for(const element of document.querySelectorAll('button,a,[role="button"]')){
+   if(!isGlobalNav(element))continue;
+   const label=normalize(element.getAttribute('aria-label')||element.textContent||'');
+   if(!globalRedundancies.has(label))continue;
+   // On layouts where Jeux is absent, retain an entry to the catalog.
+   if(label.startsWith('boutique')&&!document.querySelector('[data-page="jeux"],[data-page="cmdCatalogSection"]'))continue;
    element.hidden=true;
-   element.style.setProperty('display','none','important');
+   element.dataset.cmdNavSuppressed='1';
    element.setAttribute('aria-hidden','true');
    element.setAttribute('tabindex','-1');
+   element.style.setProperty('display','none','important');
   }
  }
- function install(){
-  hideDuplicateEntries();
+ let scheduled=false;
+ const schedule=()=>{
+  if(scheduled)return;scheduled=true;
+  queueMicrotask(()=>{scheduled=false;clean();});
+ };
+ function start(){
+  clean();
   if(typeof MutationObserver==='undefined')return;
-  let pending=false;
-  new MutationObserver(()=>{
-   if(pending)return;pending=true;
-   queueMicrotask(()=>{pending=false;hideDuplicateEntries()});
-  }).observe(document.body,{childList:true,subtree:true});
+  new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});
  }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
- else install();
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
+ else start();
 })();
