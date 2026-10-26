@@ -20,6 +20,11 @@ html.cmd-console{--cmd-side:252px;--cmd-head:68px;background:#0b1018;color-schem
 .cmd-brand{height:var(--cmd-head);display:flex;align-items:center;gap:12px;padding:0 22px;border-bottom:1px solid #263341;flex-shrink:0}.cmd-brand img{width:38px;height:38px;object-fit:contain;border-radius:8px}.cmd-brand strong{font-size:15px;letter-spacing:.07em;color:white}.cmd-brand small{display:block;font-size:10px;color:#8193a7;letter-spacing:.14em;margin-top:3px}
 .cmd-sidebar-scroll{overflow:auto;padding:21px 12px 25px;overscroll-behavior:contain;flex:1}.cmd-group-title{display:block;padding:15px 12px 9px;color:#8292a5;font-size:10px;font-weight:750;letter-spacing:.13em;text-transform:uppercase}
 #cmdSidebar button.cmd-nav{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;margin:3px 0;background:transparent;color:#bac7d5;border:0;border-left:3px solid transparent;border-radius:5px;text-align:left;font:500 13px system-ui;cursor:pointer;min-height:43px}
+#cmdSidebar .cmd-advanced-nav{border-top:1px solid #2d4867;margin:16px 6px 0;padding:12px 0 0}
+#cmdSidebar .cmd-advanced-nav>summary{font-weight:750;color:#a9c4df;font-size:12px;cursor:pointer;padding:11px;line-height:1.4}
+#cmdSidebar .cmd-advanced-nav>summary:hover{color:white}
+#cmdAdvancedServerItems{display:grid;gap:2px}
+#cmdAdvancedServerItems .cmd-group-title{padding-top:11px}
 #cmdSidebar button.cmd-nav:hover{background:#1c2937;color:white}#cmdSidebar button.cmd-nav[aria-current=page]{background:#183950;border-left-color:#49c7ff;color:#80daff}#cmdSidebar .cmd-nav span:first-child{width:19px;text-align:center;font-size:16px}
 #cmdSidebar .links{display:flex!important;position:static!important;flex-direction:column!important;align-items:stretch!important;flex-wrap:nowrap!important;gap:3px!important;width:100%!important;max-height:none!important;overflow:visible!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
 #cmdSidebar .links>*{width:100%!important;box-sizing:border-box;text-align:left!important;min-height:40px;white-space:normal!important;margin:0!important;border-radius:5px!important;font-size:12px!important}
@@ -57,8 +62,27 @@ let selected='overview',currentOrder=new URL(location.href).searchParams.get('to
 const viewCards={overview:[cards[0],overview],settings:[cards[0],cards[2]],files:[cards[0],cards[3]],schedule:[cards[0],cards[1]],backups:[cards[0],backups],logs:[cards[0],logs],payments:[payments]};
 function activate(key,title){selected=key;panel.dataset.cmdView=key;for(const card of [...cards,overview,backups,logs,payments])card.classList.toggle('cmd-hidden-card',!viewCards[key]?.includes(card));const h=panel.querySelector('h2');if(h)h.textContent=title;const sub=panel.querySelector('.sub');if(sub)sub.textContent='Administration de tes serveurs · CMD Hosting';$('cmdTitle').textContent=title;for(const b of $('cmdPrimary').querySelectorAll('button')){if(b.dataset.view===key)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')};if(document.documentElement.classList.contains('cmd-menu-open'))menu(false)}
 function addNav(groupTitle,items){const t=document.createElement('span');t.className='cmd-group-title';t.textContent=groupTitle;$('cmdPrimary').append(t);for(const [key,icon,title,target]of items){const b=document.createElement('button');b.type='button';b.className='cmd-nav';b.dataset.view=key;const i=document.createElement('span');i.textContent=icon;i.setAttribute('aria-hidden','true');const n=document.createElement('span');n.textContent=title;b.append(i,n);b.onclick=()=>{if(target){const original=originalLinks.find(x=>x.dataset.page===target);if(original)original.click();$('cmdTitle').textContent=title;for(const x of $('cmdPrimary').querySelectorAll('button'))x.removeAttribute('aria-current');b.setAttribute('aria-current','page');if(document.documentElement.classList.contains('cmd-menu-open'))menu(false)}else{hostLink?.click();activate(key,title);if(key==='backups')loadBackupGames();if(key==='logs')loadLogs();if(key==='payments')loadPaymentSetup()}};$('cmdPrimary').append(b)}}
-addNav('Administration',[['overview','▦','Vue d’ensemble'],['settings','⚙','Paramètres'],['files','▤','Fichiers'],['backups','▣','Sauvegardes'],['schedule','◷','Planification'],['logs','≡','Journal des commandes']]);
-addNav('Mon compte',[['rentals','▥','Locations','rentals'],['wallet','◇','Portefeuille et dons','wallet'],['payments','✓','Tests des paiements']]);
+// A single clear landing page; keep every legacy tool but fold advanced items.
+addNav('Serveurs',[['overview','▦','Vue d’ensemble']]);
+const advanced=document.createElement('details');
+advanced.id='cmdAdvancedServerTools';
+advanced.className='cmd-advanced-nav';
+const summary=document.createElement('summary');
+summary.textContent='Réglages avancés · fichiers, sauvegardes, console';
+const nested=document.createElement('div');
+nested.id='cmdAdvancedServerItems';
+advanced.append(summary,nested);
+$('cmdPrimary').append(advanced);
+const mainNavigation=$('cmdPrimary');
+const addAdvanced=(label,items)=>{
+ const holder=document.createElement('div');
+ mainNavigation.append(holder);
+ addNav(label,items);
+ while(holder.nextSibling)nested.append(holder.nextSibling);
+ holder.remove();
+};
+addAdvanced('Outils avancés',[['settings','⚙','Paramètres'],['files','▤','Fichiers'],['backups','▣','Sauvegardes'],['schedule','◷','Planification'],['logs','≡','Journal des commandes']]);
+addAdvanced('Compte & facturation',[['rentals','▥','Locations','rentals'],['wallet','◇','Portefeuille et dons','wallet'],['payments','✓','Tests des paiements']]);
 for(const original of originalLinks)original.addEventListener('click',()=>{if(original.dataset.page==='hostingPanel')activate('overview','Vue d’ensemble');else{for(const b of $('cmdPrimary').querySelectorAll('button'))b.removeAttribute('aria-current');$('cmdTitle').textContent=original.textContent.trim()}if(document.documentElement.classList.contains('cmd-menu-open'))menu(false)});
 async function loadBackupGames(){try{const d=await request('/api/game-library'),s=$('cmdBackupGame'),old=s.value;s.replaceChildren();for(const g of d.items||[]){const o=document.createElement('option');o.value=g.id;o.textContent=g.display_name;s.append(o)}if([...s.options].some(o=>o.value===old))s.value=old;await loadBackups()}catch(e){$('cmdBackupList').textContent=e.message}}
 async function loadBackups(){const list=$('cmdBackupList'),id=$('cmdBackupGame').value;list.replaceChildren();if(!id){list.textContent='Aucun profil de serveur enregistré.';return}try{const d=await request('/api/game-library/backups?id='+encodeURIComponent(id));if(!d.versions?.length)list.textContent='Aucune version enregistrée pour ce profil.';for(const v of d.versions||[]){const row=document.createElement('div');row.className='cmd-result-row';const title=document.createElement('strong');title.textContent=new Date(v.created_at).toLocaleString('fr-FR');const b=document.createElement('button');b.type='button';b.className='ghost';b.textContent='Télécharger les paramètres';b.onclick=()=>{const url=URL.createObjectURL(new Blob([JSON.stringify(v.data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='cmd-parametres-'+v.id+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)};row.append(title,b);list.append(row)}}catch(e){list.textContent=e.message}}
