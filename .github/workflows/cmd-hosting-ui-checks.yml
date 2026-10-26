@@ -11,6 +11,7 @@ on:
       - "services/mods-api/index.ts"
       - "tests/mobile-catalog-profiles.test.mjs"
       - "tests/fs25-unified-hosting-nav.test.mjs"
+      - "tests/fs25-modhub-search-v8.test.mjs"
       - "tests/palworld-mobile-navigation.test.mjs"
       - "tests/cmd-unified-mobile-v6.test.mjs"
       - "tests/cmd-simplified-mobile-v7.test.mjs"
@@ -26,6 +27,7 @@ on:
       - "services/mods-api/index.ts"
       - "tests/mobile-catalog-profiles.test.mjs"
       - "tests/fs25-unified-hosting-nav.test.mjs"
+      - "tests/fs25-modhub-search-v8.test.mjs"
       - "tests/palworld-mobile-navigation.test.mjs"
       - "tests/cmd-unified-mobile-v6.test.mjs"
       - "tests/cmd-simplified-mobile-v7.test.mjs"
@@ -46,7 +48,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate HTML/CSS/SVG UI additions without deploying
-        run: node --test tests/premium-ui.test.mjs tests/restored-web.test.mjs tests/anomalia-nasdara-catalog.test.mjs tests/mobile-catalog-profiles.test.mjs tests/fs25-unified-hosting-nav.test.mjs tests/palworld-mobile-navigation.test.mjs tests/cmd-unified-mobile-v6.test.mjs tests/cmd-simplified-mobile-v7.test.mjs tests/anomalia-workshop-bridge.test.mjs tests/anomalia-catalog.test.mjs
+        run: node --test tests/premium-ui.test.mjs tests/restored-web.test.mjs tests/anomalia-nasdara-catalog.test.mjs tests/mobile-catalog-profiles.test.mjs tests/fs25-unified-hosting-nav.test.mjs tests/fs25-modhub-search-v8.test.mjs tests/palworld-mobile-navigation.test.mjs tests/cmd-unified-mobile-v6.test.mjs tests/cmd-simplified-mobile-v7.test.mjs tests/anomalia-workshop-bridge.test.mjs tests/anomalia-catalog.test.mjs
       - name: Parse mobile catalogue, workshop and navigation scripts
         run: |
           node --check web/public/mod-v2-ui.js
