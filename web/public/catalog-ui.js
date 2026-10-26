@@ -111,9 +111,8 @@ function modal(game){
  overlay.querySelector('[data-close-dialog]').onclick=dismiss;
  overlay.querySelector('[data-anomalia-workshop]')?.addEventListener('click',()=>{
   dismiss();
-  const button=document.querySelector('#cmdOriginalNav .links [data-page="cmdMods"]')||
-    document.querySelector('.links [data-page="cmdMods"]');
-  if(button)button.click();else window.location.hash='#cmdMods';
+  if(typeof window.CMDHostingOpenMods==='function')window.CMDHostingOpenMods();
+  else window.location.hash='#cmdMods';
  });
 
  overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss()});
