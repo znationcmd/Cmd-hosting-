@@ -61,3 +61,17 @@ test('iPhone game catalogue loads bounded covers, legible titles, and same UI fo
  assert.match(html,/cmd-navigation-cleanup\.js\?v=20261026/);
  assert.match(html,/mod-v2-ui\.js\?v=20261026-palworld-1/);
 });
+
+test('Workshop Palworld is a first-class server-mod source and the mobile cards stay compact',()=>{
+ const css=read('web/public/ui/mobile-catalog-compact.css');
+ assert.match(mods,/id="cvQuickPalworld"/);
+ assert.match(mods,/__palworld_workshop__/);
+ assert.match(mods,/cmdv-source-quick/);
+ assert.match(mods,/palworldWorkshopBrowse/);
+ assert.match(mods,/\&searchtext=/);
+ assert.match(mods,/Mods enregistrés/);
+ assert.match(css,/#jeux \.game > img\.real-game-image/);
+ assert.match(css,/max-height:104px!important/);
+ assert.match(css,/\.cmd-shop-cover img/);
+ assert.match(html,/mobile-catalog-compact\.css/);
+});
