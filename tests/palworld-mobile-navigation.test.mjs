@@ -1,0 +1,52 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const read=name=>readFileSync(new URL('../'+name,import.meta.url),'utf8');
+const mods=read('web/public/mod-v2-ui.js');
+const autodetect=read('web/public/mod-auto-detect.js');
+const profile=read('web/public/catalog-compat.js');
+const nav=read('web/public/ui/cmd-navigation-cleanup.js');
+const mobile=read('web/public/ui/cmd-mobile-catalog-fix.css');
+const html=read('web/public/index.html');
+
+test('Palworld Steam Workshop official path and safe dedicated-server instructions',()=>{
+ assert.match(mods,/https:\/\/steamcommunity\.com\/app\/1623730\/workshop\//);
+ assert.match(mods,/docs\.palworldgame\.com\/settings-and-operation\/mod\//);
+ assert.match(mods,/Mods\/Workshop/);
+ assert.match(mods,/Info\.json/);
+ assert.match(mods,/PalModSettings\.ini/);
+ assert.match(mods,/ActiveModList/);
+ assert.match(mods,/PackageName/);
+ assert.match(mods,/palworldProfile\?'steam'/);
+ assert.match(mods,/palworldProfile\?1623730/);
+ assert.match(mods,/palworldBrowser\(\)/);
+});
+test('Palworld workshop visible even when mods API has no provider or existing game install',()=>{
+ assert.match(mods,/window\.CMDHostingOpenPalworldWorkshop/);
+ assert.match(mods,/else if\(palworldProfile\)\{palworldBrowser\(\)/);
+ assert.match(mods,/Aucun mod n’est téléchargé ou installé/);
+ assert.match(autodetect,/g==='palworld'/);
+ assert.match(autodetect,/gameSources\.palworld/);
+ assert.match(profile,/rpIdentify\(x\)==='Palworld'/);
+ assert.match(profile,/CMDHostingOpenPalworldWorkshop/);
+ assert.match(profile,/modsPage\(chosen\(\)\)/);
+});
+test('Profile retains Mods access; duplicate standalone menus only are suppressed',()=>{
+ assert.match(profile,/const cats=\['Vue générale'.*?'Mods'/);
+ assert.match(nav,/cmdPrimary button/);
+ assert.match(nav,/Mods\\s\*/);
+ assert.match(nav,/Jeux/);
+ assert.doesNotMatch(nav,/\.remove\(\)/);
+ assert.doesNotMatch(nav,/\.page button/);
+});
+test('iPhone game catalogue loads bounded covers, legible titles, and same UI for old/new pages',()=>{
+ assert.match(mobile,/#jeux #game-list/);
+ assert.match(mobile,/#cmdCatalogSection #cmdShopGrid/);
+ assert.match(mobile,/max-height:145px!important/);
+ assert.match(mobile,/object-fit:cover!important/);
+ assert.match(mobile,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(mobile,/\.cmd-shop-name/);
+ assert.match(html,/cmd-mobile-catalog-fix\.css\?v=20261026/);
+ assert.match(html,/cmd-navigation-cleanup\.js\?v=20261026/);
+ assert.match(html,/mod-v2-ui\.js\?v=20261026-palworld-1/);
+});
