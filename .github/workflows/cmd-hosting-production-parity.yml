@@ -1,0 +1,24 @@
+name: CMD Hosting - Production mobile/UI parity
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'web/public/index.html'
+      - 'web/public/ui/cmd-simplified-navigation-v7.js'
+      - 'web/public/ui/cmd-simplified-mobile-v7.css'
+      - 'web/public/catalog-compat.js'
+      - 'scripts/verify-cmd-hosting-production-ui.mjs'
+      - '.github/workflows/cmd-hosting-production-parity.yml'
+permissions:
+  contents: read
+jobs:
+  read-only-live-check:
+    name: Compare GitHub to actual public Railway site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Read-only check public UI, no credentials or deployment
+        run: node scripts/verify-cmd-hosting-production-ui.mjs
