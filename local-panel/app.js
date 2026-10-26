@@ -38,6 +38,7 @@ async function select(id,restart=true){
  if(!current)throw Error('Serveur inconnu');
  document.querySelectorAll('.serverItem').forEach((button,i)=>button.classList.toggle('active',servers[i].id===id));
  $('selectedName').textContent=current.name;
+ await window.CMDLocalProfile?.show({id:current.id,name:current.name,game:current.game,map:current.map,slots:current.slots,installed:current.installed,linked:true});
  $('selectedRoot').textContent=current.root;
  $('selectedState').textContent=current.note;
  $('installedBadge').textContent=current.installed?'FICHIERS DÉTECTÉS':'INSTALLATION NON VÉRIFIÉE';
@@ -131,7 +132,7 @@ async function refreshMaps(){
 }
 $('loginForm').addEventListener('submit',e=>{e.preventDefault();safe(async()=>{
  token=$('token').value.trim();await api('/api/servers');$('token').value='';
- show('loginView',false);show('workspace',true);await Promise.all([loadLifetimeCatalogue(),refreshLifetime()]);await refresh();await refreshDayzInstall();await refreshProfiles();notice('Bibliothèque de serveurs ouverte. Les profils restent enregistrés sans échéance.');
+ show('loginView',false);show('workspace',true);await Promise.all([loadLifetimeCatalogue(),refreshLifetime()]);await refresh();await refreshDayzInstall();await refreshProfiles();await window.CMDLocalProfile?.pc();notice('Bibliothèque de serveurs ouverte. Les profils restent enregistrés sans échéance.');
 })});
 let previousDayzState='';
 function dayzMessage(message,problem=false){
@@ -215,7 +216,14 @@ async function refreshProfiles(){
    notice(result.note||'Lancement demandé. Vérifier la console Windows et le jeu.');
    await refreshProfiles();
   });
-  actions.append(prepare,start);
+  const openProfile=element('button','quiet','Ouvrir profil · Mods');
+  openProfile.type='button';
+  openProfile.onclick=()=>safe(async()=>{
+   await window.CMDLocalProfile?.show({id:item.id,name:item.title,game:item.game,map:item.map,
+    slots:item.slots,installed:item.filesVerified,linked:false});
+   $('profileWorkspace').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  actions.append(openProfile,prepare,start);
   card.append(heading,desc,stat,summary,blockers,actions);
   list.append(card);
  }
@@ -295,7 +303,15 @@ async function refreshLifetime(){
    await refreshLifetime();await refresh();
    notice(result.note||'Profil retiré uniquement sur demande explicite ; fichiers conservés.');
   });
-  actions.append(edit,link,openFiles,remove);
+  const profileButton=element('button','primary','Ouvrir mon profil');
+  profileButton.type='button';
+  profileButton.onclick=()=>safe(async()=>{
+   if(item.linkedFilesAvailable){await refresh();await select(item.id);}
+   else await window.CMDLocalProfile?.show({id:item.id,name:item.name,game:item.gameKey,
+    map:item.map,slots:item.slots,installed:false,linked:false});
+   $('profileWorkspace').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  actions.append(profileButton,edit,link,openFiles,remove);
   card.append(title,sub,flag,state,actions);panel.append(card);
  }
 }
@@ -373,4 +389,6 @@ $('uploadForm').addEventListener('submit',e=>{e.preventDefault();safe(async()=>{
 })});
 setInterval(()=>{if(!$('workspace').hidden && token)void refreshDayzInstall().catch(()=>{})},9000);
 
+// Show the five requested CMD profiles before the general game catalogue form.
+$('lifetimeServers').before($('cmdProfiles'));
 setInterval(()=>{if(!$('workspace').hidden&&token)void refreshProfiles().catch(()=>{})},20000);
