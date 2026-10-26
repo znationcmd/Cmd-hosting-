@@ -1,0 +1,101 @@
+/* CMD Hosting mobile catalog v3 — constrain cover images, preserve game titles and actions.
+   Site data and server state are not modified by these presentation rules. */
+html body #jeux #game-list.games{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr))!important;
+  align-items:stretch!important;
+  gap:12px!important;
+}
+html body #jeux #game-list>.game{
+  box-sizing:border-box!important;
+  display:grid!important;
+  grid-template-columns:112px minmax(0,1fr)!important;
+  grid-auto-flow:row!important;
+  align-items:center!important;
+  gap:12px!important;
+  min-width:0!important;
+  padding:12px!important;
+  overflow:hidden!important;
+  min-height:115px!important;
+  max-height:none!important;
+}
+html body #jeux #game-list>.game>.real-game-image{
+  display:block!important;
+  width:112px!important;
+  min-width:0!important;
+  max-width:112px!important;
+  height:84px!important;
+  max-height:84px!important;
+  aspect-ratio:4/3!important;
+  object-fit:cover!important;
+  object-position:center!important;
+  border:1px solid #7891bd!important;
+  border-radius:9px!important;
+  flex:none!important;
+}
+html body #jeux #game-list>.game>.real-game-image[hidden]{display:none!important}
+html body #jeux #game-list>.game>.game-body{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  justify-content:center!important;
+  min-width:0!important;
+  width:100%!important;
+  height:auto!important;
+  max-height:none!important;
+}
+html body #jeux #game-list .game-body h3{font-size:15px!important;line-height:1.3!important;
+  margin:0 0 3px!important;overflow-wrap:anywhere!important}
+html body #jeux #game-list .game-body p{font-size:12px!important;margin:0 0 7px!important}
+html body #jeux #game-list .game-body button{max-width:100%!important;
+  padding:8px 12px!important;min-height:36px!important;white-space:normal!important}
+html body #cmdCatalogSection .cmd-shop-grid{grid-template-columns:repeat(auto-fill,minmax(min(200px,100%),1fr))!important;
+  gap:10px!important}
+html body #cmdCatalogSection .cmd-shop-card{width:100%!important;max-width:100%!important;min-width:0!important;
+  overflow:hidden!important;max-height:none!important}
+html body #cmdCatalogSection .cmd-shop-cover{height:110px!important;min-height:0!important;max-height:110px!important;
+  overflow:hidden!important}
+html body #cmdCatalogSection .cmd-shop-cover img{
+  display:block!important;position:static!important;width:100%!important;height:100%!important;
+  max-height:110px!important;max-width:100%!important;min-height:0!important;
+  object-fit:cover!important;object-position:center!important;aspect-ratio:auto!important}
+html body #cmdCatalogSection .cmd-shop-text{height:auto!important;min-height:90px!important;padding:10px!important}
+html body #cmdIntegratedGames img,html body #cmdCatalogSection .cmdg-card img{
+  max-width:100%!important;object-fit:cover!important;max-height:148px!important}
+html body #cmdRenterProfile,html body #cmdCatalogSection,html body #cmdIntegratedGames{
+  min-width:0!important;max-width:100%!important;overflow-wrap:anywhere}
+html body #cmdRenterProfile .cmdrp-layout{min-width:0!important}
+html body #cmdRenterProfile .cmdrp-main{min-width:0!important;overflow-wrap:anywhere}
+html body #cmdRenterProfile .cmdrp-sidebar select{max-width:100%!important;width:100%!important}
+html body #cmdRenterProfile .cmdrp-banner{min-height:105px!important}
+html body #cmdRenterProfile .cmdrp-banner>div{min-height:105px!important}
+html body #cmdRenterProfile #cmdrpBrief img{width:70px!important;height:54px!important;object-fit:cover!important}
+html body #cmdMods .cmdv-toolbar{min-width:0!important;flex-wrap:wrap!important}
+html body #cmdMods .cmdv-toolbar select{max-width:100%!important;min-width:0!important}
+html body [data-cmd-nav-suppressed="1"]{display:none!important}
+@media(max-width:700px){
+ html body #jeux{padding-top:15px!important}
+ html body #jeux #game-list.games{grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+ html body #jeux #game-list>.game{grid-template-columns:100px minmax(0,1fr)!important;
+  margin:0!important;padding:10px!important;min-height:108px!important}
+ html body #jeux #game-list>.game>.real-game-image{
+   width:100px!important;max-width:100px!important;height:78px!important;max-height:78px!important}
+ html body #jeux #game-list .game-body h3{font-size:14px!important}
+ html body #cmdCatalogSection .cmd-shop-grid{grid-template-columns:minmax(0,1fr)!important}
+ html body #cmdCatalogSection .cmd-shop-card{display:grid!important;
+  grid-template-columns:125px minmax(0,1fr)!important;align-items:stretch!important;min-height:112px!important}
+ html body #cmdCatalogSection .cmd-shop-cover{height:100%!important;max-height:140px!important}
+ html body #cmdCatalogSection .cmd-shop-cover img{height:100%!important;max-height:140px!important}
+ html body #cmdCatalogSection .cmd-shop-text{min-height:0!important;padding:11px!important}
+ html body #cmdCatalogSection .cmd-shop-name{font-size:14px!important;min-height:0!important}
+ html body #cmdRenterProfile .cmdrp-layout{display:block!important;min-height:0!important}
+ html body #cmdRenterProfile .cmdrp-sidebar{border-right:0!important;padding:12px!important}
+ html body #cmdRenterProfile .cmdrp-main{padding:12px!important}
+ html body #cmdRenterProfile .cmdrp-stats{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html body #cmdRenterProfile .cmdrp-cols{grid-template-columns:minmax(0,1fr)!important}
+ html body #cmdRenterProfile .cmdrp-prepared-list{grid-template-columns:minmax(0,1fr)!important}
+}
+@media(max-width:360px){
+ html body #jeux #game-list>.game{grid-template-columns:82px minmax(0,1fr)!important}
+ html body #jeux #game-list>.game>.real-game-image{width:82px!important;max-width:82px!important;height:72px!important;max-height:72px!important}
+}
