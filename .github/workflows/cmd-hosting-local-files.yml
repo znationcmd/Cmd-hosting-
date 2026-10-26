@@ -31,6 +31,7 @@ jobs:
           node --check local-panel/server.mjs
           node --check local-panel/app.js
           node --check local-panel/exclusive-game-lock.mjs
+          node --check local-panel/game-profiles.mjs
           node --check dayz-worlds/manager.mjs
           node --check asa-astraeos/manager.mjs
       - name: Run real filesystem and security contract tests
@@ -45,7 +46,7 @@ jobs:
           Copy-Item asa-astraeos distribution\asa-astraeos -Recurse
           New-Item -ItemType Directory -Force -Path distribution\scripts | Out-Null
           Copy-Item scripts/Installer-DayZ-PC-1-clic.ps1,scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd distribution\scripts\
-          Copy-Item local-panel/server.mjs,local-panel/app.js,local-panel/index.html,local-panel/style.css,local-panel/README.md,local-panel/exclusive-game-lock.mjs distribution\local-panel\
+          Copy-Item local-panel/server.mjs,local-panel/app.js,local-panel/index.html,local-panel/style.css,local-panel/README.md,local-panel/exclusive-game-lock.mjs,local-panel/game-profiles.mjs distribution\local-panel\
       - name: Upload Windows ready-to-extract archive
         if: runner.os == 'Windows'
         uses: actions/upload-artifact@v4
