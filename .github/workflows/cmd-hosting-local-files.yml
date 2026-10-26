@@ -35,7 +35,7 @@ jobs:
           node --check dayz-worlds/manager.mjs
           node --check asa-astraeos/manager.mjs
       - name: Run real filesystem and security contract tests
-        run: node --test local-panel/server.test.mjs dayz-worlds/worlds.test.mjs asa-astraeos/manager.test.mjs
+        run: node --test local-panel/server.test.mjs dayz-worlds/worlds.test.mjs asa-astraeos/manager.test.mjs local-panel/exclusive-game-lock.test.mjs
       - name: Package double-click Windows app
         if: runner.os == 'Windows'
         shell: pwsh
