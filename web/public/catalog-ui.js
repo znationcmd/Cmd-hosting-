@@ -66,17 +66,17 @@ styles.textContent=[
 '@media(prefers-reduced-motion:reduce){.cmd-shop-feature-cover,.cmd-shop-cover img,.cmd-shop-card,.cmd-shop-shine{animation:none!important;transition:none!important}}'
 ].join('\n');
 document.head.append(styles);
+// Reuse "Jeux" instead of adding a redundant "Boutique des jeux" menu.
 const originalNav=document.querySelector('#cmdOriginalNav .links')||document.querySelector('.links');
-if(originalNav){
- const navBtn=document.createElement('button');navBtn.type='button';navBtn.dataset.page='cmdCatalogSection';navBtn.textContent='🎮 Boutique de jeux';navBtn.addEventListener('click',()=>openShop());originalNav.prepend(navBtn);
-}
-const side=document.getElementById('cmdPrimary');
-if(side){
- const button=document.createElement('button');button.type='button';button.className='cmd-nav';button.dataset.shop='yes';
- const ico=document.createElement('span');ico.textContent='🎮';const label=document.createElement('span');label.textContent='Boutique des jeux';
- button.append(ico,label);button.onclick=()=>openShop();
- const header=document.createElement('span');header.className='cmd-group-title';header.textContent='BOUTIQUE';
- side.prepend(button);side.prepend(header);
+const gamesNav=originalNav?.querySelector('[data-page="jeux"]')||
+ document.querySelector('[data-page="jeux"]');
+if(gamesNav){
+ gamesNav.addEventListener('click',()=>openShop());
+}else if(originalNav){
+ const navBtn=document.createElement('button');
+ navBtn.type='button';navBtn.dataset.page='cmdCatalogSection';
+ navBtn.textContent='Jeux';navBtn.addEventListener('click',()=>openShop());
+ originalNav.prepend(navBtn);
 }
 const platforms=[['all','Tous'],['pc','PC'],['ps','PlayStation'],['xbox','Xbox'],['switch','Nintendo'],['mobile','Mobile']];
 let records=[],activePlatform='all',currentQuery='',activeStatus='all';
