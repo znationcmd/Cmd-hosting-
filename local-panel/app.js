@@ -131,7 +131,7 @@ async function refreshMaps(){
 }
 $('loginForm').addEventListener('submit',e=>{e.preventDefault();safe(async()=>{
  token=$('token').value.trim();await api('/api/servers');$('token').value='';
- show('loginView',false);show('workspace',true);await refresh();await refreshDayzInstall();await refreshProfiles();notice('Connecté au gestionnaire de fichiers de cette machine.');
+ show('loginView',false);show('workspace',true);await Promise.all([loadLifetimeCatalogue(),refreshLifetime()]);await refresh();await refreshDayzInstall();await refreshProfiles();notice('Bibliothèque de serveurs ouverte. Les profils restent enregistrés sans échéance.');
 })});
 let previousDayzState='';
 function dayzMessage(message,problem=false){
@@ -223,6 +223,110 @@ async function refreshProfiles(){
   list.prepend(element('p','muted','Sur téléphone : état consultable. Pour installer ou démarrer un vrai serveur, ouvre ce même panneau sur ton PC hôte : http://127.0.0.1:8788.'));
  }
 }
+
+let lifetimeCatalogue=[];
+let lifetimeCache=[];
+async function loadLifetimeCatalogue(){
+ const result=await api('/api/library/catalogue');
+ lifetimeCatalogue=result.suggestions||[];
+ const datalist=$('lifetimeGames');datalist.replaceChildren();
+ for(const g of lifetimeCatalogue){
+  const option=document.createElement('option');
+  option.value=g.name;option.label=g.key;
+  datalist.append(option);
+ }
+}
+async function refreshLifetime(){
+ const result=await api('/api/library/profiles');
+ lifetimeCache=result.profiles;
+ const panel=$('lifetimeList');panel.replaceChildren();
+ $('lifetimeSummary').textContent=result.profiles.length+
+  ' serveur(s) sauvegardé(s) à vie · 0 expiration automatique · 1 seul serveur démarrable à la fois';
+ if(!result.profiles.length){
+  panel.append(element('p','empty','Aucun profil personnalisé : choisis un jeu puis crée ton premier serveur.'));
+ }
+ for(const item of result.profiles){
+  const card=element('article','lifetimeRow');
+  const title=element('strong','',item.name);
+  const sub=element('small','',item.gameName+' · '+item.slots+' slots'+
+   (item.map?' · '+item.map:''));
+  const flag=element('span','tag '+(item.gameInstalledVerified?'online':'offline'),
+   item.gameInstalledVerified?'BINAIRE DÉTECTÉ':'PROFIL CONSERVÉ');
+  const state=element('p','muted',item.gameInstalledVerified?
+   'Installation associée ; lancement/ports/joueurs non vérifiés.':
+   item.linkedFilesAvailable?'Dossier lié · fichiers du jeu non validés':
+   'Non installé : télécharge d’abord le serveur dédié officiel sur la machine.');
+  const actions=element('div','lifetimeButtons');
+  const edit=element('button','quiet','Modifier');
+  edit.type='button';
+  edit.onclick=()=>safe(async()=>{
+   const name=prompt('Nom du serveur',item.name);if(name===null)return;
+   const slots=prompt('Nombre de joueurs (1 à 500)',String(item.slots));if(slots===null)return;
+   const map=prompt('Carte / monde (facultatif)',item.map||'');if(map===null)return;
+   await api('/api/library/profiles',{method:'PATCH',headers:{'content-type':'application/json'},
+    body:JSON.stringify({id:item.id,name,slots:Number(slots),map})});
+   await refreshLifetime();notice('Profil modifié. Aucun fichier ni sauvegarde supprimé.');
+  });
+  const link=element('button','quiet',item.directory?'Changer le dossier':'Associer les fichiers');
+  link.type='button';
+  link.onclick=()=>safe(async()=>{
+   const hint=item.directory||'C:\\CMD-Servers\\MonServeur\\jeu';
+   const directory=prompt('Dossier réel du serveur dédié sur CE PC Windows. Doit exister et rester distinct des autres mondes.',hint);
+   if(directory===null)return;
+   await api('/api/library/profiles/link',{method:'POST',headers:{'content-type':'application/json'},
+    body:JSON.stringify({id:item.id,directory})});
+   await refreshLifetime();await refresh();
+   notice('Fichiers locaux liés. Le jeu ne sera pas démarré sans validation de son exécutable.');
+  });
+  if(!['localhost','127.0.0.1','::1','[::1]'].includes(location.hostname))link.disabled=true;
+  const openFiles=element('button','quiet','Fichiers / Mods');
+  openFiles.type='button';openFiles.disabled=!item.linkedFilesAvailable;
+  openFiles.onclick=()=>safe(async()=>{
+   await refresh();await select(item.id);
+   $('explorer').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  const remove=element('button','quiet','Supprimer ce profil');
+  remove.type='button';
+  remove.onclick=()=>safe(async()=>{
+   const confirmation=prompt('Pour retirer seulement cette fiche (les sauvegardes et mods restent sur le disque), recopie exactement : '+item.name);
+   if(confirmation===null)return;
+   const result=await api('/api/library/profiles',{method:'DELETE',headers:{'content-type':'application/json'},
+    body:JSON.stringify({id:item.id,confirmName:confirmation})});
+   await refreshLifetime();await refresh();
+   notice(result.note||'Profil retiré uniquement sur demande explicite ; fichiers conservés.');
+  });
+  actions.append(edit,link,openFiles,remove);
+  card.append(title,sub,flag,state,actions);panel.append(card);
+ }
+}
+$('createLifetimeForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ safe(async()=>{
+  const gameName=$('lifetimeGameName').value.trim();
+  const guess=lifetimeCatalogue.find(g=>g.name.toLowerCase()===gameName.toLowerCase());
+  const name=$('lifetimeServerName').value.trim();
+  const slots=Number($('lifetimeSlots').value);
+  const map=$('lifetimeMap').value.trim();
+  const result=await api('/api/library/profiles',{
+   method:'POST',headers:{'content-type':'application/json'},
+   body:JSON.stringify({gameName,gameKey:guess?.key||'custom',name,slots,map,platform:'pc'})
+  });
+  $('lifetimeServerName').value='';$('lifetimeMap').value='';
+  await refreshLifetime();
+  notice(result.note||'Profil enregistré à vie. Le jeu doit encore être installé.');
+ });
+});
+$('refreshLifetime').onclick=()=>safe(refreshLifetime);
+$('exportLifetime').onclick=()=>safe(async()=>{
+ const snapshot=await api('/api/library/profiles/export');
+ const blob=new Blob([JSON.stringify(snapshot,null,2)],{type:'application/json'});
+ const link=document.createElement('a'),url=URL.createObjectURL(blob);
+ link.href=url;link.download='CMDHosting-Mes-Serveurs-'+new Date().toISOString().slice(0,10)+'.json';
+ document.body.append(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1500);
+ notice('Liste de serveurs exportée. Conserve aussi les véritables sauvegardes des jeux sur ton PC.');
+});
+
 $('refreshProfiles').onclick=()=>safe(refreshProfiles);
 
 $('refresh').onclick=()=>safe(refresh);
