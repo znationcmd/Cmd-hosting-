@@ -70,3 +70,14 @@ padding:13px;margin:14px 0 18px;min-width:0}
 .cmdProfileButtons{display:flex;gap:8px;flex-wrap:wrap}
 .cmdProfileButtons button{min-width:0;flex:1 1 95px;font-size:11px;min-height:35px}
 @media(max-width:790px){.cmdProfiles{padding:11px}#cmdProfileList{max-height:none}.cmdProfileCard{padding:10px}}
+
+
+/* Palworld official mod access lives with the server profile, not a duplicate global menu. */
+.cmdPalworldQuick{margin:15px 0 8px;padding:13px;border:1px solid #4775a5;border-radius:12px;
+ background:linear-gradient(125deg,#143854,#241d50);display:flex;flex-direction:column;gap:8px}
+.cmdPalworldQuick strong{font-size:13px;color:#e8f5ff}
+.cmdPalworldQuick .muted{font-size:11px;line-height:1.55;margin:0}
+.cmdPalworldQuick a{display:block;text-decoration:none;font-weight:700;font-size:12px;
+ text-align:center;color:#effaff;border:1px solid #7194c7;border-radius:8px;background:#234d86;
+ padding:9px 11px;overflow-wrap:anywhere}
+.cmdPalworldQuick a:hover{background:#376eb1}
