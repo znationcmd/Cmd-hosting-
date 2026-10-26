@@ -30,10 +30,16 @@ export async function profileChecks(){
     else{
       if(!arkResult.installed)blockers.push('Exécutable officiel ARK ASA absent sur le PC');
       if(!arkResult.allModIdsFound)blockers.push('Identifiants des mods CurseForge incomplets');
-      if(arkResult.premiumRequiresEntitlement)blockers.push('Licence du contenu premium à vérifier et confirmer sur le PC');
-      if(!arkResult.crossplayTested)blockers.push('Compatibilité PC / PS5 / Xbox des mods non vérifiée');
+      if(arkResult.premiumRequiresEntitlement&&process.env.CMD_ASA_PREMIUM_ACK!=='yes')
+        blockers.push('Licence du contenu premium à confirmer localement (CMD_ASA_PREMIUM_ACK=yes uniquement si autorisé)');
+      if(!process.env.CMD_ASA_ADMIN_PASSWORD)
+        blockers.push('Mot de passe administrateur ARK/RCON à définir sur le PC (pas dans GitHub)');
+      if(!arkResult.crossplayTested)
+        blockers.push('Compatibilité PC / PS5 / Xbox des mods non vérifiée (validation en jeu nécessaire)');
     }
-    return {...p,ready:Boolean(arkResult?.installed&&arkResult?.allModIdsFound),
+    return {...p,ready:Boolean(arkResult?.installed&&arkResult?.allModIdsFound&&
+      (!arkResult?.premiumRequiresEntitlement||process.env.CMD_ASA_PREMIUM_ACK==='yes')&&
+      process.env.CMD_ASA_ADMIN_PASSWORD),
       filesVerified:Boolean(arkResult?.installed),modCount:arkResult?.modCount||24,
       modsInstalled:null,mission:'Astraeos_WP',blockers,activeGameDetected:activeUnknown,
       state:arkResult?.installed?'installé, contrôle des mods requis':'ARK ASA non installé'};
