@@ -1,8 +1,9 @@
-// CMD Hosting — lifetime local game profiles: no subscription, expiration, Railway or game-file deletion.
+// CMD Hosting — permanent server data with optional paid rental periods; expiry suspends, NEVER deletes.
 // Records are only server intentions. A playable server requires an installed official dedicated executable.
 import {readFile,writeFile,rename,mkdir,open,unlink} from 'node:fs/promises';
 import path from 'node:path';
 import {randomBytes} from 'node:crypto';
+import {configureRental,rentalStatus,validateRentalPeriod} from './rental-policy.mjs';
 export const MAX_PROFILES=10000; // operational anti-abuse ceiling, not a rental time quota
 export const GAME_SUGGESTIONS=Object.freeze([
  ['dayz','DayZ PC'],['ark-asa','ARK Survival Ascended'],['ark-ase','ARK Survival Evolved'],
@@ -63,7 +64,8 @@ export function lifetimeRegistry({file}){
    const record={id:'profile-'+randomBytes(10).toString('hex'),...valid,status:'non-installe',
     directory:null,createdAt:stamp,updatedAt:stamp,expiresAt:null,
     expired:false,automaticDeletion:false,autoRenewalNotRequired:true,
-    modIds:[],settings:{},notes:'Profil sauvegardé. Aucun serveur dédié installé automatiquement.'};
+    rental:configureRental(null,Number(input.periodDays||30)),
+    modIds:[],settings:{},notes:'Profil sauvegardé. Location en attente de paiement vérifié ; expiration = suspension sans suppression.'};
    data.items.push(record);await write(data);return record;
   });
  }
@@ -96,6 +98,20 @@ export function lifetimeRegistry({file}){
    return {deleted:true,filesDeleted:false,gameWorldsPreserved:true,name:record.name};
   });
  }
+ async function configurePeriod(id,periodDays){
+  validateRentalPeriod(periodDays);
+  return serialize(async()=>{
+   const data=await read(),record=data.items.find(x=>x.id===id);
+   if(!record)fail('Profil inconnu.');
+   record.rental=configureRental(record.rental,periodDays);
+   record.updatedAt=new Date().toISOString();
+   await write(data);return {...record,rentalStatus:rentalStatus(record.rental)};
+  });
+ }
+ async function rentalView(){
+  const profiles=await list();
+  return profiles.map(record=>({...record,rentalStatus:rentalStatus(record.rental)}));
+ }
  async function snapshot(){return read()}
- return {list,create,modify,link,remove,snapshot,file:filepath};
+ return {list,create,modify,link,remove,snapshot,configurePeriod,rentalView,file:filepath};
 }
