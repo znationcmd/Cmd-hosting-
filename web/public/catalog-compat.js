@@ -80,7 +80,14 @@ const style=document.createElement('style');style.textContent=[
 ].join('\n');document.head.append(style);
 const $=id=>document.getElementById(id),mk=(t,text,cls)=>{let e=document.createElement(t);if(text!==undefined)e.textContent=String(text);if(cls)e.className=cls;return e};
 const cats=['Vue générale','Réglages de base','Fichiers & FTP','Console','Mods','Joueurs'],admins=['Sauvegardes','Redémarrages','Permissions & accès','Tâches planifiées','Réinstaller','Changer de jeu'];
-let leases=[],library=[],catalog=[],pc=null,key='',tab=cats[0],sending=false;
+let leases=[],library=[],catalog=[],pc=null,key='',tab=cats[0],sending=false,founder=false;
+const preparedCMDProfiles=[
+ {id:'cmd-lux',name:'CMD Lux · DayZ',game:'DayZ PC',map:'Lux',slots:100},
+ {id:'cmd-namalsk',name:'CMD Namalsk · DayZ',game:'DayZ PC',map:'Namalsk',slots:100},
+ {id:'cmd-deer-isle',name:'CMD Deer Isle · DayZ',game:'DayZ PC',map:'Deer Isle',slots:100},
+ {id:'cmd-takistan-plus',name:'CMD Takistan Plus · DayZ',game:'DayZ PC',map:'Takistan Plus',slots:100},
+ {id:'cmd-valhalla-astraeos',name:'CMD Valhalla Astraeos · ARK: Survival Ascended',game:'ARK ASA',map:'Astraeos',slots:100}
+];
 
 /*CMD_MAP_PICKER_FIXED_V1 — game-specific covers and map choices, honest draft status*/
 let blueprints=[],rpOwnerId="anonymous";
@@ -220,22 +227,37 @@ function switchGamePage(x=chosen()){
 }
 
 function list(){let a=leases.map(r=>{let g=library.find(y=>String(y.id)===String(r.gameId));return{id:'r'+r.gameId,type:'location',name:r.name||g?.display_name||'Serveur',r,g}});
-for(const s of pc?.machine?.servers||[])a.push({id:'p'+s.id,type:'machine',name:s.name||s.id,s});return a}
+for(const s of pc?.machine?.servers||[])a.push({id:'p'+s.id,type:'machine',name:s.name||s.id,s});
+if(founder){
+ for(const p of preparedCMDProfiles){
+  if(a.some(v=>String(v.name||'').toLowerCase().startsWith(p.name.split(' · ')[0].toLowerCase())))continue;
+  a.push({id:'prep-'+p.id,type:'prepared',name:p.name,prepared:p});
+ }
+}
+return a}
 function chosen(){return list().find(x=>x.id===key)}
-function state(x){if(!x)return'Aucun serveur';if(x.s)return pc?.machine?.online?(x.s.running?'En ligne':x.s.configured?'Prêt à démarrer':'Non configuré'):'PC hors ligne';
+function state(x){if(!x)return'Aucun serveur';if(x.type==='prepared')return'Préparé · non installé';if(x.s)return pc?.machine?.online?(x.s.running?'En ligne':x.s.configured?'Prêt à démarrer':'Non configuré'):'PC hors ligne';
 return({exempt:'Accès permanent',active:'Location active',awaiting_payment:'Précommercialisation',suspended:'Suspendu',expired:'Expiré'})[x.r?.state]||'Location enregistrée'}
 function art(x){const image=rpArtwork(x);return image?'linear-gradient(90deg,#081629cf,#0c204877),url("'+image+'")':'linear-gradient(110deg,#173454,#122038)'}
 const line=(k,v)=>{let c=mk('div',undefined,'cmdrp-line');c.append(mk('span',k),mk('b',v??'Non renseigné'));return c};
 const box=t=>{let b=mk('div',undefined,'cmdrp-box');b.append(mk('h3',t));return b};
 async function cmd(action){let x=chosen();if(sending||!x?.s||!pc?.machine?.online||!x.s.configured)return;if(action==='start'&&x.s.running||action!=='start'&&!x.s.running)return;if(action!=='start'&&!confirm((action==='stop'?'Arrêter ':'Redémarrer ')+x.name+' ?'))return;
 sending=true;controls(x);try{let r=await fetch('/api/pc/command',{method:'POST',credentials:'include',headers:{'content-type':'application/json'},body:JSON.stringify({serverId:x.s.id,action})}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.message||'Commande refusée');$('cmdrpStatus').textContent='Commande envoyée, en attente de confirmation du PC.';setTimeout(load,11000)}catch(e){$('cmdrpStatus').textContent=e.message}finally{sending=false;controls(chosen())}}
-function controls(x){let c=$('cmdrpActions');c.replaceChildren();if(!x)return;if(!x.s){c.append(btn('Gérer ma location',rentalsPage));return}for(const [t,a]of[['▶ Démarrer','start'],['↻ Redémarrer','restart'],['■ Arrêter','stop']]){let b=btn(t,()=>cmd(a));b.disabled=sending||!pc?.machine?.online||!x.s.configured||(a==='start'?x.s.running:!x.s.running);c.append(b)}}
-function content(x){let p=$('cmdrpDetails');p.replaceChildren();if(!x){
+function controls(x){let c=$('cmdrpActions');c.replaceChildren();if(!x)return;
+if(x.type==='prepared'){c.append(mk('small','Profil préparé · aucun serveur en ligne'));return}
+if(!x.s){c.append(btn('Gérer ma location',rentalsPage));return}for(const [t,a]of[['▶ Démarrer','start'],['↻ Redémarrer','restart'],['■ Arrêter','stop']]){let b=btn(t,()=>cmd(a));b.disabled=sending||!pc?.machine?.online||!x.s.configured||(a==='start'?x.s.running:!x.s.running);c.append(b)}}
+function content(x){let p=$('cmdrpDetails');p.replaceChildren();
+if(x?.type==='prepared'){
+ const info=box('Configuration CMD préparée · non installée');
+ info.append(line('Profil',x.prepared.name),line('Carte',x.prepared.map),
+  line('Slots prévus',String(x.prepared.slots)),line('Statut','Aucun serveur confirmé sur une machine'));
+ info.append(mk('p','Les fichiers du jeu, mods et sauvegardes ne sont pas installés par cette fiche. Le démarrage est désactivé jusqu’à confirmation par l’agent Windows.','cmdrp-prepared-help'));
+ info.append(btn('Voir les jeux',shop));p.append(info);return;
+}
+if(!x){
  p.append(mk('div','Aucun serveur installé ou relié à ton compte. Les profils préparés ne sont pas des serveurs en ligne.','cmdrp-warn'));
  const prepared=box('Mes 5 profils CMD préparés · hors ligne');
- const names=['CMD Lux · DayZ · 100 slots','CMD Namalsk · DayZ · 100 slots',
- 'CMD Deer Isle · DayZ · 100 slots','CMD Takistan Plus · DayZ · 100 slots',
- 'CMD Valhalla Astraeos · ARK ASA · 100 slots'];
+ const names=founder?preparedCMDProfiles.map(x=>x.name+' · '+x.slots+' slots'):[];
  const ul=mk('ul',undefined,'cmdrp-prepared-list');
  for(const name of names){const li=mk('li');li.append(mk('strong',name),mk('small','À installer sur Windows · 0 joueur connecté'));ul.append(li)}
  prepared.append(ul,mk('p','Les cinq configurations sont préparées dans CMD Hosting, mais aucune machine Windows n’a confirmé leur installation. DayZ : un seul démarrage à la fois. Pas de serveur fictif.','cmdrp-prepared-help'));
@@ -260,8 +282,8 @@ p.append(c)}
 function draw(){let a=list(),x=chosen(),sel=$('cmdrpSelect');sel.replaceChildren();for(const z of a)sel.add(new Option(z.name+' · '+z.type,z.id));if(x)sel.value=x.id;$('cmdrpBrief').replaceChildren();if(x){const img=rpArtwork(x);if(img){const tag=mk('img');tag.src=img;tag.alt='Image du jeu '+(rpIdentify(x)||x.name);tag.loading='lazy';$('cmdrpBrief').append(tag)}}$('cmdrpBrief').append(mk('span',state(x)));$('cmdrpTitle').textContent=x?.name||'Mon profil loueur';$('cmdrpDescription').textContent=x?x.type+' · '+state(x):'Mes serveurs CMD Hosting';$('cmdrpBanner').style.backgroundImage=x?art(x):'linear-gradient(110deg,#16365e,#28264c)';controls(x);
 for(const[id,names]of[['cmdrpSettings',cats],['cmdrpAdmin',admins]]){let el=$(id);el.replaceChildren();for(const n of names){let b=btn(n,()=>{tab=n;if(n==='Mods'){modsPage(chosen());return;}if(n==='Changer de jeu'){switchGamePage();return;}draw()});if(n===tab)b.className='cmdrp-on';el.append(b)}}content(x)}
 async function load(){$('cmdrpStatus').textContent='Chargement des serveurs…';
-try{let m=await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json());if(!m.user){leases=[];library=[];pc=null;$('cmdrpUser').textContent='Non connecté';draw();$('cmdrpStatus').textContent='Connecte-toi pour consulter tes serveurs.';$('cmdrpDetails').prepend(btn('Se connecter',()=>location.href='/connexion'));return}
-$('cmdrpUser').textContent=m.user.displayName||m.user.display_name||m.user.username||'Compte CMD';
+try{let m=await fetch('/api/auth/me',{credentials:'include'}).then(r=>r.json());if(!m.user){leases=[];library=[];pc=null;founder=false;$('cmdrpUser').textContent='Non connecté';draw();$('cmdrpStatus').textContent='Connecte-toi pour consulter tes serveurs.';$('cmdrpDetails').prepend(btn('Se connecter',()=>location.href='/connexion'));return}
+founder=m.user.role==='founder';$('cmdrpUser').textContent=m.user.displayName||m.user.display_name||m.user.username||'Compte CMD';
 const rr=await Promise.allSettled(['/api/rentals','/api/game-library','/api/catalog','/api/pc/status'].map(url=>fetch(url,{credentials:'include',cache:'no-store'})));
 const doc=await Promise.all(rr.map(async r=>r.status==='fulfilled'&&r.value.ok?r.value.json().catch(()=>({})):{}));
 leases=Array.isArray(doc[0]?.rentals)?doc[0].rentals:[];library=Array.isArray(doc[1]?.items)?doc[1].items:[];catalog=Array.isArray(doc[2]?.games)?doc[2].games:[];pc=doc[3]?.machine?doc[3]:null;
