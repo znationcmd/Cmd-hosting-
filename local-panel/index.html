@@ -8,13 +8,20 @@
 <p>DayZ, ARK, Arma Reforger, ANOMALIA et tous les jeux disposant d'une installation autorisée. Les dossiers présentés sont lus directement sur la machine hôte. Aucun fichier fictif.</p></section>
 <section id="loginView" class="login card"><h2>Accès administrateur local</h2><p>Entre la clé affichée par CMD Hosting sur l'ordinateur où le panneau est lancé.</p><form id="loginForm"><input id="token" required autocomplete="off" type="password" placeholder="Clé administrateur de la machine"><button class="primary">Ouvrir mes serveurs</button></form><small>La clé reste dans cet onglet. Ne rends pas ce panneau accessible directement sur Internet.</small></section>
 <section id="workspace" hidden>
+<section id="pcConnection" class="card pcConnection" aria-label="Raccordement de ce PC à CMD Hosting">
+ <div class="blockTitle"><div><span class="eyebrow">HÉBERGEMENT LOCAL · CE PC</span><h2>Connexion PC et téléphone</h2></div><span class="tag online" id="pcConnectionBadge">Panneau PC en cours</span></div>
+ <p id="pcConnectionStatus" class="muted" role="status">Vérification du réseau local…</p>
+ <div id="pcConnectionAddresses" class="connectionAddresses"></div>
+ <div class="tools"><button id="refreshConnection" type="button" class="quiet">↻ Vérifier la connexion</button></div>
+ <p class="muted">Sur iPhone : même Wi-Fi que le PC, puis ouvre l’adresse locale affichée et saisis la clé du panneau Windows. En 4G ou hors du domicile, il faut un VPN privé authentifié. Ne redirige jamais le port 8788 sur Internet.</p>
+</section>
 <div class="layout">
 <aside class="sidebar card"><div class="blockTitle"><h2>Mes serveurs</h2><button id="refresh" class="quiet">↻</button></div>
 <section id="lifetimeServers" class="cmdProfiles lifetimeServers" aria-label="Ma bibliothèque de serveurs permanents">
  <div class="blockTitle"><h3>Mes serveurs · sans expiration</h3><button type="button" id="refreshLifetime" class="quiet">↻</button></div>
  <p class="muted">Crée autant de profils de jeux que nécessaire, même si le serveur dédié n’est pas encore installé. Tes réglages sont conservés sans limite de durée ; un seul serveur peut fonctionner à la fois sur le PC.</p>
  <form id="createLifetimeForm" class="register lifetimeCreate">
-  <label>Jeu du catalogue ou autre jeu<input id="lifetimeGameName" list="lifetimeGames" required minlength="2" maxlength="120" placeholder="DayZ PC, ARK, Palworld, FS25…" autocomplete="off"></label>
+  <label>Tous les jeux du catalogue (ou un nom personnalisé)<input id="lifetimeGameName" list="lifetimeGames" required minlength="2" maxlength="120" placeholder="DayZ PC, ARK, Palworld, FS25…" autocomplete="off"></label>
   <datalist id="lifetimeGames"></datalist>
   <label>Nom de mon serveur<input id="lifetimeServerName" required minlength="2" maxlength="100" placeholder="CMD Mon Serveur"></label>
   <div class="lifetimeFields"><label>Joueurs demandés<input id="lifetimeSlots" type="number" min="1" max="500" value="100" required></label>
@@ -28,18 +35,12 @@
 </section>
 <hr>
 <section id="cmdProfiles" class="cmdProfiles" aria-label="Les 5 profils de serveurs CMD">
- <div class="blockTitle"><h3>Mes 5 serveurs CMD</h3><button id="refreshProfiles" class="quiet" type="button">↻</button></div>
+ <div class="blockTitle"><h3>Mes serveurs CMD · DayZ / ARK</h3><button id="refreshProfiles" class="quiet" type="button">↻</button></div>
  <p class="muted">4 DayZ + 1 ARK Astraeos · 100 slots configurés chacun · un seul démarré à la fois · sans Railway.</p>
  <p class="muted" id="cmdProfileSummary" role="status">Vérification des vrais fichiers Windows…</p>
  <div id="cmdProfileList"></div>
  <p class="muted">Préparer crée les configurations sans télécharger un faux jeu. Démarrer devient disponible après installation réelle des jeux, cartes et mods.</p>
-<div class="cmdPalworldQuick">
- <strong>Palworld · Mods & Steam Workshop</strong>
- <p class="muted">Ton jeu Steam peut déjà avoir des mods téléchargés. Le serveur dédié Windows charge uniquement les mods compatibles activés dans PalModSettings.ini.</p>
- <a href="https://steamcommunity.com/app/1623730/workshop/" target="_blank" rel="noopener noreferrer">Ouvrir le Steam Workshop Palworld</a>
- <a href="https://docs.palworldgame.com/settings-and-operation/mod/" target="_blank" rel="noopener noreferrer">Guide officiel serveur</a>
- <p class="muted">Dès qu'un vrai PalServer.exe est détecté, sélectionne Palworld dans Mes serveurs pour retrouver les mods et leurs statuts.</p>
-</div>
+
 </section><p class="muted">Tu ne verras que les installations détectées ou les dossiers que tu as associés.</p><div id="serverList" class="serverList"></div>
 <hr><section id="dayzCreate" class="dayzCreate">
 <span class="eyebrow">SERVEUR DAYZ PC · CHERNARUS</span>
@@ -58,6 +59,21 @@
 <button type="submit" class="primary">Associer ce dossier</button><small>Le dossier doit déjà exister dans le répertoire autorisé. Aucun téléchargement inventé.</small></form></details>
 </aside>
 <div class="content">
+<section id="profileWorkspace" class="card profileWorkspace" hidden>
+ <div class="blockTitle"><div><span class="eyebrow">MES SERVEURS → PROFIL</span>
+ <h2 id="profileGameName">Profil de mon serveur</h2></div><span id="profileGameState" class="tag offline">NON INSTALLÉ</span></div>
+ <p id="profileGameInfo" class="muted"></p>
+ <div class="tools profileActions">
+  <button id="profileOpenFiles" type="button" class="quiet">Fichiers</button>
+  <button id="profileOpenMods" type="button" class="primary">Mods & Workshop</button>
+  <button id="profileOpenMaps" type="button" class="quiet">Carte</button>
+  <button id="profileOpenConsole" type="button" class="quiet">Console</button>
+ </div>
+ <div id="profileMods" class="profileMods" hidden><strong>Mods du serveur</strong>
+  <p id="profileModsStatus" class="muted"></p><div id="profileModsList" class="profileModsList"></div>
+  <div id="profileModsSource"></div></div>
+ <p id="profileConsoleStatus" class="muted" hidden>La console réelle exige un serveur dédié installé et démarré sur le PC. Aucun processus n’est simulé.</p>
+</section>
 <section class="card status"><div><span class="eyebrow">ÉTAT DU SERVEUR</span><h2 id="selectedName">Choisis un serveur à gauche</h2><p id="selectedState">Les jeux non installés n'ont pas de fichiers à afficher.</p><code id="selectedRoot"></code></div><span id="installedBadge" class="tag">AUCUN SERVEUR</span></section>
 <section id="explorer" class="card" hidden><div class="blockTitle"><div><span class="eyebrow">FICHIERS SUR DISQUE</span><h2>Explorateur de fichiers</h2></div><div class="tools"><button id="rootBtn" class="quiet">⌂ Racine</button><button id="upBtn" class="quiet">↑ Retour</button><button id="reloadFiles" class="quiet">↻ Actualiser</button></div></div>
 <nav id="crumbs" aria-label="Chemin du serveur"></nav>
