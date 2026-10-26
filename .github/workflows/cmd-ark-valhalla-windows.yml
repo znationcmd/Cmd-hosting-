@@ -1,0 +1,54 @@
+name: CMD Hosting — Valhalla Astraeos local Windows
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'ark-valhalla/**'
+      - 'LANCER-CMD-VALHALLA-ASTRAEOS.cmd'
+      - '.github/workflows/cmd-ark-valhalla-windows.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate local ARK manager source
+        run: |
+          node --check ark-valhalla/manager.mjs
+          node --test ark-valhalla/manager.test.mjs
+      - name: Validate Windows installer syntax
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          foreach ($file in @('ark-valhalla/Installer-ARK-Valhalla.ps1','scripts/Install-CMDGameServer.ps1')) {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile($file,[ref]$tokens,[ref]$errors)
+            if ($errors -and $errors.Count) { $errors | Format-List Message,Extent; exit 1 }
+            Write-Host "Syntax OK: $file"
+          }
+      - name: Package local Windows profile without game files, paid DLC or purchased mods
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path bundle\ark-valhalla,bundle\scripts | Out-Null
+          Copy-Item LANCER-CMD-VALHALLA-ASTRAEOS.cmd bundle\
+          Copy-Item ark-valhalla\* bundle\ark-valhalla\ -Exclude '*.test.mjs'
+          Copy-Item scripts\Install-CMDGameServer.ps1 bundle\scripts\
+          if (!(Test-Path bundle\ark-valhalla\manifest.json)) { throw 'Manifest absent' }
+          if (!(Test-Path bundle\ark-valhalla\Installer-ARK-Valhalla.ps1)) { throw 'Installateur absent' }
+      - uses: actions/upload-artifact@v4
+        if: runner.os == 'Windows'
+        with:
+          name: CMDHosting-CMD-Valhalla-Astraeos-Windows
+          path: bundle/
+          if-no-files-found: error
+          retention-days: 90
