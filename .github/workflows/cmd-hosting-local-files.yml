@@ -4,6 +4,11 @@ on:
   push:
     paths:
       - 'local-panel/**'
+      - 'web/public/ui/cmd-fs25-pc-status-v11.js'
+      - 'web/public/index.html'
+      - 'scripts/DIAGNOSTIC-CONNEXION-PC-FS25.ps1'
+      - 'scripts/VERIFIER-RACCORDEMENT-PC-FS25.cmd'
+      - 'tests/fs25-pc-connection-v11.test.mjs'
       - 'asa-astraeos/**'
       - 'dayz-worlds/**'
       - 'CMD-5-SERVEURS-UN-SEUL.cmd'
@@ -29,13 +34,21 @@ jobs:
       - name: Validate actual game file explorer JavaScript
         run: |
           node --check local-panel/server.mjs
+          node --check web/public/ui/cmd-fs25-pc-status-v11.js
           node --check local-panel/app.js
           node --check local-panel/exclusive-game-lock.mjs
           node --check local-panel/game-profiles.mjs
           node --check dayz-worlds/manager.mjs
           node --check asa-astraeos/manager.mjs
       - name: Run real filesystem and security contract tests
-        run: node --test local-panel/server.test.mjs dayz-worlds/worlds.test.mjs asa-astraeos/manager.test.mjs local-panel/exclusive-game-lock.test.mjs
+        run: node --test local-panel/server.test.mjs dayz-worlds/worlds.test.mjs asa-astraeos/manager.test.mjs local-panel/exclusive-game-lock.test.mjs tests/fs25-pc-connection-v11.test.mjs
+      - name: Validate Windows PC diagnostic PowerShell syntax
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tokens=$null; $errors=$null
+          [void][System.Management.Automation.Language.Parser]::ParseFile('scripts/DIAGNOSTIC-CONNEXION-PC-FS25.ps1',[ref]$tokens,[ref]$errors)
+          if ($errors.Count) { $errors | Format-List Message,Extent; throw 'PowerShell diagnostic syntax invalid' }
       - name: Package double-click Windows app
         if: runner.os == 'Windows'
         shell: pwsh
@@ -46,6 +59,7 @@ jobs:
           Copy-Item asa-astraeos distribution\asa-astraeos -Recurse
           New-Item -ItemType Directory -Force -Path distribution\scripts | Out-Null
           Copy-Item scripts/Installer-DayZ-PC-1-clic.ps1,scripts/INSTALLER-DAYZ-PC-UN-CLIC.cmd distribution\scripts\
+          Copy-Item scripts/DIAGNOSTIC-CONNEXION-PC-FS25.ps1,scripts/VERIFIER-RACCORDEMENT-PC-FS25.cmd distribution\scripts\
           # Include every local runtime module (persistent-profiles and rental-policy were missing from old ZIP).
           Copy-Item local-panel/*.mjs,local-panel/*.js,local-panel/*.html,local-panel/*.css,local-panel/README.md distribution\local-panel\
           # Import the DISTRIBUTION COPY, not the source tree: fail before upload if any module is missing.
