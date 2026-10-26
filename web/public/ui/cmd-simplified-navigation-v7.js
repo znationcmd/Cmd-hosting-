@@ -80,26 +80,40 @@
    el.hidden=true;el.dataset.cmdNavSuppressed='1';
   }
  }
+ function selectedPalworldProfile(){
+  const select=$('cmdrpSelect');
+  const selected=select?.selectedOptions?.[0]?.textContent||'';
+  const selectedTitle=$('cmdrpTitle')?.textContent||'';
+  return /\\bpalworld\\b/i.test(selected+' '+selectedTitle);
+ }
  function profileShortcut(){
   const root=$('cmdRenterProfile');
   if(!root)return;
   const sidebar=root.querySelector('.cmdrp-sidebar');
   if(!sidebar)return;
+  const palworldSelected=selectedPalworldProfile();
   let button=$('cmdrpPalworldWorkshop')||$('cmdrpPalworldOpenV6');
   if(button){
     // Existing Palworld control already owns its click handler; avoid firing it twice.
     if(button.textContent!=='Palworld · Steam Workshop')button.textContent='Palworld · Steam Workshop';
     button.title='Parcourir le vrai Steam Workshop officiel de Palworld, sans installation fictive';
-    button.hidden=false;
+    button.hidden=!palworldSelected;
+    button.disabled=!palworldSelected;
     button.dataset.cmdv7Palworld='1';
   }else{
     button=document.createElement('button');button.id='cmdrpPalworldWorkshop';button.type='button';
     button.textContent='Palworld · Steam Workshop';button.dataset.cmdv7Palworld='1';
     button.addEventListener('click',showPalworld);
     const before=$('cmdrpCreate');if(before)before.before(button);else sidebar.append(button);
+    button.hidden=!palworldSelected;
+    button.disabled=!palworldSelected;
   }
   const p=root.querySelector('.cmdrp-palworld-hint');
-  if(p&&p.textContent!=='Workshop officiel Palworld. Les mods de serveur demandent un hôte Windows et un fichier PalModSettings.ini.')p.textContent='Workshop officiel Palworld. Les mods de serveur demandent un hôte Windows et un fichier PalModSettings.ini.';
+  if(p){
+   p.hidden=!palworldSelected;
+   if(p.textContent!=='Workshop officiel Palworld. Les mods de serveur demandent un hôte Windows et un fichier PalModSettings.ini.')
+    p.textContent='Workshop officiel Palworld. Les mods de serveur demandent un hôte Windows et un fichier PalModSettings.ini.';
+  }
  }
  function catalogScreen(){
   // Make the full dynamic catalogue the only "Jeux" page. Legacy twelve-game cards
@@ -131,6 +145,10 @@
     new MutationObserver(requestRender).observe(document.body,{subtree:true,childList:true});
   }
   // Classic-script load order can create the renter profile after the shell.
+  // Re-evaluate the Palworld shortcut whenever the actual server selection changes.
+  document.addEventListener('change',event=>{
+   if(event.target?.id==='cmdrpSelect')profileShortcut();
+  });
   document.addEventListener('click',event=>{
     const el=event.target?.closest?.('[data-page="jeux"],[href="#jeux"]');
     if(!el||!el.closest('#cmdSidebar,#cmdPrimary,#cmdOriginalNav'))return;
