@@ -38,7 +38,7 @@ test('Changes and linking survive reopen; only exact manual deletion removes a p
  assert.equal((await restored.list())[0].slots,120);
  assert.equal((await restored.list())[0].map,'Lux');
  assert.equal((await restored.list())[0].directory,'C:\\CMD-Servers\\Lux\\DayZ');
- await assert.rejects(()=>restored.remove(p.id,'CMD Lux'),/recopie exactement/);
+ await assert.rejects(()=>restored.remove(p.id,'CMD Lux'),/recopie exactement/i);
  assert.equal((await restored.list()).length,1);
  const removed=await restored.remove(p.id,'CMD Lux RP');
  assert.equal(removed.gameWorldsPreserved,true);
@@ -55,6 +55,6 @@ test('Concurrent creations persist without clobber; invalid values never enter D
  assert.equal((await profiles.list()).length,24);
  await assert.rejects(()=>profiles.create({name:'a',gameName:'Palworld',slots:100}),/Nom de serveur/);
  await assert.rejects(()=>profiles.create({name:'bad',gameName:'Palworld',slots:10000}),/Slots demandés/);
- assert.throws(()=>validateProfile({name:'Valid',gameName:'Game',gameKey:'../../etc',slots:10}),/identifiant/);
+ assert.throws(()=>validateProfile({name:'Valid',gameName:'Game',gameKey:'../../etc',slots:10}),/identifiant/i);
  assert.equal((await profiles.list()).length,24);
 });
