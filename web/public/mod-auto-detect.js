@@ -6,8 +6,8 @@ const info=document.createElement('div');info.id='cvAutoGame';info.setAttribute(
 select.closest('.cmdv-toolbar')?.after(info);
 let cache=new Map(),loading=false,revision=0,loaded=false;
 const status=msg=>info.textContent=msg;
-const gameSources={arma:'Workshop Bohemia (Arma Reforger)',ark:'CurseForge (ARK: Survival Ascended)',dayz:'Steam Workshop (DayZ PC)'};
-const getSource=g=>g.startsWith('g-arma-reforger')||g==='arma'?gameSources.arma:g.startsWith('g-ark-survival-ascended')||g==='ark'?gameSources.ark:g==='dayz'||g==='g-dayz'?gameSources.dayz:'';
+const gameSources={arma:'Workshop Bohemia (Arma Reforger)',ark:'CurseForge (ARK: Survival Ascended)',dayz:'Steam Workshop (DayZ PC)',palworld:'Steam Workshop officiel (Palworld · serveur Windows)'};
+const getSource=g=>g.startsWith('g-arma-reforger')||g==='arma'?gameSources.arma:g.startsWith('g-ark-survival-ascended')||g==='ark'?gameSources.ark:g==='dayz'||g==='g-dayz'?gameSources.dayz:g==='palworld'||g.startsWith('g-palworld')?gameSources.palworld:'';
 const imageAlt=()=>{};
 async function loadLabels(){
 if(loading)return;loading=true;try{
@@ -28,6 +28,7 @@ const id=select.value,game=cache.get(id),num=++revision;
 if(!id){status('Choisis un serveur : CMD Hosting détectera automatiquement le jeu et le catalogue de mods correspondant.');return}
 if(!game){status('Identification du jeu en cours…');return}
 const name=game.game_name||game.game_key,provider=getSource(game.game_key||'');
+ if(provider===gameSources.palworld){status('Jeu détecté : Palworld · Steam Workshop officiel disponible. Seuls les mods compatibles avec le serveur dédié Windows peuvent être activés dans PalModSettings.ini.');return}
 status('Jeu détecté : '+name+' · Vérification des mods…');
 try{
 const r=await fetch('/api/mods?gameId='+encodeURIComponent(id),{credentials:'include',cache:'no-store'});
