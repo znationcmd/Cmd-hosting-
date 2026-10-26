@@ -5,11 +5,23 @@ import {spawnSync} from 'node:child_process';
 import path from 'node:path';
 const ROOT=path.resolve(process.env.CMD_SERVERS_ROOT||path.join(process.env.SystemDrive||'C:','CMD-Servers'));
 const LOCK=path.join(ROOT,'.cmd-hosting-active-game.lock');
+// Dedicated executables only: never treat installed Steam GAME CLIENTS as hosted servers.
+export const DEDICATED_SERVER_EXECUTABLES=Object.freeze([
+ 'DayZServer_x64.exe','ArkAscendedServer.exe','ShooterGameServer.exe',
+ 'PalServer.exe','ArmaReforgerServer.exe','arma3server_x64.exe',
+ '7DaysToDieServer.exe','FactoryServer.exe','valheim_server.exe',
+ 'enshrouded_server.exe','ProjectZomboidServer64.exe','PalServer-Win64-Shipping.exe'
+]);
+export function parseRunningDedicatedServers(tasklistOutput=''){
+ const names=new Set(DEDICATED_SERVER_EXECUTABLES.map(name=>name.toLowerCase()));
+ return String(tasklistOutput).split(/\r?\n/).map(line=>/^\s*"([^"]+\.exe)"\s*,/i.exec(line)?.[1])
+  .filter(name=>name&&names.has(name.toLowerCase()));
+}
 export function gameProcessesRunning(){
  if(process.platform!=='win32')return false;
  const result=spawnSync('tasklist.exe',['/FO','CSV','/NH'],{encoding:'utf8',windowsHide:true,timeout:12000});
- if(result.error||result.status!==0)throw Error('Impossible de verifier les processus DayZ et ARK : demarrage refuse.');
- return /"(?:DayZServer_x64|ArkAscendedServer|ShooterGameServer)\.exe"/i.test(result.stdout||'');
+ if(result.error||result.status!==0)throw Error('Impossible de vérifier les processus des serveurs dédiés : démarrage refusé.');
+ return parseRunningDedicatedServers(result.stdout).length>0;
 }
 export async function acquireGameLock(game){
  if(typeof game!=='string'||!/^[a-z0-9-]{3,40}$/.test(game))throw Error('Identifiant de jeu non valide.');
