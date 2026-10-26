@@ -84,7 +84,7 @@
   const select=$('cmdrpSelect');
   const selected=select?.selectedOptions?.[0]?.textContent||'';
   const selectedTitle=$('cmdrpTitle')?.textContent||'';
-  return /\\bpalworld\\b/i.test(selected+' '+selectedTitle);
+  return /\bpalworld\b/i.test(selected+' '+selectedTitle);
  }
  function profileShortcut(){
   const root=$('cmdRenterProfile');
