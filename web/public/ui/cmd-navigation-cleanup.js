@@ -6,7 +6,8 @@
    '#cmdPrimary button','#cmdPrimary a','#cmdSidebar button','#cmdSidebar a',
    '#nav button','#nav a','nav.links button','nav.links a',
    '.side-nav button','.side-nav a','.side-menu button','.side-menu a',
-   '.sidebar button','.sidebar a','.cmd-menu button','.cmd-menu a',
+   '.sidebar button','.sidebar a','.app-sidebar button','.app-sidebar a','#sidebar button','#sidebar a',
+   '.navigation button','.navigation a','.cmd-menu button','.cmd-menu a',
    '.menu-sidebar button','.menu-sidebar a','[data-cmd16="navigation"] button'
  ].join(',');
  const duplicate=/^(?:mods\s*(?:&|et|\+|and)\s*workshop|jeux\s*et\s*decors?\s*hd)$/i;
@@ -19,7 +20,7 @@
  function hideDuplicateEntries(){
   for(const element of document.querySelectorAll(NAV_SELECTORS)){
    // Hide only standalone global navigation. Never hide controls inside a profile.
-   if(element.closest('.page,#cmdRenterProfile,.cmdrp,.cmdv-toolbar,.cmdv-block'))continue;
+   if(element.closest('#cmdRenterProfile,.cmdrp,#cmdMods,.cmdv-toolbar,.cmdv-block,[data-server-profile]'))continue;
    if(!duplicate.test(cleaned(element)))continue;
    element.classList.add('cmd-nav-duplicate-hidden');
    element.dataset.cmdNavSuppressed='1';
