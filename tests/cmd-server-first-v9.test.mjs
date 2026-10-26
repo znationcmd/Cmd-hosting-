@@ -54,7 +54,7 @@ test('runtime: menu hides ONLY duplicate global links and Palworld only for sele
  const map={cmdSidebar:nav,cmdRenterProfile:profile,cmdrpSelect:{selectedOptions:[option],options:[option]},
  cmdrpTitle:{textContent:'CMD Valhalla FS25'},cmdrpPalworldWorkshop:shortcut,cmdCatalogSection:shop};
  const events={};
- const context={window:{},document:{
+ const context={window:{addEventListener(){}},document:{
   readyState:'complete',body:{},getElementById:id=>map[id]||null,
   querySelectorAll:()=>[],addEventListener:(type,fn)=>events[type]=fn
  },location:{hash:''},history:{replaceState(){}},MutationObserver:undefined,
