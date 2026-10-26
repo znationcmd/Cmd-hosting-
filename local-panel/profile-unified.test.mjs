@@ -10,8 +10,8 @@ test('local hosting profile interface includes PC pairing information and per-ga
  ]);
  for(const id of ['pcConnection','profileWorkspace','profileOpenFiles','profileOpenMods',
  'profileOpenMaps','profileOpenConsole'])assert.match(ui,new RegExp('id="'+id+'"'));
- assert.match(ui,/profile-unified\\.js/);
+ assert.ok(ui.includes('profile-unified.js'));
  assert.match(js,/CMDLocalProfile/);
- assert.match(server,/api\\/profile\\/workshop/);
+ assert.ok(server.includes('/api/profile/workshop'));
  assert.match(server,/remoteInternetEnabled:false/);
 });
