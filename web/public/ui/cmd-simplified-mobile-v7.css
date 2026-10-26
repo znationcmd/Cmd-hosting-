@@ -102,3 +102,9 @@ html body #cmdRenterProfile [data-cmdv7-palworld="1"]{
  html body #cmdCatalogSection .cmd-shop-card>.cmd-shop-cover,
  html body #cmdCatalogSection .cmd-shop-card>.cmd-shop-cover>img{width:88px!important;max-width:88px!important;min-width:88px!important}
 }
+
+/* Palworld workshop belongs to Palworld's selected server only. Force-hidden overrides
+   earlier 3D button display rules; all other game Mods tabs remain visible. */
+html body #cmdRenterProfile #cmdrpPalworldWorkshop[hidden],
+html body #cmdRenterProfile [data-cmdv7-palworld="1"][hidden],
+html body #cmdRenterProfile .cmdrp-palworld-hint[hidden]{display:none!important}
