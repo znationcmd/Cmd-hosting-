@@ -104,3 +104,40 @@ test('responsive secondary mods UI contains real search and does not claim insta
  expect(scripts.length).toBe(1);
  expect(()=>new Script(scripts[0][1])).not.toThrow();
 });
+
+
+test('FS25 direct ModHub keyword search returns official browse URL and never invents installed mods',async()=>{
+ const result=await call('/api/mods/games/search?game=Farming%20Simulator%2025&q=John%20Deere');
+ expect(result.r.status).toBe(200);
+ expect(result.data.mode).toBe('official_modhub_search');
+ expect(result.data.items).toEqual([]);
+ expect(result.data.autoInstall).toBe(false);
+ expect(result.data.browseUrl).toContain('www.farming-simulator.com/mods.php?');
+ expect(result.data.browseUrl).toContain('title=fs2025');
+ expect(result.data.browseUrl).toContain('searchMod=John+Deere');
+ const url=new URL(result.data.browseUrl);
+ expect(url.searchParams.get('searchMod')).toBe('John Deere');
+ const pal=await call('/api/mods/games/profile?game=Palworld');
+ expect(pal.r.status).toBe(200);
+ expect(pal.data.officialUrl).toBe('https://steamcommunity.com/app/1623730/workshop/');
+ expect(pal.data.autoInstall).toBe(false);
+});
+test('FS25 mobile page actually submits to genuine GIANTS ModHub without auto-install or spoofed results',async()=>{
+ const page=await handle(new Request('http://localhost/mods/fs25'));
+ expect(page.status).toBe(200);
+ const html=await page.text();
+ expect(html).toContain('action="/mods/fs25/search"');
+ expect(html).toContain('name="q"');
+ expect(html).toContain('Farming Simulator 25');
+ expect(html).toContain('Aucune installation');
+ const result=await handle(new Request('http://localhost/mods/fs25/search?q=John%20Deere'));
+ expect(result.status).toBe(303);
+ const dest=new URL(result.headers.get('location')!);
+ expect(dest.host).toBe('www.farming-simulator.com');
+ expect(dest.pathname).toBe('/mods.php');
+ expect(dest.searchParams.get('title')).toBe('fs2025');
+ expect(dest.searchParams.get('searchMod')).toBe('John Deere');
+ const empty=await handle(new Request('http://localhost/mods/fs25/search?q='));
+ expect(empty.status).toBe(303);
+ expect(empty.headers.get('location')).toBe('/mods/fs25');
+});
