@@ -14,6 +14,9 @@ const sourceLabel={arma:'Arma Reforger · Bohemia Workshop',curseforge:'CurseFor
 const palworldQuickStyle=document.createElement('style');palworldQuickStyle.textContent=
 '.cmdv-source-quick{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 12px}.cmdv-source-quick button{background:linear-gradient(110deg,#1c7ab9,#4e3587)!important;border-color:#88b7ed!important;font-size:12px!important}.cmdv-source-quick span{color:#adc6dd;font-size:11px}#cmdMods .cmdv-tabs[hidden]{display:none!important}';
 document.head.append(palworldQuickStyle);
+const fs25SearchStyle=document.createElement('style');
+fs25SearchStyle.textContent='.cmdv-fs25-tags{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}.cmdv-fs25-tags a{border:1px solid #507ca5;background:linear-gradient(110deg,#1a4368,#3c2d6b);padding:8px 11px;border-radius:8px;font:600 12px system-ui;color:#e9f4ff;text-decoration:none;max-width:100%}.cmdv-fs25-tags a:hover{background:#315c83}.cmdv-fs25-official{border:1px solid #7faddc;background:#234b86;color:#fff;border-radius:7px;padding:9px 12px;font-weight:700;text-align:center;white-space:normal}#cmdMods .cmdv-source-quick[hidden],#cmdMods .cmdv-tabs[hidden]{display:none!important}@media(max-width:700px){.cmdv-fs25-tags a{font-size:11px;flex:1 1 42%;text-align:center}}';
+document.head.append(fs25SearchStyle);
 const palworldSteamWorkshop='https://steamcommunity.com/app/1623730/workshop/';
 const palworldWorkshopBrowse='https://steamcommunity.com/workshop/browse/?appid=1623730';
 const isPalworld=p=>/\bpalworld\b/i.test([p?.game_key,p?.game_name,p?.display_name,p?.server_label,p?.name].filter(Boolean).join(' '));
