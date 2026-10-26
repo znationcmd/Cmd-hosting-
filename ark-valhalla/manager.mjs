@@ -73,8 +73,11 @@ async function checks(){
   }
   if(mod.verification==='name_to_confirm'&&!approval.nameMatched)
    missing.push('Vérifier la correspondance du mod RP demandé : '+mod.name+' (candidat RolePlay Additions: Jobs).');
-  if(['platform_to_confirm','name_to_confirm'].includes(mod.verification)&&approval.consoleCrossplayConfirmed!==true)
-   missing.push('Cross-play PC/PS5/Xbox non vérifié : '+mod.name);
+  if(['platform_to_confirm','name_to_confirm'].includes(mod.verification)&&approval.consoleCrossplayConfirmed!==true){
+   if(mod.crossplayReportedByOwner===true)
+    warnings.push('Cross-play annoncé compatible par le propriétaire, à tester en connexion PC/PS5/Xbox : '+mod.name);
+   else missing.push('Cross-play PC/PS5/Xbox non vérifié : '+mod.name);
+  }
   if(mod.verification==='premium_review'&&approval.entitlementConfirmed!==true)
    missing.push('Licence/accès premium ou freemium à confirmer : '+mod.name);
   known.push(String(id));
@@ -91,7 +94,8 @@ async function checks(){
  return {ready:missing.length===0,missing,warnings,officialExecutablePresent:await present(EXE),
   verifiedIdsCount:known.length,modsCount:data.mods.length,map:data.map.code,slots:100,
   restartTimes:data.restarts.times,timezone:'Europe/Paris',gameRoot:GAME,configRoot:CONFIG,
-  windowsOnly:true,railway:false,mods:known,hasRconSecret:hasAdmin};
+  windowsOnly:true,railway:false,mods:known,hasRconSecret:hasAdmin,
+  crossplayClaim:data.crossplay,crossplayRuntimeVerified:false};
 }
 async function updateApprovals(mutator){
  await templates();
