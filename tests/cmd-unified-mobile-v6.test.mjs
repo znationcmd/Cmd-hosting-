@@ -26,7 +26,7 @@ test('iPhone game cards show several real games with bounded images and readable
 });
 test('menus are simplified without deleting any UI or server data',()=>{
  for(const value of ['mods & workshop','jeux et decors hd','boutique des jeux'])assert.ok(ui.includes(value));
- assert.match(ui,/data-cmd-nav-suppressed/);
+ assert.match(ui,/cmdNavSuppressed/);
  assert.match(ui,/function mainNavigation/);
  assert.match(ui,/#cmdRenterProfile,#cmdMods,#hostingPanel/);
  assert.doesNotMatch(ui,/\.remove\(\)/);
