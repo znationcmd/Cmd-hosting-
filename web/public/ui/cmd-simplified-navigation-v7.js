@@ -86,7 +86,7 @@
   if(!sidebar)return;
   let button=$('cmdrpPalworldWorkshop')||$('cmdrpPalworldOpenV6');
   if(button){
-    button.onclick=showPalworld;
+    // Existing Palworld control already owns its click handler; avoid firing it twice.
     if(button.textContent!=='Palworld · Steam Workshop')button.textContent='Palworld · Steam Workshop';
     button.title='Parcourir le vrai Steam Workshop officiel de Palworld, sans installation fictive';
     button.hidden=false;
