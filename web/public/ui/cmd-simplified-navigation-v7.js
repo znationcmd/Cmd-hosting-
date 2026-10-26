@@ -9,6 +9,7 @@
   .replace(/[^\p{L}\p{N} &+]/gu,' ').trim().replace(/\s+/g,' ').toLowerCase();
  const duplicateLabels=new Set([
   'mods & workshop','mods et workshop','mods workshop',
+  'changer de jeu','fichiers','console','mods',
   'jeux et decors hd','jeux et decor hd','jeux & decors hd','jeux et decors',
   'boutique des jeux','boutique de jeux'
  ]);
