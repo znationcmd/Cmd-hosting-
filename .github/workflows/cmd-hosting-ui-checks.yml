@@ -13,6 +13,7 @@ on:
       - "tests/fs25-unified-hosting-nav.test.mjs"
       - "tests/palworld-mobile-navigation.test.mjs"
       - "tests/cmd-unified-mobile-v6.test.mjs"
+      - "tests/cmd-simplified-mobile-v7.test.mjs"
       - "tests/anomalia-nasdara-catalog.test.mjs"
       - "scripts/recover-hosting-public.mjs"
       - ".github/workflows/cmd-hosting-ui-checks.yml"
@@ -27,6 +28,7 @@ on:
       - "tests/fs25-unified-hosting-nav.test.mjs"
       - "tests/palworld-mobile-navigation.test.mjs"
       - "tests/cmd-unified-mobile-v6.test.mjs"
+      - "tests/cmd-simplified-mobile-v7.test.mjs"
       - "tests/anomalia-nasdara-catalog.test.mjs"
       - "scripts/recover-hosting-public.mjs"
       - ".github/workflows/cmd-hosting-ui-checks.yml"
@@ -44,7 +46,7 @@ jobs:
         with:
           node-version: "22"
       - name: Validate HTML/CSS/SVG UI additions without deploying
-        run: node --test tests/premium-ui.test.mjs tests/restored-web.test.mjs tests/anomalia-nasdara-catalog.test.mjs tests/mobile-catalog-profiles.test.mjs tests/fs25-unified-hosting-nav.test.mjs tests/palworld-mobile-navigation.test.mjs tests/cmd-unified-mobile-v6.test.mjs tests/anomalia-workshop-bridge.test.mjs tests/anomalia-catalog.test.mjs
+        run: node --test tests/premium-ui.test.mjs tests/restored-web.test.mjs tests/anomalia-nasdara-catalog.test.mjs tests/mobile-catalog-profiles.test.mjs tests/fs25-unified-hosting-nav.test.mjs tests/palworld-mobile-navigation.test.mjs tests/cmd-unified-mobile-v6.test.mjs tests/cmd-simplified-mobile-v7.test.mjs tests/anomalia-workshop-bridge.test.mjs tests/anomalia-catalog.test.mjs
       - name: Parse mobile catalogue, workshop and navigation scripts
         run: |
           node --check web/public/mod-v2-ui.js
@@ -52,6 +54,7 @@ jobs:
           node --check web/public/catalog-compat.js
           node --check web/public/ui/cmd-navigation-cleanup.js
           node --check web/public/ui/cmd-unified-experience-v6.js
+          node --check web/public/ui/cmd-simplified-navigation-v7.js
       - name: Parse public-source recovery script
         run: node --check scripts/recover-hosting-public.mjs
       - name: Validate snapshot origin and route safety offline
