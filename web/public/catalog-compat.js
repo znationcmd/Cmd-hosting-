@@ -94,7 +94,8 @@ let blueprints=[],rpOwnerId="anonymous";
 function rpIdentify(x){
  const direct=blueprints.find(g=>g.catalogId===Number(x?.g?.catalogId||x?.g?.id||x?.r?.gameId));if(direct)return direct.gameName;
  const raw=[x?.g?.game_key,x?.g?.gameKey,x?.g?.key,x?.g?.game_name,x?.g?.name,x?.g?.display_name,x?.name,x?.s?.id].filter(Boolean).join(' ').toLowerCase();
- if(/\bpalworld\b/.test(raw))return"Palworld";
+ if(/\b(?:fs[ -]?25|farming simulator 25|farming simulator 2025)\b/.test(raw))return"Farming Simulator 25";
+  if(/\bpalworld\b/.test(raw))return"Palworld";
  if(/\bday\s*z\b|\bdayz\b/.test(raw))return"DayZ";
  if(/\bark\b/.test(raw)&&/\b(ascended|asa)\b/.test(raw))return"ARK: Survival Ascended";
  if(/\bark\b/.test(raw)&&/\b(evolved|ase)\b/.test(raw))return"ARK: Survival Evolved";
@@ -204,6 +205,10 @@ function modsPage(x=chosen()){
   // avec ou sans machine associée, sans confondre ses mods avec ceux de DayZ.
   if(rpIdentify(x)==='Palworld'&&typeof window.CMDHostingOpenPalworldWorkshop==='function'){
     window.CMDHostingOpenPalworldWorkshop();
+    return;
+  }
+  if(rpIdentify(x)==='Farming Simulator 25'&&typeof window.CMDHostingOpenFS25ModHub==='function'){
+    window.CMDHostingOpenFS25ModHub();
     return;
   }
   if(!x?.g?.id){
