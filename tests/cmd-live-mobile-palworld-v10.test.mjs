@@ -59,3 +59,13 @@ test('real future static source includes v10 after v9, no changes to backend rou
  assert.ok(html.includes('/ui/cmd-live-mobile-palworld-v10.js'));
  assert.ok(html.indexOf('cmd-live-mobile-palworld-v10.js')>html.indexOf('cmd-server-first-v9.js'));
 });
+
+test('production embedded patch stays below Railway 32KB variable limit and does not replace backend',()=>{
+ const embed=load('web/public/ui/cmd-live-v10-railway-embed.js');
+ assert.ok(backup.length+embed.length+2<32768);
+ assert.doesNotThrow(()=>new Script(backup+'\n'+embed));
+ assert.match(embed,/cmdrpRailwayPalworld/);
+ assert.match(embed,/cmd-shop-cover img/);
+ assert.match(embed,/#cmdCatalogSection/);
+ assert.doesNotMatch(embed,/\/api\/pc\/command|\/api\/rentals|localStorage\.setItem|ServerAdminPassword/);
+});
