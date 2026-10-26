@@ -9,7 +9,8 @@ const modSources={
  'ark-asa':['CurseForge ARK Survival Ascended','https://www.curseforge.com/ark-survival-ascended/mods'],
  'ark-ase':['Steam Workshop ARK Survival Evolved','https://steamcommunity.com/app/346110/workshop/'],
  'arma-reforger':['Arma Reforger Workshop','https://reforger.armaplatform.com/workshop'],
- palworld:['Steam Workshop Palworld','https://steamcommunity.com/app/1623730/workshop/']
+ palworld:['Steam Workshop Palworld','https://steamcommunity.com/app/1623730/workshop/'],
+ fs25:['ModHub officiel GIANTS Farming Simulator 25','https://www.farming-simulator.com/mods.php?lang=fr&title=fs2025&platform=pc']
 };
 function row(name,id){
  const wrap=element('div','profileModRow');
@@ -46,8 +47,9 @@ async function mods(){
  const a=source&&linkSource(source[0],source[1]);if(a)sources.append(a);
  if(pack?.mods?.length){
   for(const mod of pack.mods)list.append(row(mod.name,mod.sourceId));
-  $('profileModsStatus').textContent=pack.mods.length+
-   ' mods demandés pour '+selectedProfile.name+'. Aucun mod déclaré installé tant que son dossier réel n’est pas contrôlé.';
+  $('profileModsStatus').textContent=selectedProfile.game==='fs25'
+   ? pack.mods.length+' ZIP FS25 réellement détectés. Activation dans le panneau GIANTS nécessaire, serveur arrêté.'
+   : pack.mods.length+' mods demandés pour '+selectedProfile.name+'. Aucun mod déclaré installé tant que son dossier réel n’est pas contrôlé.';
  }else $('profileModsStatus').textContent='Aucun mod préinstallé vérifié. Utilise la source officielle ci-dessous. L’installation nécessite le serveur réel.';
  if(selectedProfile.game==='palworld'&&selectedProfile.linked&&current?.game==='palworld'){
   await refreshPalworld();
