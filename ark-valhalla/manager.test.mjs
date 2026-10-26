@@ -65,3 +65,16 @@ test('launcher does not deploy online, lacks prerequisites by default and has sa
  assert.equal(result.ready,false);
  assert.ok(result.missing.some(x=>/ARK|Windows|DLC|CurseForge/.test(x)));
 });
+
+test('user-declared crossplay list is retained as a claim, never incorrectly called runtime verified',async()=>{
+ const data=await manifest();
+ assert.equal(data.mods.length,24);
+ assert.equal(data.crossplay,'reported_compatible_by_server_owner_pending_real_console_test');
+ assert.ok(data.mods.every(mod=>mod.crossplayReportedByOwner===true));
+ const state=await checks();
+ assert.equal(state.crossplayRuntimeVerified,false);
+ assert.equal(state.crossplayClaim,data.crossplay);
+ assert.ok(state.warnings.some(w=>w.includes('Cross-play annoncé compatible')));
+ assert.ok(!state.missing.some(w=>w.includes('Cross-play PC/PS5/Xbox non vérifié')));
+ assert.ok(state.missing.some(w=>w.includes('Role Play Jobs')));
+});
