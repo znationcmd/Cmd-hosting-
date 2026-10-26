@@ -44,6 +44,17 @@ const section=document.createElement('section');section.id=pid;section.className
 section.innerHTML='<div class="cmdrp"><header class="cmdrp-head"><b>◆ CMD Hosting</b><div><button id="cmdrpServers">MES SERVEURS</button><button id="cmdrpStore">LOUER UN SERVEUR</button><button id="cmdrpReload">↻ ACTUALISER</button></div><span id="cmdrpUser">PROFIL LOUEUR</span></header><div class="cmdrp-layout"><aside class="cmdrp-sidebar"><small>CHOISIR UN SERVEUR</small><select id="cmdrpSelect" aria-label="Sélectionner un serveur"></select><div id="cmdrpBrief"></div><small>PARAMÈTRES</small><nav id="cmdrpSettings"></nav><small>ADMINISTRATION</small><nav id="cmdrpAdmin"></nav><button id="cmdrpCreate">＋ Nouveau serveur</button></aside><div class="cmdrp-main"><p id="cmdrpStatus" role="status"></p><header class="cmdrp-banner" id="cmdrpBanner"><div><small>CMD HOSTING / GESTION DES SERVEURS</small><h2 id="cmdrpTitle">Mes serveurs</h2><p id="cmdrpDescription"></p><div id="cmdrpActions"></div></div></header><div id="cmdrpDetails"></div></div></div></div>';root.append(section);
 // Simplify the profile: retain every admin tool, but place advanced settings in one
 // collapsible area instead of 12 permanently visible navigation buttons.
+// Workshop Palworld belongs to "Mes serveurs / Profil", not to a duplicate global section.
+const palworldShortcut=document.createElement('button');
+palworldShortcut.id='cmdrpPalworldWorkshop';
+palworldShortcut.type='button';
+palworldShortcut.textContent='Palworld · Steam Workshop';
+palworldShortcut.title='Consulter les mods officiels Palworld, même sans serveur associé';
+palworldShortcut.addEventListener('click',()=>{
+ if(typeof window.CMDHostingOpenPalworldWorkshop==='function')window.CMDHostingOpenPalworldWorkshop();
+ else window.open('https://steamcommunity.com/app/1623730/workshop/','_blank','noopener,noreferrer');
+});
+section.querySelector('#cmdrpCreate')?.before(palworldShortcut);
 const adminNav=section.querySelector('#cmdrpAdmin');
 const adminHeading=adminNav?.previousElementSibling;
 if(adminNav && adminHeading?.tagName==='SMALL'){
@@ -53,6 +64,7 @@ if(adminNav && adminHeading?.tagName==='SMALL'){
 }
 const style=document.createElement('style');style.textContent=[
 '.cmdrp-advanced{margin:13px 0 5px;border-top:1px solid #304c6d;padding-top:10px}.cmdrp-advanced>summary{font-size:12px;font-weight:750;color:#b8d7fb;cursor:pointer;min-height:40px;display:flex;align-items:center}.cmdrp-advanced[open]>summary{color:#fff}.cmdrp-prepared-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:9px;list-style:none;margin:14px 0;padding:0}.cmdrp-prepared-list li{padding:11px;border:1px solid #486085;border-radius:10px;background:#152944}.cmdrp-prepared-list strong,.cmdrp-prepared-list small{display:block}.cmdrp-prepared-list small{color:#e4c88e;font-size:11px;margin-top:6px}.cmdrp-prepared-help{font-size:12px;line-height:1.6;color:#bdcee8}@media(max-width:700px){.cmdrp-prepared-list{grid-template-columns:1fr}}',
+'.cmdrp-sidebar #cmdrpPalworldWorkshop{margin-top:5px;background:#163659;border:1px solid #4c7cb3;color:#ecf7ff;text-align:center;font-weight:750;white-space:normal;min-height:44px}.cmdrp-sidebar #cmdrpPalworldWorkshop:hover{background:#245586}',
 '#cmdRenterProfile{max-width:1700px;margin:auto;color:#edf6ff}#cmdRenterProfile button,#cmdRenterProfile select{font:inherit}#cmdRenterProfile button{cursor:pointer}',
 '.cmdrp{background:#071427;border:1px solid #365276;border-radius:15px;overflow:hidden}.cmdrp-head{display:flex;align-items:center;flex-wrap:wrap;justify-content:space-between;gap:12px;background:#081b35;padding:14px;border-bottom:1px solid #305075}',
 '.cmdrp-head b{font-size:21px;color:#fff}.cmdrp-head>div{display:flex;gap:7px;flex-wrap:wrap}.cmdrp-head button{background:transparent;border:0;border-bottom:2px solid #269eff;color:#d5e8ff;padding:8px;font-size:11px;font-weight:800}#cmdrpUser{color:#9cbde7;font-size:12px}',
