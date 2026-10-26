@@ -209,3 +209,26 @@ test('the real panel shows named CMD profiles and disables unverified or remote 
  assert.match(ui,/!data\.localBrowser\|\|!item\.ready/);
  assert.match(ui,/Astraeos|Valhalla|profile\.title|item\.title/);
 });
+
+
+test('Palworld Workshop lists ONLY actual Info.json files on Windows host; no imaginary mods',async()=>{
+ const pal=join(root,'palworldWorld','palworld');
+ const workshop=join(pal,'Mods','Workshop','4829200');
+ await mkdir(workshop,{recursive:true});
+ await writeFile(join(pal,'PalServer.exe'),'STUB LOCAL ONLY');
+ await writeFile(join(pal,'Mods','PalModSettings.ini'),'[PalModSettings]\nbGlobalEnableMod=true\nActiveModList=CustomPalWorld\n');
+ await writeFile(join(workshop,'Info.json'),JSON.stringify({PackageName:'CustomPalWorld',InstallRules:[{IsServer:true}]}));
+ const response=await call('/api/servers');
+ const game=response.data.servers.find(g=>g.game==='palworld');
+ assert.ok(game);
+ const mods=await call('/api/palworld/workshop?id='+id(game.id));
+ assert.equal(mods.status,200);
+ assert.equal(mods.data.game,'palworld');
+ assert.equal(mods.data.installedMods.length,1);
+ assert.equal(mods.data.installedMods[0].packageName,'CustomPalWorld');
+ assert.equal(mods.data.installedMods[0].serverCompatible,true);
+ assert.equal(mods.data.installedMods[0].enabled,true);
+ assert.equal(mods.data.workshop,'https://steamcommunity.com/app/1623730/workshop/');
+ const other=await call('/api/palworld/workshop?id='+id((response.data.servers.find(g=>g.game==='dayz')).id));
+ assert.equal(other.status,422);
+});
