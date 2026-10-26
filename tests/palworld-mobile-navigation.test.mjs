@@ -40,6 +40,16 @@ test('Profile retains Mods access; duplicate standalone menus only are suppresse
  assert.doesNotMatch(nav,/\.remove\(\)/);
  assert.doesNotMatch(nav,/\.page button/);
 });
+test('Palworld catalogue opens official Steam Workshop without a fake server',()=>{
+ const shop=read('web/public/catalog-ui.js');
+ assert.match(shop,/data-palworld-workshop/);
+ assert.match(shop,/window\.CMDHostingOpenPalworldWorkshop/);
+ assert.match(shop,/steamcommunity\.com\/app\/1623730\/workshop/);
+ const profile=read('web/public/catalog-compat.js');
+ assert.match(profile,/Mes 5 profils CMD préparés/);
+ assert.match(profile,/À installer sur Windows/);
+ assert.match(profile,/Administration avancée/);
+});
 test('iPhone game catalogue loads bounded covers, legible titles, and same UI for old/new pages',()=>{
  assert.match(mobile,/#jeux #game-list/);
  assert.match(mobile,/#cmdCatalogSection #cmdShopGrid/);
