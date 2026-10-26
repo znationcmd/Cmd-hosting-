@@ -80,7 +80,7 @@
    native.hidden=!(chosen||noServer);
    native.disabled=!(chosen||noServer);
    native.setAttribute('aria-hidden',String(native.hidden));
-   native.textContent='Palworld · Steam Workshop officiel';
+   if(native.textContent!=='Palworld · Steam Workshop')native.textContent='Palworld · Steam Workshop';
    native.title='Catalogue officiel Palworld, accessible même sans machine. Installation uniquement sur serveur compatible.';
    native.style.removeProperty('display');
    const hint=profile.querySelector('.cmdrp-palworld-hint');
