@@ -1,0 +1,59 @@
+name: CMD Hosting — Automatic local Windows updates
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'local-panel/**'
+      - 'dayz-worlds/**'
+      - 'asa-astraeos/**'
+      - 'scripts/**'
+      - 'DEMARRER-CMD-HOSTING-FICHIERS.cmd'
+      - 'CMD-5-SERVEURS-UN-SEUL.cmd'
+      - '.github/workflows/cmd-hosting-local-auto-update.yml'
+permissions:
+  contents: write
+concurrency:
+  group: cmd-hosting-local-release
+  cancel-in-progress: false
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check local-panel/updater.mjs
+      - run: node --check local-panel/make-update-manifest.mjs
+      - run: node --test local-panel/updater.test.mjs local-panel/server.test.mjs local-panel/persistent-profiles.test.mjs local-panel/profile-unified.test.mjs local-panel/exclusive-game-lock.test.mjs dayz-worlds/worlds.test.mjs asa-astraeos/manager.test.mjs
+  publish:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Generate and verify pinned SHA-256 source manifest
+        run: |
+          node local-panel/make-update-manifest.mjs
+          node -e "const m=require('./update-manifest.json');if(m.commit!==process.env.GITHUB_SHA)process.exit(1);console.log(m.files.length+' verified source files')"
+      - name: Publish manifest to stable update channel
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="cmd-hosting-local-latest"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" update-manifest.json --clobber
+          else
+            gh release create "$tag" update-manifest.json --title "CMD Hosting automatic Windows updates" --notes "Versioned, hash-verified application code updates only. No game files, saved worlds, credentials, or PC activation." --target "$GITHUB_SHA" --latest=false
+          fi
+          echo "Published validated manifest for $GITHUB_SHA"
