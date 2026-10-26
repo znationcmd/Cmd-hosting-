@@ -42,7 +42,7 @@ async function apply(){
  for(const name of ['Game.ini','GameUserSettings.ini']){
   const target=path.join(CONFIG,name);
   if(await present(target)){result.push(name+': conservé (existant, fusion manuelle si nécessaire)');continue}
-  await copyFile(path.join(HERE,name),target,8);
+  await copyFile(path.join(HERE,name),target,1);
   result.push(name+': installé (nouveau uniquement)');
  }
  return result;
@@ -87,7 +87,7 @@ async function checks(){
   const value=await readFile(adminConfig,'utf8');
   hasAdmin=/^\s*ServerAdminPassword\s*=\s*\S+/mi.test(value);
  }catch{}
- if(!hasAdmin)warnings.push('Mot de passe administrateur RCON absent dans GameUserSettings.ini : aucun redémarrage automatique sûr.');
+ if(!hasAdmin)missing.push('Mot de passe administrateur RCON absent dans GameUserSettings.ini : redémarrages sûrs 08 h/12 h/22 h impossibles.');
  return {ready:missing.length===0,missing,warnings,officialExecutablePresent:await present(EXE),
   verifiedIdsCount:known.length,modsCount:data.mods.length,map:data.map.code,slots:100,
   restartTimes:data.restarts.times,timezone:'Europe/Paris',gameRoot:GAME,configRoot:CONFIG,
@@ -131,9 +131,9 @@ async function lock(){
 async function unlock(){
  try{const v=JSON.parse(await readFile(LOCK,'utf8'));if(v.pid===process.pid)await unlink(LOCK)}catch{}
 }
-function parisSlot(){
+function parisSlot(at=new Date()){
  const x=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',
-  day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+  day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(at);
  const v=Object.fromEntries(x.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
  return {date:v.year+'-'+v.month+'-'+v.day,time:v.hour+':'+v.minute};
 }
@@ -182,7 +182,7 @@ async function gracefulRestart(child){
   await rcon('SaveWorld',pass);
   await new Promise(r=>setTimeout(r,15000));
   await rcon('DoExit',pass);
-  await Promise.race([new Promise(resolve=>child.once('exit',resolve)),new Promise((_,reject)=>setTimeout(()=>reject(Error('DoExit sans confirmation de sortie sous 90 secondes')),90000))]);
+  await Promise.race([new Promise(resolve=>{if(child.exitCode!==null)resolve();else child.once('exit',resolve)}),new Promise((_,reject)=>setTimeout(()=>reject(Error('DoExit sans confirmation de sortie sous 90 secondes')),90000))]);
   return true;
  }catch(e){
   console.error('Redémarrage NON FORCE, sauvegardes protégées : '+e.message);
@@ -199,27 +199,28 @@ async function run(){
  const data=await manifest();
  const args=[data.map.code+'?listen?SessionName='+encodeURIComponent(data.displayName),
   '-port=7777','-QueryPort=27015','-WinLiveMaxPlayers=100','-server','-log','-mods='+validation.mods.join(',')];
- let child,done=false;
+ let child,done=false,restarting=false;
  const launched=new Set();
  function spawnGame(){
   console.log('ARK Astraeos : lancement officiel 100 slots, mods CurseForge='+validation.mods.length);
   child=spawn(EXE,args,{cwd:path.dirname(EXE),stdio:'inherit',windowsHide:false});
   child.once('error',e=>{console.error('Erreur ARK : '+e.message);done=true});
-  child.once('exit',(code)=>{console.log('ARK terminé : '+code);done=true});
+  child.once('exit',(code)=>{console.log('ARK terminé : '+code);if(!restarting)done=true});
  }
  try{
   spawnGame();
   const scheduler=setInterval(async()=>{
    if(done||!child||child.exitCode!==null)return;
    const now=parisSlot(),slot=now.date+'-'+now.time;
-   if(!data.restarts.times.includes(now.time)||launched.has(slot))return;
-   launched.add(slot);
+   if(!data.restarts.times.includes(now.time)||launched.has(slot)||restarting)return;
+   launched.add(slot);restarting=true;
    console.log('Redémarrage programmé '+now.time+' Europe/Paris : tentative SaveWorld → DoExit');
-   if(await gracefulRestart(child)){
-    done=false;
-    spawnGame();
-    console.log('Redémarrage sauvegardé.');
-   }
+   try{
+    if(await gracefulRestart(child)){
+     spawnGame();
+     console.log('Redémarrage sauvegardé.');
+    }else if(child.exitCode!==null)done=true;
+   }finally{restarting=false}
   },15000);
   try{while(!done)await new Promise(r=>setTimeout(r,1000))}
   finally{clearInterval(scheduler)}
