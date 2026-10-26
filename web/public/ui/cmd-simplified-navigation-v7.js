@@ -86,6 +86,17 @@
   const selectedTitle=$('cmdrpTitle')?.textContent||'';
   return /\bpalworld\b/i.test(selected+' '+selectedTitle);
  }
+ function selectedFs25Profile(){
+  const select=$('cmdrpSelect');
+  const selected=select?.selectedOptions?.[0]?.textContent||'';
+  const selectedTitle=$('cmdrpTitle')?.textContent||'';
+  return /\bfs[ -]?25\b|farming\s*simulator\s*25/i.test(selected+' '+selectedTitle);
+ }
+ function openFs25(){
+  openProfile();
+  if(typeof window.CMDHostingOpenFS25ModHub==='function')window.CMDHostingOpenFS25ModHub();
+  else window.open('https://www.farming-simulator.com/mods.php?title=fs2025','_blank','noopener,noreferrer');
+ }
  function profileShortcut(){
   const root=$('cmdRenterProfile');
   if(!root)return;
@@ -108,6 +119,16 @@
     button.hidden=!palworldSelected;
     button.disabled=!palworldSelected;
   }
+  const fs25Selected=selectedFs25Profile();
+  let fs25=$('cmdrpFS25ModHub');
+  if(!fs25){
+   fs25=document.createElement('button');fs25.type='button';fs25.id='cmdrpFS25ModHub';
+   fs25.textContent='FS25 · Rechercher sur ModHub';
+   fs25.title='Recherche des vrais mods Farming Simulator 25 sur le ModHub officiel GIANTS';
+   fs25.addEventListener('click',openFs25);
+   const create=$('cmdrpCreate');if(create)create.before(fs25);else sidebar.append(fs25);
+  }
+  fs25.hidden=!fs25Selected;fs25.disabled=!fs25Selected;
   const p=root.querySelector('.cmdrp-palworld-hint');
   if(p){
    p.hidden=!palworldSelected;
