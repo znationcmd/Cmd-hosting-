@@ -19,6 +19,8 @@ const palworldWorkshopBrowse='https://steamcommunity.com/workshop/browse/?appid=
 const isPalworld=p=>/\bpalworld\b/i.test([p?.game_key,p?.game_name,p?.display_name,p?.server_label,p?.name].filter(Boolean).join(' '));
 let game=null,mods=[],rights=[],provider='',mode='free',sort='popular',term='',page=1,steamAppId=null,serial=0,fs25Profile=false,palworldProfile=false;
 const officialFs25Url='https://www.farming-simulator.com/mods.php?lang=fr&title=fs2025&platform=pc';
+const fs25BrowseUrl=q=>q?'https://www.farming-simulator.com/mods.php?'+new URLSearchParams({lang:'fr',title:'fs2025',searchMod:q,platform:'pc'}).toString():officialFs25Url;
+const fs25QuickSearches=['Tracteurs','Cartes','Camions','John Deere','Véhicules','Bâtiments'];
 const isFs25=p=>/\bfs[ -]?25\b|farming\s*simulator\s*25|farming.simulator.2025/i.test([p?.game_key,p?.display_name,p?.game_name,p?.server_label,p?.name].filter(Boolean).join(' '));
 function say(v){$('cvStatus').textContent=v}
 async function fetchJson(path,opts={}){const r=await fetch(path,{credentials:'include',cache:'no-store',...opts});let d={};try{d=await r.json()}catch{}if(!r.ok){const e=new Error(d.message||'Indisponible');e.browseUrl=d.browseUrl;throw e}return d}
@@ -27,6 +29,16 @@ function officialUrl(){return palworldProfile?palworldSteamWorkshop:provider==='
 function link(href,label){const a=document.createElement('a');a.href=href;a.textContent=label;a.target='_blank';a.rel='noopener noreferrer';return a}
 function enter(){if(typeof show==='function')show('cmdMods');else document.querySelectorAll('.page').forEach(x=>x.classList.add('hide'));panel.classList.remove('hide');location.hash='cmdMods';loadServers()}
 window.CMDHostingOpenMods=enter;
+window.CMDHostingOpenFS25ModHub=()=>{
+ if(typeof show==='function')show('cmdMods');
+ else{document.querySelectorAll('.page').forEach(x=>x.classList.add('hide'));panel.classList.remove('hide')}
+ fs25Profile=true;palworldProfile=false;provider='fs25';game=null;mods=[];rights=[];term='';
+ if(![...$('cvServer').options].some(o=>o.value==='__fs25_modhub__'))
+  $('cvServer').add(new Option('Farming Simulator 25 · ModHub officiel (sans serveur)','__fs25_modhub__'));
+ $('cvServer').value='__fs25_modhub__';$('cvSearch').value='';
+ sessionStorage.setItem('cvServer','__fs25_modhub__');
+ activeList();fs25Browser();
+};
 window.CMDHostingOpenPalworldWorkshop=()=>{
  if(typeof show==='function')show('cmdMods');else {document.querySelectorAll('.page').forEach(p=>p.classList.add('hide'));panel.classList.remove('hide')}
  palworldProfile=true;fs25Profile=false;provider='steam';steamAppId=1623730;
@@ -46,25 +58,35 @@ function fs25Browser(){
  const body=document.createElement('div');body.className='cmdv-cardbody';
  const h=document.createElement('h4');h.textContent='ModHub officiel · Farming Simulator 25';
  const p=document.createElement('p');
- p.textContent='Tous les mods officiels FS25 se recherchent sur le site GIANTS. Le bouton ouvre le vrai ModHub, avec sa recherche de mods, ses catégories, ses cartes et ses machines.';
+ p.textContent='Recherche réelle sur le ModHub GIANTS, réservée à Farming Simulator 25. Les fiches et téléchargements restent sur le site officiel.';
  const actions=document.createElement('div');actions.className='cmdv-cardbuttons';
- const button=document.createElement('a');button.href=officialFs25Url;button.target='_blank';button.rel='noopener noreferrer';
- button.className='cmdv-fs25-official';button.textContent='Rechercher des mods FS25 sur ModHub ↗';
- actions.append(button);body.append(h,p,actions);card.append(body);results.append(card);
- $('cvResultsCount').textContent='Catalogue officiel FS25 · recherche sur le site GIANTS';
- $('cvCatalogTitle').textContent='Farming Simulator 25 — ModHub GIANTS';
- $('cvProviderName').textContent='SOURCE OFFICIELLE GRATUITE';
- $('cvOfficial').hidden=false;$('cvOfficial').href=officialFs25Url;
- $('cvOfficial').textContent='Ouvrir ModHub FS25 ↗';
- $('cvDescription').textContent='Les mods doivent être compatibles FS25. Le téléchargement ne démarre pas sur le serveur tant que ses fichiers ne sont pas présents.';
- $('cvPages').hidden=true;
- say('FS25 : catalogue officiel disponible. Cherche un mod sur ModHub, puis installe son ZIP sur ton serveur FS25 avec le gestionnaire de fichiers ou le panneau GIANTS.');
+ const official=link(fs25BrowseUrl(term),term?'Voir les résultats pour « '+term+' » ↗':'Parcourir les mods FS25 ↗');
+ official.className='cmdv-fs25-official';actions.append(official);
+ body.append(h,p,actions);card.append(body);results.append(card);
+ const shortcuts=document.createElement('div');shortcuts.className='cmdv-fs25-tags';
+ for(const keyword of fs25QuickSearches){
+  const a=link(fs25BrowseUrl(keyword),keyword);a.className='cmdv-fs25-chip';
+  shortcuts.append(a);
+ }
  const help=document.createElement('p');help.className='cmdv-sub';
- help.textContent='Le fichier ZIP officiel doit être ajouté au dossier mods du serveur FS25. Les fichiers non installés ne seront jamais affichés comme actifs.';
- body.append(help);
+ help.textContent='Les mods doivent provenir du ModHub FS25 et être compatibles avec le serveur. Installe ensuite les ZIP dans le gestionnaire natif GIANTS du serveur arrêté. Aucune installation automatique annoncée.';
+ results.append(shortcuts,help);
+ $('cvResultsCount').textContent=term?'Recherche officielle : '+term:'ModHub GIANTS · Farming Simulator 25';
+ $('cvCatalogTitle').textContent='FS25 — rechercher des mods';
+ $('cvProviderName').textContent='GIANTS SOFTWARE · MODHUB OFFICIEL';
+ $('cvOfficial').hidden=false;$('cvOfficial').href=fs25BrowseUrl(term);
+ $('cvOfficial').textContent='Ouvrir ModHub FS25 ↗';
+ $('cvDescription').textContent='Saisis un mod dans la barre de recherche et ouvre les résultats du véritable ModHub GIANTS.';
+ $('cvPages').hidden=true;$('cvAppLabel').hidden=true;
+ $('cvSearch').placeholder='Tracteur, carte, John Deere, camion…';
+ $('cvSearchForm').querySelector('button').textContent='⌕ Chercher sur ModHub';
+ $('cvMode').closest('label').hidden=true;
+ panel.querySelectorAll('.cmdv-tabs').forEach(el=>el.hidden=true);
+ const quick=$('cvQuickPalworld')?.closest('.cmdv-source-quick');if(quick)quick.hidden=true;
+ say(term?'FS25 : recherche prête pour « '+term+' ». Ouvre les résultats officiels GIANTS.':'FS25 : recherche et catégories du ModHub disponibles même sans machine. Aucun mod prétendu installé.');
 }
-
 function palworldBrowser(){
+ const quick=$('cvQuickPalworld')?.closest('.cmdv-source-quick');if(quick)quick.hidden=false;
  const results=$('cvResults');results.replaceChildren();
  const card=document.createElement('article');card.className='cmdv-card cmdv-palworld-official';
  const body=document.createElement('div');body.className='cmdv-cardbody';
@@ -101,26 +123,33 @@ async function loadServers(){
  select.replaceChildren();
  select.add(new Option('Sélectionne un serveur',''));
  select.add(new Option('Palworld · Workshop officiel (sans serveur)','__palworld_workshop__'));
+ select.add(new Option('Farming Simulator 25 · ModHub officiel (sans serveur)','__fs25_modhub__'));
  try{
   const d=await fetchJson('/api/game-library'),list=d.items||[];
   for(const g of list)select.add(new Option(g.display_name||g.game_key,String(g.id)));
-  select.value=last==='__palworld_workshop__'||list.some(g=>String(g.id)===last)?last:list[0]?.id||'';
+  select.value=['__palworld_workshop__','__fs25_modhub__'].includes(last)||list.some(g=>String(g.id)===last)?last:list[0]?.id||'__fs25_modhub__';
   const chosen=list.find(g=>String(g.id)===String(select.value));
-  fs25Profile=isFs25(chosen);
+  fs25Profile=isFs25(chosen)||select.value==='__fs25_modhub__';
   palworldProfile=isPalworld(chosen)||select.value==='__palworld_workshop__';
   await config();
  }catch(e){
-  select.value='__palworld_workshop__';
-  palworldProfile=true;fs25Profile=false;provider='steam';steamAppId=1623730;
-  mods=[];rights=[];activeList();palworldBrowser();
-  say('Connexion du compte indisponible. Le Workshop officiel Palworld reste accessible, sans prétendre avoir installé de mods.');
+  const defaultToFs25=last==='__fs25_modhub__';
+  select.value=defaultToFs25?'__fs25_modhub__':'__palworld_workshop__';
+  palworldProfile=!defaultToFs25;fs25Profile=defaultToFs25;provider=defaultToFs25?'fs25':'steam';steamAppId=defaultToFs25?null:1623730;
+  mods=[];rights=[];activeList();
+  if(defaultToFs25)fs25Browser();else palworldBrowser();
+  say('Compte indisponible : les catalogues officiels restent consultables, sans installer de mods.');
  }
 } 
 async function config(){const id=$('cvServer').value;game=null;mods=[];rights=[];provider='';activeList();
+ const quick=$('cvQuickPalworld')?.closest('.cmdv-source-quick');if(quick)quick.hidden=true;
  $('cvMode').closest('label').hidden=false;
  panel.querySelectorAll('.cmdv-tabs').forEach(el=>el.hidden=false);
  $('cvSearchForm').querySelector('button').textContent='⌕ Rechercher';
- $('cvSearch').placeholder='Rechercher un mod par son nom…';if(id==='__palworld_workshop__'){palworldProfile=true;fs25Profile=false;provider='steam';steamAppId=1623730;
+ $('cvSearch').placeholder='Rechercher un mod par son nom…';
+ if(id==='__fs25_modhub__'){fs25Profile=true;palworldProfile=false;provider='fs25';
+  sessionStorage.setItem('cvServer',id);fs25Browser();return}
+ if(id==='__palworld_workshop__'){palworldProfile=true;fs25Profile=false;provider='steam';steamAppId=1623730;
  sessionStorage.setItem('cvServer',id);palworldBrowser();return}
  if(!id){say('Choisis un profil serveur ou ouvre le Workshop Palworld.');$('cvResults').replaceChildren();return}
 try{const [d,a]=await Promise.all([fetchJson('/api/mods?gameId='+encodeURIComponent(id)),fetchJson('/api/mods/access?gameId='+encodeURIComponent(id))]);game=d.game;mods=d.mods||[];rights=a.mods||[];fs25Profile=fs25Profile||isFs25(game);palworldProfile=palworldProfile||isPalworld(game);provider=fs25Profile?'fs25':palworldProfile?'steam':d.providers?.[0]||'';steamAppId=palworldProfile?1623730:d.steamAppId||null;sessionStorage.setItem('cvServer',id);$('cvApp').value=steamAppId||'';$('cvAppLabel').hidden=provider!=='steam';$('cvAuto').checked=!!d.preferences.enabled;$('cvBackup').checked=!!d.preferences.backup_before_update;$('cvInterval').value=String(d.preferences.frequency_minutes||60);$('cvArmaJson').hidden=provider!=='arma';
@@ -155,6 +184,12 @@ $('cvMode').onchange=()=>{mode=$('cvMode').value;page=1;$('cvPaidLabel').hidden=
 $('cvRefresh').onclick=loadServers;
 $('cvSearchForm').onsubmit=e=>{
  e.preventDefault();term=$('cvSearch').value.trim();page=1;
+ if(fs25Profile){
+  const destination=fs25BrowseUrl(term);
+  const a=document.createElement('a');a.href=destination;a.target='_blank';a.rel='noopener noreferrer';
+  a.style.display='none';document.body.append(a);a.click();a.remove();
+  fs25Browser();return;
+ }
  if(palworldProfile){
   const destination=term?palworldWorkshopBrowse+'&searchtext='+encodeURIComponent(term):palworldWorkshopBrowse;
   const a=document.createElement('a');a.href=destination;a.target='_blank';a.rel='noopener noreferrer';
