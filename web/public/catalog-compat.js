@@ -181,11 +181,13 @@ function rentalsPage(){if(!$('rentals'))return $('cmdrpStatus').textContent='Loc
 
 /*CMD_RENTER_WIRING_FIX_V1*/
 function modsPage(x=chosen()){
+  // Palworld : le Workshop officiel doit fonctionner depuis chaque profil,
+  // avec ou sans machine associée, sans confondre ses mods avec ceux de DayZ.
+  if(rpIdentify(x)==='Palworld'&&typeof window.CMDHostingOpenPalworldWorkshop==='function'){
+    window.CMDHostingOpenPalworldWorkshop();
+    return;
+  }
   if(!x?.g?.id){
-    if(rpIdentify(x)==='Palworld'&&typeof window.CMDHostingOpenPalworldWorkshop==='function'){
-      window.CMDHostingOpenPalworldWorkshop();
-      return;
-    }
     $('cmdrpStatus').textContent='Mods : associe un profil de jeu à ce serveur pour accéder aux mods compatibles.';
     return;
   }
