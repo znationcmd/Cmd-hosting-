@@ -1,0 +1,42 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {Script,runInNewContext} from 'node:vm';
+const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8');
+const mods=read('web/public/mod-v2-ui.js');
+const profile=read('web/public/catalog-compat.js');
+const nav=read('web/public/ui/cmd-simplified-navigation-v7.js');
+const css=read('web/public/ui/cmd-simplified-mobile-v7.css');
+test('all new scripts parse in ECMAScript without running the UI',()=>{
+ for(const [name,source] of [['mods',mods],['profile',profile],['nav',nav]])assert.doesNotThrow(()=>new Script(source),name);
+});
+test('FS25 search uses real GIANTS parameter searchMod and real FS2025 title',()=>{
+ const expression=/const officialFs25Url=[^\n]+\nconst fs25BrowseUrl=[^\n]+/;
+ const helper=expression.exec(mods);
+ assert.ok(helper,'FS25 public ModHub deep link helper exists');
+ const result=runInNewContext(helper[0]+"\nfs25BrowseUrl('John Deere')",{URLSearchParams});
+ const url=new URL(result);
+ assert.equal(url.hostname,'www.farming-simulator.com');
+ assert.equal(url.searchParams.get('title'),'fs2025');
+ assert.equal(url.searchParams.get('searchMod'),'John Deere');
+ assert.equal(url.searchParams.get('platform'),'pc');
+ assert.match(mods,/__fs25_modhub__/);
+ assert.match(mods,/CMDHostingOpenFS25ModHub/);
+ assert.match(mods,/fs25QuickSearches/);
+ assert.match(mods,/if\(fs25Profile\)\{/);
+ assert.match(mods,/fs25Browser\(\)/);
+ assert.doesNotMatch(helper[0],/example\.com|fake|mock/i);
+});
+test('FS25 / Palworld buttons remain on profile only with no fake server status',()=>{
+ assert.match(profile,/CMDHostingOpenFS25ModHub/);
+ assert.match(profile,/Farming Simulator 25/);
+ assert.match(nav,/selectedFs25Profile/);
+ assert.match(nav,/cmdrpFS25ModHub/);
+ assert.match(nav,/selectedPalworldProfile/);
+ assert.match(nav,/cmdrpPalworldWorkshop/);
+ assert.match(css,/#cmdrpFS25ModHub\[hidden\]/);
+ assert.match(css,/#cmdrpPalworldWorkshop\[hidden\]/);
+ assert.match(mods,/PalModSettings\.ini/);
+ assert.match(mods,/ActiveModList/);
+ assert.match(mods,/Aucune installation automatique annoncée/);
+});
