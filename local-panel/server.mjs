@@ -8,6 +8,7 @@
 import http from 'node:http';
 import {spawn} from 'node:child_process';
 import {PROFILES,knownProfile,profileChecks,prepareProfile} from './game-profiles.mjs';
+import {lifetimeRegistry,GAME_SUGGESTIONS} from './persistent-profiles.mjs';
 import {gameProcessesRunning} from './exclusive-game-lock.mjs';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {readFile,readdir,writeFile,rename,mkdir,lstat,realpath,copyFile,open,stat} from 'node:fs/promises';
@@ -22,6 +23,7 @@ const defaultServersRoot=process.env.CMD_SERVERS_ROOT||(
 const installRoot=path.resolve(defaultServersRoot);
 const manifestPath=path.join(stateDir,'servers.json');
 const keyFile=path.join(stateDir,'access-token.txt');
+const lifetime=lifetimeRegistry({file:path.join(stateDir,'persistent-game-profiles.json')});
 const listenHost=process.env.CMD_FILES_LISTEN_HOST||'127.0.0.1';
 const port=Number(process.env.CMD_FILES_PORT||8788);
 const DAYZ_SCRIPT=path.resolve(HERE,'..','scripts','Installer-DayZ-PC-1-clic.ps1');
@@ -144,8 +146,13 @@ async function discover(){
 async function instances(){
  const manual=(await config()).servers;
  const detected=await discover();
- const known=new Set(manual.map(x=>path.resolve(x.root).toLowerCase()));
- return [...manual.map(x=>({...x,detected:false})),...detected.filter(x=>!known.has(path.resolve(x.root).toLowerCase()))];
+ const saved=(await lifetime.list()).filter(p=>p.directory).map(p=>({
+  id:p.id,game:p.gameKey,name:p.name,root:p.directory,detected:false,
+  persistentProfile:true,gameName:p.gameName,map:p.map,slots:p.slots
+ }));
+ const known=new Set([...manual,...saved].map(x=>path.resolve(x.root).toLowerCase()));
+ return [...manual.map(x=>({...x,detected:false})),...saved,
+  ...detected.filter(x=>!known.has(path.resolve(x.root).toLowerCase()))];
 }
 async function selected(id){
  const item=(await instances()).find(x=>x.id===id);
@@ -204,6 +211,50 @@ async function action(req,res,url){
  const route=url.pathname,method=req.method;
  if(route==='/api/status'&&method==='GET')return reply(res,200,{name:'CMD Hosting Fichiers',mode:'local-host',railway:false,defaultRoot:installRoot,bind:listenHost});
  if(route==='/api/servers'&&method==='GET')return reply(res,200,{servers:await listed(),catalogueNote:'Tous les jeux avec des fichiers sur un hôte peuvent être enregistrés; aucune arborescence fictive.'});
+ if(route==='/api/library/catalogue'&&method==='GET'){
+  return reply(res,200,{suggestions:GAME_SUGGESTIONS,freeGameName:true,serverSoftwareMayBeUnavailable:true,
+   note:'Choisis un jeu ou saisis le nom de n’importe quel jeu du catalogue. Profil sans échéance ; logiciel serveur officiel nécessaire pour jouer.'});
+ }
+ if(route==='/api/library/profiles'&&method==='GET'){
+  const saved=await lifetime.list(),available=await listed();
+  return reply(res,200,{profiles:saved.map(p=>({...p,linkedFilesAvailable:available.some(x=>x.id===p.id),
+   gameInstalledVerified:available.some(x=>x.id===p.id&&x.installed),runningVerified:false})),
+   oneGameRunningAtATime:true,autoDelete:false,expiryDays:null,
+   serverCreatedDoesNotMeanInstalled:true});
+ }
+ if(route==='/api/library/profiles/export'&&method==='GET')return reply(res,200,await lifetime.snapshot());
+ if(route==='/api/library/profiles'&&method==='POST'){
+  const data=await jsonBody(req,4096),created=await lifetime.create(data);
+  return reply(res,201,{created:true,profile:created,gameInstalled:false,
+   note:'Profil enregistré sans paiement ni expiration. Installation officielle du serveur à effectuer séparément.'});
+ }
+ if(route==='/api/library/profiles'&&method==='PATCH'){
+  const data=await jsonBody(req,4096);
+  if(!validId(data.id))throw bad(400,'Identifiant de profil invalide.');
+  const updated=await lifetime.modify(data.id,data);
+  return reply(res,200,{updated:true,profile:updated});
+ }
+ if(route==='/api/library/profiles/link'&&method==='POST'){
+  if(!locallyRequested(req))throw bad(403,'Association de dossiers réels autorisée depuis le PC hôte uniquement.');
+  const data=await jsonBody(req,4096);
+  if(!validId(data.id)||typeof data.directory!=='string'||data.directory.length>800)
+   throw bad(400,'Dossier invalide.');
+  const physical=path.resolve(data.directory);
+  if(!within(installRoot,physical)||physical===installRoot)
+   throw bad(403,'Choisis un dossier de serveur sous CMD-Servers.');
+  await pathChecked(physical,'',{dir:true});
+  const existing=(await lifetime.list()).filter(p=>p.directory&&p.id!==data.id);
+  if(existing.some(p=>path.resolve(p.directory).toLowerCase()===physical.toLowerCase()))
+   throw bad(409,'Ce dossier appartient déjà à un autre serveur : chaque monde doit avoir ses sauvegardes séparées.');
+  const linked=await lifetime.link(data.id,physical);
+  return reply(res,200,{linked:true,profile:linked,note:'Dossier réel associé, démarrage non déclenché.'});
+ }
+ if(route==='/api/library/profiles'&&method==='DELETE'){
+  const data=await jsonBody(req,2048);
+  if(!validId(data.id)||typeof data.confirmName!=='string')throw bad(400,'Confirmation de suppression invalide.');
+  const result=await lifetime.remove(data.id,data.confirmName);
+  return reply(res,200,{...result,note:'Suppression demandée par le propriétaire : les fichiers et les sauvegardes restent sur le disque.'});
+ }
  if(route==='/api/profiles'&&method==='GET'){
   return reply(res,200,{profiles:await gameProfileStatus(),localBrowser:locallyRequested(req),
    oneGameAtATime:true,railway:false,activeProfile:activeSession()?.id||null,
