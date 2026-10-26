@@ -86,3 +86,11 @@ test('new mobile catalog override remains loaded after old style and bounds both
   assert.match(override,/object-fit:cover!important/);
   assert.match(html,/cmd-hosting-mobile-catalog-v3\.css\?v=20261026-mobile3/);
 });
+
+test('one Jeux entry opens the full catalog without hiding server profile controls',()=>{
+ assert.match(nav,/openFullCatalog/);
+ assert.match(nav,/window\.show\('cmdCatalogSection'\)/);
+ assert.match(nav,/event\.stopImmediatePropagation\(\)/);
+ assert.match(nav,/profileSelectors/);
+ assert.doesNotMatch(nav,/\.remove\(\)/);
+});
