@@ -9,7 +9,9 @@ const base='https://cmd-hosting-web-production.up.railway.app';
 const files=[
  ['/ui/cmd-simplified-navigation-v7.js','web/public/ui/cmd-simplified-navigation-v7.js'],
  ['/ui/cmd-simplified-mobile-v7.css','web/public/ui/cmd-simplified-mobile-v7.css'],
- ['/catalog-compat.js','web/public/catalog-compat.js']
+ ['/catalog-compat.js','web/public/catalog-compat.js'],
+ ['/ui/cmd-server-first-v8.js','web/public/ui/cmd-server-first-v8.js'],
+ ['/ui/cmd-server-first-v8.css','web/public/ui/cmd-server-first-v8.css']
 ];
 async function get(route){
  const control=new AbortController();
