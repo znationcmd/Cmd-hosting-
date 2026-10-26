@@ -94,3 +94,10 @@ test('one Jeux entry opens the full catalog without hiding server profile contro
  assert.match(nav,/profileSelectors/);
  assert.doesNotMatch(nav,/\.remove\(\)/);
 });
+
+test('dedicated profile has an obvious Palworld Workshop shortcut without creating a fake server',()=>{
+ assert.match(profile,/id='cmdrpPalworldWorkshop'/);
+ assert.match(profile,/section\.querySelector\('#cmdrpCreate'\)\?\.before\(palworldShortcut\)/);
+ assert.match(profile,/Workshop Palworld/);
+ assert.match(nav,/globalRedundancies/);
+});
