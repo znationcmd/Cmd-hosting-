@@ -21,7 +21,10 @@ Pour ARK, Arma et les autres jeux, le navigateur affiche leurs dossiers et les f
 - Toutes les APIs nécessitent une clé administrateur aléatoire gardée sur la machine, jamais enregistrée par le navigateur.
 - Isolation stricte par serveur; blocage des chemins absolus, `..`, liens symboliques et dossiers de données hors du répertoire de jeux autorisé.
 - Les fichiers sensibles de connexion sont exclus. Pas de suppression et pas d'exécution de commandes à distance.
-- Le panneau ne démarre, n'arrête, ne met à jour ni ne télécharge les jeux. Il gère les **fichiers réellement présents**. Les machines doivent être allumées pour un accès 24/24.
+- Depuis ce même PC Windows uniquement, le panneau peut maintenant **préparer les quatre profils DayZ + CMD Valhalla Astraeos**, puis lancer un profil compatible dont les vrais exécutables et mods sont validés. Aucun shell ni chemin d'exécution arbitraire exposé au navigateur.
+- Les appels provenant d'un téléphone ou d'un autre ordinateur ne peuvent **pas** lancer un jeu. Depuis un téléphone sur Wi-Fi, le panneau peut afficher l'état et les fichiers autorisés après connexion.
+- Le démarrage du gestionnaire n'est pas une preuve que des joueurs peuvent rejoindre le serveur : vérifier les journaux du jeu, le pare-feu, les ports et la connexion en jeu. Les machines doivent rester allumées pour un accès 24/24.
+- Le téléchargement des binaires officiels nécessite toujours l'installateur SteamCMD et les licences appropriées ; le panneau ne crée pas de fichiers de jeu imaginaires.
 
 ### Développement / tests
 
@@ -35,3 +38,17 @@ Variables optionnelles : `CMD_SERVERS_ROOT` (dossier contenant les jeux), `CMD_F
 Les tests GitHub Actions fabriquent leurs propres dossiers **factices uniquement pendant les tests**, dans un répertoire temporaire : jamais de serveur fictif dans une installation utilisateur. L'archive distribuée contient uniquement le gestionnaire de fichiers; les jeux officiels sont téléchargés séparément sur l'hôte.
 
 Ce module est volontairement isolé de la fonction Bun Railway principale, de PostgreSQL, des comptes, des prix et des agents de location. Il ne modifie aucun de ces services.
+
+### Cinq profils CMD dans « Mes serveurs »
+
+Le gestionnaire affiche **CMD Lux, CMD Namalsk, CMD Deer Isle, CMD Takistan Plus** (DayZ PC) et **CMD Valhalla Astraeos** (ARK ASA), chacun avec 100 slots **configurés**, sans prétendre accueillir 100 joueurs tant que la machine et les mods ne sont pas testés. Les mods de chaque monde restent séparés. Le panneau utilise les gestionnaires `dayz-worlds/manager.mjs` et `asa-astraeos/manager.mjs` déjà présents, avec le verrou exclusif commun `local-panel/exclusive-game-lock.mjs`.
+
+Dans la rubrique « Mes serveurs CMD », clique « Préparer » (génère les configurations sans écraser les existantes), puis installe le serveur officiel et ses cartes/mods légalement via SteamCMD. « Démarrer » n'est autorisé **que depuis ce PC Windows** et reste bloqué si les fichiers attendus, les mods ou les autorisations locales manquent. La machine ne passe jamais par Railway pour faire fonctionner le jeu.
+
+Si l'écran indique zéro **serveur installé**, cela n'efface pas les cinq **profils prévus** : ces compteurs sont volontairement séparés, car une installation ne peut pas être déclarée active sans exécutables, stockage et diagnostic.
+
+### Palworld et Steam Workshop
+
+Pour un serveur Palworld Windows détecté, ouvre « Mes serveurs » et sélectionne Palworld. Le panneau montre « Mods de mon serveur » et propose le [Workshop Steam Palworld](https://steamcommunity.com/app/1623730/workshop/) et le [guide officiel](https://docs.palworldgame.com/settings-and-operation/mod/). Les mods réellement présents dans `Mods/Workshop/<dossier>/Info.json` sont détectés et comparés aux `ActiveModList` de `Mods/PalModSettings.ini`, sans téléchargement fictif.
+
+Les mods Palworld dédiés sont actuellement pris en charge sur les serveurs Windows uniquement, lorsqu'un mod possède des règles `IsServer: true`. Sauvegarder avant modification et redémarrer correctement le serveur pour les charger.
