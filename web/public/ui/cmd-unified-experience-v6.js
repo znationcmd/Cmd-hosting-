@@ -39,7 +39,7 @@
   if(side){
    const old=side.querySelector('#cmdrpPalworldWorkshop');
    if(old){
-    old.textContent='Mods Palworld · Workshop Steam';
+    if(old.textContent!=='Palworld · Steam Workshop')old.textContent='Palworld · Steam Workshop';
     old.title='Voir les mods Palworld compatibles Steam, même sans serveur connecté';
     old.classList.add('cmdrp-palworld-open');
    }else if(!side.querySelector('#cmdrpPalworldOpenV6')){
@@ -62,7 +62,7 @@
    if(heading)heading.after(b);else mods.prepend(b);
   }
   const quick=mods?.querySelector('#cvQuickPalworld');
-  if(quick){quick.hidden=false;quick.style.removeProperty('display');quick.textContent='Voir les mods Palworld';}
+  if(quick){if(quick.hidden)quick.hidden=false;if(quick.style.display)quick.style.removeProperty('display');if(quick.textContent!=='Voir les mods Palworld')quick.textContent='Voir les mods Palworld';}
  }
  function clampCovers(){
   if(!window.matchMedia('(max-width:780px)').matches)return;
