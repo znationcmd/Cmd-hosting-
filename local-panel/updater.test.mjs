@@ -31,7 +31,7 @@ test('Windows launchers check updates before starting the local panel without de
   readFile(new URL('./updater.mjs',import.meta.url),'utf8')
  ]);
  assert.match(launcher,/node\.exe "%~dp0local-panel\\updater\.mjs" auto/);
- assert.ok(launcher.indexOf('updater.mjs')<launcher.indexOf('local-panel\\server.mjs'));
+ assert.ok(launcher.indexOf('updater.mjs')<launcher.indexOf('node.exe "%~dp0local-panel\\server.mjs"'));
  assert.match(menu,/node\.exe "%~dp0local-panel\\updater\.mjs" auto/);
  assert.match(code,/backup|previous/);
  assert.match(code,/sha256/);
