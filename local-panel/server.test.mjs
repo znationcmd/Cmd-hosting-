@@ -155,3 +155,57 @@ test('actual create action appears in the user interface with conditional consen
  assert.match(js,/publisherTermsAccepted:true/);
  assert.match(js,/status\.localBrowser/);
 });
+
+
+test('five CMD profiles are visible before official installation, with honest readiness and local-only action',async()=>{
+ const result=await call('/api/profiles');
+ assert.equal(result.status,200);
+ assert.equal(result.data.profiles.length,5);
+ assert.equal(result.data.oneGameAtATime,true);
+ assert.equal(result.data.railway,false);
+ assert.equal(result.data.localBrowser,true);
+ const ids=result.data.profiles.map(p=>p.id).sort();
+ assert.deepEqual(ids,['cmd-deer-isle','cmd-lux','cmd-namalsk','cmd-takistan-plus','cmd-valhalla-astraeos'].sort());
+ for(const profile of result.data.profiles){
+  assert.equal(profile.slots,100);
+  assert.equal(profile.publiclyReachableVerified,false);
+  assert.equal(profile.localOnly,true);
+  assert.equal(profile.startedByThisPanel,false);
+  assert.ok(Array.isArray(profile.blockers));
+ }
+ const noAuth=await call('/api/profiles',{auth:''});
+ assert.equal(noAuth.status,401);
+});
+test('local start rejects missing consent, non-Windows and invalid IDs; never runs a mocked game',async()=>{
+ const badId=await call('/api/profiles/start',{
+  method:'POST',headers:{'content-type':'application/json'},
+  body:JSON.stringify({id:'unknown-game',confirmLocal:true})
+ });
+ assert.equal(badId.status,process.platform==='win32'?400:403);
+ const refusal=await call('/api/profiles/start',{
+  method:'POST',headers:{'content-type':'application/json'},
+  body:JSON.stringify({id:'cmd-lux',confirmLocal:false})
+ });
+ assert.equal(refusal.status,process.platform==='win32'?400:403);
+ const noFiles=await call('/api/profiles/start',{
+  method:'POST',headers:{'content-type':'application/json'},
+  body:JSON.stringify({id:'cmd-lux',confirmLocal:true})
+ });
+ assert.equal(noFiles.status,process.platform==='win32'?409:403);
+ assert.equal((await call('/api/profiles')).data.activeProfile,null);
+ const denied=await call('/api/profiles/prepare',{method:'POST',auth:'',headers:{'content-type':'application/json'},
+  body:JSON.stringify({id:'cmd-lux',confirmLocal:true})});
+ assert.equal(denied.status,401);
+});
+test('the real panel shows named CMD profiles and disables unverified or remote game starts',async()=>{
+ const [html,ui]=await Promise.all([
+  readFile(new URL('./index.html',import.meta.url),'utf8'),
+  readFile(new URL('./app.js',import.meta.url),'utf8')
+ ]);
+ assert.match(html,/Mes 5 serveurs CMD/);
+ assert.match(html,/cmdProfileList/);
+ assert.match(ui,/api\/profiles\/start/);
+ assert.match(ui,/api\/profiles\/prepare/);
+ assert.match(ui,/!data\.localBrowser\|\|!item\.ready/);
+ assert.match(ui,/Astraeos|Valhalla|profile\.title|item\.title/);
+});
