@@ -9,7 +9,7 @@
     "PS5",
     "Xbox Series X|S"
   ],
-  "crossplay": "requested_not_yet_validated",
+  "crossplay": "reported_compatible_by_server_owner_pending_real_console_test",
   "hosting": "local-windows-only",
   "railway": false,
   "serverExecutable": "ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
@@ -100,7 +100,8 @@
       "name": "S-Dino Variants",
       "curseforgeId": "912815",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 2,
@@ -108,7 +109,8 @@
       "name": "Shiny! Dinos Ascended",
       "curseforgeId": "928548",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 3,
@@ -116,7 +118,8 @@
       "name": "Runic Wyverns",
       "curseforgeId": "974884",
       "verification": "platform_to_confirm",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 4,
@@ -124,7 +127,8 @@
       "name": "Moro's Indomitable Duo",
       "curseforgeId": "928824",
       "verification": "platform_to_confirm",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 5,
@@ -132,7 +136,8 @@
       "name": "ARKOLOGY: OE - Desolatitan",
       "curseforgeId": "1133222",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 6,
@@ -140,7 +145,8 @@
       "name": "Astraeos - Mythological Creatures",
       "curseforgeId": "1122696",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 7,
@@ -148,7 +154,8 @@
       "name": "ARKOLOGY: OE - Hapipalus",
       "curseforgeId": "1310904",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 8,
@@ -157,7 +164,8 @@
       "curseforgeId": "956237",
       "verification": "premium_review",
       "enabled": true,
-      "warning": "Mod présenté comme premium/freemium: vérifier l’accès et les licences avant installation."
+      "warning": "Mod présenté comme premium/freemium: vérifier l’accès et les licences avant installation.",
+      "crossplayReportedByOwner": true
     },
     {
       "order": 9,
@@ -165,7 +173,8 @@
       "name": "Custom Dino Levels",
       "curseforgeId": "928708",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 10,
@@ -173,7 +182,8 @@
       "name": "Spawn Blocker",
       "curseforgeId": "930442",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 11,
@@ -181,7 +191,8 @@
       "name": "Super Cryo Storage",
       "curseforgeId": "933099",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 12,
@@ -189,7 +200,8 @@
       "name": "Alfa Oceanic Platforms",
       "curseforgeId": "933447",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 13,
@@ -197,7 +209,8 @@
       "name": "Wall'n'Floor Decor",
       "curseforgeId": "940786",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 14,
@@ -205,7 +218,8 @@
       "name": "Thor's Hammer - Mjölnir - Monument",
       "curseforgeId": "1009997",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 15,
@@ -219,7 +233,8 @@
         "curseforgeId": "1362939",
         "url": "https://www.curseforge.com/ark-survival-ascended/mods/roleplay-additions-jobs-medieval-rp-work-crafts-extra-economy-admin"
       },
-      "warning": "Correspondance non confirmée: ne pas remplacer automatiquement."
+      "warning": "Correspondance non confirmée: ne pas remplacer automatiquement.",
+      "crossplayReportedByOwner": true
     },
     {
       "order": 16,
@@ -227,7 +242,8 @@
       "name": "AP: Death Recovery",
       "curseforgeId": "929578",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 17,
@@ -235,7 +251,8 @@
       "name": "Auto Engrams!",
       "curseforgeId": "953154",
       "verification": "platform_to_confirm",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 18,
@@ -243,7 +260,8 @@
       "name": "Super Spyglass Plus",
       "curseforgeId": "929420",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 19,
@@ -251,7 +269,8 @@
       "name": "Net Pro",
       "curseforgeId": "1019389",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 20,
@@ -259,7 +278,8 @@
       "name": "Template Hammer Importer",
       "curseforgeId": "1498853",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 21,
@@ -267,7 +287,8 @@
       "name": "Resonant's Shop Mod",
       "curseforgeId": "936660",
       "verification": "platform_to_confirm",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 22,
@@ -275,7 +296,8 @@
       "name": "Potions | Gaia Studios",
       "curseforgeId": "928650",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 23,
@@ -283,7 +305,8 @@
       "name": "Awesome ARK Tools",
       "curseforgeId": "941450",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     },
     {
       "order": 24,
@@ -291,7 +314,8 @@
       "name": "Admin Commands | Gaia Studios",
       "curseforgeId": "936457",
       "verification": "confirmed",
-      "enabled": true
+      "enabled": true,
+      "crossplayReportedByOwner": true
     }
   ],
   "status": "configuration-prepared-not-installed",
@@ -299,7 +323,8 @@
     "official-server-executable",
     "licensed-astraeos-map",
     "all-24-mod-ids",
-    "confirmed-cross-platform-entitlements",
-    "rcon-for-graceful-restarts"
-  ]
+    "rcon-for-graceful-restarts",
+    "platform-downloads-and-real-console-connection-test"
+  ],
+  "crossplayCompatibilitySource": "Owner confirms all requested ARK mods support PC, PS5 and Xbox; do not auto-certify game runtime or purchasing entitlements."
 }
