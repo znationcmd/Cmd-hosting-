@@ -10,6 +10,23 @@
 <section id="workspace" hidden>
 <div class="layout">
 <aside class="sidebar card"><div class="blockTitle"><h2>Mes serveurs</h2><button id="refresh" class="quiet">↻</button></div>
+<section id="lifetimeServers" class="cmdProfiles lifetimeServers" aria-label="Ma bibliothèque de serveurs permanents">
+ <div class="blockTitle"><h3>Mes serveurs · sans expiration</h3><button type="button" id="refreshLifetime" class="quiet">↻</button></div>
+ <p class="muted">Crée autant de profils de jeux que nécessaire, même si le serveur dédié n’est pas encore installé. Tes réglages sont conservés sans limite de durée ; un seul serveur peut fonctionner à la fois sur le PC.</p>
+ <form id="createLifetimeForm" class="register lifetimeCreate">
+  <label>Jeu du catalogue ou autre jeu<input id="lifetimeGameName" list="lifetimeGames" required minlength="2" maxlength="120" placeholder="DayZ PC, ARK, Palworld, FS25…" autocomplete="off"></label>
+  <datalist id="lifetimeGames"></datalist>
+  <label>Nom de mon serveur<input id="lifetimeServerName" required minlength="2" maxlength="100" placeholder="CMD Mon Serveur"></label>
+  <div class="lifetimeFields"><label>Joueurs demandés<input id="lifetimeSlots" type="number" min="1" max="500" value="100" required></label>
+  <label>Carte (facultatif)<input id="lifetimeMap" maxlength="120" placeholder="Namalsk, Astraeos, Everon…"></label></div>
+  <button class="primary" type="submit">+ Créer mon serveur</button>
+ </form>
+ <div class="tools lifetimeTools"><button type="button" id="exportLifetime" class="quiet">↓ Sauvegarder la liste de mes serveurs</button></div>
+ <p id="lifetimeSummary" class="muted" role="status">Aucune limite de durée. Aucun serveur fictivement démarré.</p>
+ <div id="lifetimeList" class="serverList"></div>
+ <p class="muted">Un profil n’installe pas automatiquement le jeu. Tu peux associer son véritable dossier une fois le serveur officiel installé. Aucun fichier n’est supprimé automatiquement, même lorsque le serveur est arrêté.</p>
+</section>
+<hr>
 <section id="cmdProfiles" class="cmdProfiles" aria-label="Les 5 profils de serveurs CMD">
  <div class="blockTitle"><h3>Mes 5 serveurs CMD</h3><button id="refreshProfiles" class="quiet" type="button">↻</button></div>
  <p class="muted">4 DayZ + 1 ARK Astraeos · 100 slots configurés chacun · un seul démarré à la fois · sans Railway.</p>
