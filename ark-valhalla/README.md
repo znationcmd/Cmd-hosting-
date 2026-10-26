@@ -7,13 +7,13 @@ Décompresser toute l'archive en gardant LANCER-CMD-VALHALLA-ASTRAEOS.cmd, ark-v
 Double-cliquer LANCER-CMD-VALHALLA-ASTRAEOS.cmd :
 1. Installer les fichiers officiels ASA via SteamCMD app 2430930, avec confirmation locale et un minimum de 120 Go de disque libre.
 2. Préparer les INI. Les fichiers existants sont conservés, sans écrasement.
-3. Vérifier les 24 identifiants de mods, le DLC Astraeos, les licences et le support PC/PS5/Xbox.
+3. Vérifier les 24 identifiants de mods, le DLC Astraeos et les licences. Le propriétaire confirme que sa liste de mods prend en charge le cross-play PC/PS5/Xbox; le fonctionnement réel reste à tester après installation.
 4. Démarrer seulement si tous les contrôles passent. L'outil ne simule jamais un serveur en ligne.
 
 ## Mod RP et DLC
 Le nom demandé Role Play Jobs n'a pas de correspondance certaine. RolePlay Additions: Jobs (ID 1362939) est seulement une PROPOSITION à confirmer, pas un remplacement automatique.
 Le DLC Astraeos_WP est une carte officielle payante. Aucune dépense ni installation non autorisée. Si tu possèdes la licence ou les droits applicables, confirme-le dans le fichier local de validation.
-Moro's Livyatan (Freemium) : les éventuelles licences et accès premium doivent être vérifiés. Plusieurs mods affichent un support consoles non confirmé : ne pas les considérer cross-play sans contrôle sur CurseForge.
+Moro's Livyatan (Freemium) : les éventuelles licences et accès premium doivent être vérifiés. Les mods sont déclarés cross-play par le propriétaire du serveur. Cette déclaration est conservée, mais le test réel de connexion depuis une console n'a pas encore eu lieu. Aucun achat automatique.
 
 Le fichier de validation est C:\CMD-Servers\CMD-Valhalla-Astraeos\cmdhosting-local\mod-confirmations.json. Il est créé par le menu Préparer.
 Exemple :
@@ -25,7 +25,7 @@ Exemple :
       "Moro's Livyatan (Freemium)": {"curseforgeId":"956237","entitlementConfirmed":false}
     }
   }
-Ne modifier les drapeaux à true qu'après vérification réelle, jamais à l'aveugle.
+Ne modifier les drapeaux à true qu'après vérification réelle, jamais à l'aveugle. La déclaration cross-play faite par le propriétaire est conservée dans manifest.json et ne bloque plus à elle seule le lancement. Les identifiants manquants et les éventuelles licences restent bloquants.
 
 ## Réglages et limites
 - XP x10, récolte x3, TamingSpeedMultiplier=1000, BabyMatureSpeedMultiplier=900, respawn ressources x0.5.
