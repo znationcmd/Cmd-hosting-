@@ -1,0 +1,305 @@
+{
+  "schema": "cmd-hosting/ark-valhalla-v1",
+  "id": "cmd-valhalla-astraeos",
+  "displayName": "CMD Valhalla Astraeos",
+  "game": "ARK: Survival Ascended",
+  "mode": "roleplay",
+  "platformsRequested": [
+    "PC",
+    "PS5",
+    "Xbox Series X|S"
+  ],
+  "crossplay": "requested_not_yet_validated",
+  "hosting": "local-windows-only",
+  "railway": false,
+  "serverExecutable": "ShooterGame/Binaries/Win64/ArkAscendedServer.exe",
+  "steamAppId": "2430930",
+  "serverId": "CMD-Valhalla-Astraeos",
+  "slots": 100,
+  "map": {
+    "name": "Astraeos",
+    "code": "Astraeos_WP",
+    "type": "official-paid-DLC",
+    "requiresPublisherEntitlements": true,
+    "publisherDownloadOrPurchaseAuto": false
+  },
+  "network": {
+    "gamePortUdp": 7777,
+    "queryPortUdp": 27015,
+    "rconPortTcp": 27020,
+    "publicReachabilityVerified": false
+  },
+  "restarts": {
+    "timezone": "Europe/Paris",
+    "times": [
+      "08:00",
+      "12:00",
+      "22:00"
+    ],
+    "requiresLocalSupervisor": true,
+    "requiresRconCredential": true,
+    "disableUnverifiedRestart": true
+  },
+  "settingsRequested": {
+    "experience": 10,
+    "harvest": 3,
+    "stackTarget": 30000,
+    "taming": "near_instant",
+    "maturation": 900,
+    "resourceRespawn": 0.5,
+    "daytimeScale": 10,
+    "autoDestroyInactiveStructures": false,
+    "dinoInactivityDays": 7,
+    "playerWeight": "effectively_unlimited",
+    "dinoWeight": "effectively_unlimited",
+    "fallDamage": "disabled_requested",
+    "elementTransfers": "enabled_when_cluster_and_mods_support",
+    "difficultyRequested": 10,
+    "speedLeveling": true,
+    "wildMax": 300,
+    "tekMax": 360,
+    "wyvernDrakeEggMax": 380,
+    "playerPerPoint": {
+      "health": 100,
+      "stamina": 100,
+      "oxygen": 1000,
+      "food": 100,
+      "water": 100,
+      "weight": "very_high",
+      "melee": 25,
+      "speed": 3,
+      "crafting": "very_high",
+      "resistance": 20
+    },
+    "dinoPerPoint": {
+      "health": 100,
+      "stamina": 100,
+      "oxygen": 1000,
+      "food": 100,
+      "weight": "very_high",
+      "melee": 25,
+      "speed": 3,
+      "torpor": 20
+    }
+  },
+  "limitations": [
+    "30 000 est un multiplicateur de stacks, pas une taille de pile exacte pour tous les objets.",
+    "Les valeurs par point ARK dépendent de la statistique et de l’espèce. Configuration par multiplicateurs, à tester.",
+    "Infini illimité n’existe pas comme valeur native; régler un grand multiplicateur, avec limites du moteur.",
+    "Résistance personnage +20 et torpeur dino +20 ne sont pas des stats distribuables identiques aux autres.",
+    "Tek 360 et œufs 380 ne sont pas garantis automatiquement par OverrideOfficialDifficulty=10. Nécessitent réglages compatibles propres aux créatures / mods.",
+    "Element transférable nécessite plusieurs serveurs ARK en cluster, des autorisations de transfert et éventuellement des réglages Super Cryo Storage.",
+    "Le cross-play dépend du statut console actuel de chacun des 24 mods, de leur licence et du serveur.",
+    "ARK Astraeos est un DLC payant officiel; aucune dépense ni contournement automatique.",
+    "Le redémarrage automatique nécessite le superviseur local actif et un RCON sécurisé; aucun arrêt forcé des sauvegardes."
+  ],
+  "mods": [
+    {
+      "order": 1,
+      "category": "DINOS / CRÉATURES",
+      "name": "S-Dino Variants",
+      "curseforgeId": "912815",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 2,
+      "category": "DINOS / CRÉATURES",
+      "name": "Shiny! Dinos Ascended",
+      "curseforgeId": "928548",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 3,
+      "category": "DINOS / CRÉATURES",
+      "name": "Runic Wyverns",
+      "curseforgeId": "974884",
+      "verification": "platform_to_confirm",
+      "enabled": true
+    },
+    {
+      "order": 4,
+      "category": "DINOS / CRÉATURES",
+      "name": "Moro's Indomitable Duo",
+      "curseforgeId": "928824",
+      "verification": "platform_to_confirm",
+      "enabled": true
+    },
+    {
+      "order": 5,
+      "category": "DINOS / CRÉATURES",
+      "name": "ARKOLOGY: OE - Desolatitan",
+      "curseforgeId": "1133222",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 6,
+      "category": "DINOS / CRÉATURES",
+      "name": "Astraeos - Mythological Creatures",
+      "curseforgeId": "1122696",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 7,
+      "category": "DINOS / CRÉATURES",
+      "name": "ARKOLOGY: OE - Hapipalus",
+      "curseforgeId": "1310904",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 8,
+      "category": "DINOS / CRÉATURES",
+      "name": "Moro's Livyatan (Freemium)",
+      "curseforgeId": "956237",
+      "verification": "premium_review",
+      "enabled": true,
+      "warning": "Mod présenté comme premium/freemium: vérifier l’accès et les licences avant installation."
+    },
+    {
+      "order": 9,
+      "category": "GESTION DINOS",
+      "name": "Custom Dino Levels",
+      "curseforgeId": "928708",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 10,
+      "category": "GESTION DINOS",
+      "name": "Spawn Blocker",
+      "curseforgeId": "930442",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 11,
+      "category": "GESTION DINOS",
+      "name": "Super Cryo Storage",
+      "curseforgeId": "933099",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 12,
+      "category": "CONSTRUCTION / DÉCORATION",
+      "name": "Alfa Oceanic Platforms",
+      "curseforgeId": "933447",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 13,
+      "category": "CONSTRUCTION / DÉCORATION",
+      "name": "Wall'n'Floor Decor",
+      "curseforgeId": "940786",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 14,
+      "category": "CONSTRUCTION / DÉCORATION",
+      "name": "Thor's Hammer - Mjölnir - Monument",
+      "curseforgeId": "1009997",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 15,
+      "category": "ROLE PLAY",
+      "name": "Role Play Jobs",
+      "curseforgeId": null,
+      "verification": "name_to_confirm",
+      "enabled": true,
+      "potentialMatch": {
+        "name": "RolePlay Additions: Jobs",
+        "curseforgeId": "1362939",
+        "url": "https://www.curseforge.com/ark-survival-ascended/mods/roleplay-additions-jobs-medieval-rp-work-crafts-extra-economy-admin"
+      },
+      "warning": "Correspondance non confirmée: ne pas remplacer automatiquement."
+    },
+    {
+      "order": 16,
+      "category": "UTILITAIRES",
+      "name": "AP: Death Recovery",
+      "curseforgeId": "929578",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 17,
+      "category": "UTILITAIRES",
+      "name": "Auto Engrams!",
+      "curseforgeId": "953154",
+      "verification": "platform_to_confirm",
+      "enabled": true
+    },
+    {
+      "order": 18,
+      "category": "UTILITAIRES",
+      "name": "Super Spyglass Plus",
+      "curseforgeId": "929420",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 19,
+      "category": "UTILITAIRES",
+      "name": "Net Pro",
+      "curseforgeId": "1019389",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 20,
+      "category": "UTILITAIRES",
+      "name": "Template Hammer Importer",
+      "curseforgeId": "1498853",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 21,
+      "category": "ÉCONOMIE",
+      "name": "Resonant's Shop Mod",
+      "curseforgeId": "936660",
+      "verification": "platform_to_confirm",
+      "enabled": true
+    },
+    {
+      "order": 22,
+      "category": "POTIONS",
+      "name": "Potions | Gaia Studios",
+      "curseforgeId": "928650",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 23,
+      "category": "ADMINISTRATION",
+      "name": "Awesome ARK Tools",
+      "curseforgeId": "941450",
+      "verification": "confirmed",
+      "enabled": true
+    },
+    {
+      "order": 24,
+      "category": "ADMINISTRATION",
+      "name": "Admin Commands | Gaia Studios",
+      "curseforgeId": "936457",
+      "verification": "confirmed",
+      "enabled": true
+    }
+  ],
+  "status": "configuration-prepared-not-installed",
+  "startBlockedUntil": [
+    "official-server-executable",
+    "licensed-astraeos-map",
+    "all-24-mod-ids",
+    "confirmed-cross-platform-entitlements",
+    "rcon-for-graceful-restarts"
+  ]
+}
