@@ -46,12 +46,12 @@
     const btn=document.createElement('button');
     btn.type='button';btn.id='cmdrpPalworldOpenV6';btn.className='cmdrp-palworld-open';
     btn.textContent='Mods Palworld · Workshop Steam';btn.onclick=openPalworld;
-    side.querySelector('#cmdrpCreate')?.before(btn)||side.append(btn);
+    const create=side.querySelector('#cmdrpCreate');if(create)create.before(btn);else side.append(btn);
    }
    if(!side.querySelector('.cmdrp-palworld-hint')){
     const hint=document.createElement('p');hint.className='cmdrp-palworld-hint';
     hint.textContent='Mods Palworld accessibles ici, même sans machine. Installation réelle après connexion du PC.';
-    (side.querySelector('#cmdrpPalworldWorkshop,#cmdrpPalworldOpenV6')||side).after(hint);
+    const target=side.querySelector('#cmdrpPalworldWorkshop,#cmdrpPalworldOpenV6');if(target)target.after(hint);else side.append(hint);
    }
   }
   const mods=document.getElementById('cmdMods');
