@@ -108,3 +108,14 @@ html body #cmdRenterProfile [data-cmdv7-palworld="1"]{
 html body #cmdRenterProfile #cmdrpPalworldWorkshop[hidden],
 html body #cmdRenterProfile [data-cmdv7-palworld="1"][hidden],
 html body #cmdRenterProfile .cmdrp-palworld-hint[hidden]{display:none!important}
+
+/* FS25 ModHub is contextual: only visible while an FS25 server is selected. */
+html body #cmdRenterProfile #cmdrpFS25ModHub:not([hidden]){
+ display:block!important;min-height:44px!important;width:100%!important;
+ border:1px solid #88aee9!important;border-radius:10px!important;
+ background:linear-gradient(105deg,#176eab,#663c9c)!important;color:#fff!important;
+ white-space:normal!important;text-align:center!important
+}
+html body #cmdRenterProfile #cmdrpFS25ModHub[hidden],
+html body #cmdRenterProfile #cmdrpPalworldWorkshop[hidden],
+html body #cmdRenterProfile #cmdrpPalworldOpenV6[hidden]{display:none!important}
