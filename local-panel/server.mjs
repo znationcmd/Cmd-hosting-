@@ -86,6 +86,7 @@ const profiles={
  'arma-3':{name:'Arma 3',landmark:'arma3server_x64.exe',configs:['server.cfg','basic.cfg','mpmissions']},
  '7dtd':{name:'7 Days to Die',landmark:'7DaysToDieServer.exe',configs:['serverconfig.xml']},
  palworld:{name:'Palworld',landmark:'PalServer.exe',configs:['Pal/Saved/Config/WindowsServer/PalWorldSettings.ini','Mods/PalModSettings.ini','Mods/Workshop']},
+ fs25:{name:'Farming Simulator 25',landmark:'dedicatedServer.exe',configs:['dedicatedServer.xml','mods','serverProfile/mods']},
  satisfactory:{name:'Satisfactory',landmark:'FactoryServer.exe',configs:['FactoryGame/Saved/Config/WindowsServer/Game.ini']},
  anomalia:{name:'ANOMALIA PRIMEVAL OUTBOUNDUN',landmark:'AnomaliaServer.exe',configs:[]}
 };
@@ -226,7 +227,8 @@ const workshopSources=Object.freeze({
  'ark-asa':{name:'CurseForge ARK Survival Ascended',url:'https://www.curseforge.com/ark-survival-ascended/mods'},
  'ark-ase':{name:'Steam Workshop ARK Survival Evolved',url:'https://steamcommunity.com/app/346110/workshop/'},
  'arma-reforger':{name:'Arma Reforger Workshop',url:'https://reforger.armaplatform.com/workshop'},
- palworld:{name:'Steam Workshop Palworld',url:'https://steamcommunity.com/app/1623730/workshop/'}
+ palworld:{name:'Steam Workshop Palworld',url:'https://steamcommunity.com/app/1623730/workshop/'},
+ fs25:{name:'ModHub officiel GIANTS Farming Simulator 25',url:'https://www.farming-simulator.com/mods.php?lang=fr&title=fs2025&platform=pc'}
 });
 async function profileModView(id){
  const known=knownProfile(id);
@@ -245,9 +247,26 @@ async function profileModView(id){
    state:'prévu — installation à vérifier'
   }));
  }
+ // ZIPs found in the REAL linked FS25 server directory, never pretend enabled by GIANTS.
+ if(game==='fs25'&&personal?.directory){
+  const base=path.resolve(personal.directory);
+  if(within(installRoot,base)&&base!==installRoot){
+   for(const rel of ['mods','serverProfile/mods']){
+    try{
+     const dir=await pathChecked(base,rel,{dir:true});
+     for(const ent of (await readdir(dir,{withFileTypes:true})).slice(0,400)){
+      if(!ent.isFile()||!/^FS25_[A-Za-z0-9._-]+\.zip$/i.test(ent.name))continue;
+      const entry=await lstat(path.join(dir,ent.name));
+      mods.push({name:ent.name,sourceId:null,installedVerified:entry.size>0,
+       activeVerified:false,state:'ZIP sur disque — activation GIANTS non vérifiée'});
+     }
+    }catch{}
+   }
+  }
+ }
  return {id,game,map,mods,workshop:workshopSources[game]||null,
-  filesInstalledNotAssumed:true,source:'manifest local sur le PC',
-  note:mods.length?'Liste demandée : aucune installation de mod affirmée sans contrôle disque.':
+  filesInstalledNotAssumed:game!=='fs25',source:game==='fs25'?'ZIP réellement présents sur le disque local':'manifest local sur le PC',
+  note:mods.length?(game==='fs25'?'ZIP détectés sur disque, activation en jeu non vérifiée.':'Liste demandée : aucune installation de mod affirmée sans contrôle disque.'):
   'Les mods disponibles dépendent des fichiers du serveur installé et des conditions du jeu.'};
 }
 async function action(req,res,url){
