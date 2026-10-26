@@ -119,3 +119,40 @@ html body #cmdRenterProfile #cmdrpFS25ModHub:not([hidden]){
 html body #cmdRenterProfile #cmdrpFS25ModHub[hidden],
 html body #cmdRenterProfile #cmdrpPalworldWorkshop[hidden],
 html body #cmdRenterProfile #cmdrpPalworldOpenV6[hidden]{display:none!important}
+
+
+/* Definitive phone catalogue: no game poster may replace its name or action.
+   Also handles the dynamic integrated list and cards loaded after the page opens. */
+@media (max-width:900px){
+ html body #cmdIntegratedGames .cmdg-grid,
+ html body #cmdIntegratedGames .cmdg-list,
+ html body #cmdIntegratedGames [class*="games-grid"]{
+   display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+   align-items:stretch!important;gap:10px!important;
+ }
+ html body #cmdIntegratedGames .cmdg-card{
+   display:grid!important;grid-template-columns:104px minmax(0,1fr)!important;
+   width:100%!important;max-width:100%!important;min-width:0!important;
+   min-height:100px!important;max-height:155px!important;
+   padding:8px!important;overflow:hidden!important;gap:10px!important;
+ }
+ html body #cmdIntegratedGames .cmdg-card img,
+ html body #cmdIntegratedGames .cmdg-card picture,
+ html body #cmdIntegratedGames .cmdg-card [class*="cover"]{
+   width:104px!important;max-width:104px!important;min-width:0!important;
+   height:88px!important;max-height:88px!important;min-height:0!important;
+   object-fit:cover!important;position:static!important;transform:none!important;
+ }
+ html body #cmdIntegratedGames .cmdg-card :is(h3,h4,strong){
+   font-size:14px!important;white-space:normal!important;overflow-wrap:anywhere!important;
+ }
+ html body #cmdCatalogSection .cmd-shop-grid .cmd-shop-card,
+ html body #jeux #game-list .game{contain:layout!important}
+ html body #cmdCatalogSection .cmd-shop-card img,
+ html body #jeux #game-list .game img{
+   max-block-size:100px!important;object-fit:cover!important;
+ }
+ html body #cmdRenterProfile .cmdrp-sidebar .cmdrp-palworld-hint{
+   font-size:12px!important;line-height:1.5!important;white-space:normal!important
+ }
+}
