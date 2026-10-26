@@ -9,8 +9,8 @@ const css=read('web/public/ui/cmd-simplified-mobile-v7.css');
 const mods=read('web/public/mod-v2-ui.js');
 const profile=read('web/public/catalog-compat.js');
 test('single last-loaded V7 mobile override and menu on the recovered main page',()=>{
- assert.match(html,/cmd-simplified-mobile-v7\.css\?v=20261026-v7/);
- assert.match(html,/cmd-simplified-navigation-v7\.js\?v=20261026-v7/);
+ assert.match(html,/cmd-simplified-mobile-v7\.css\?v=20261026-fs25-8/);
+ assert.match(html,/cmd-simplified-navigation-v7\.js\?v=20261026-fs25-8/);
  assert.ok(html.indexOf('cmd-simplified-mobile-v7.css')>html.indexOf('cmd-unified-mobile-v6.css'));
  assert.ok(html.indexOf('cmd-simplified-navigation-v7.js')>html.indexOf('cmd-unified-experience-v6.js'));
  assert.doesNotThrow(()=>new Script(js));
