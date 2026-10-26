@@ -49,28 +49,16 @@
   parent.append(link);
  }
  function keepWorkshopWithinServer(){
+  // The native profile (#cmdrpPalworldWorkshop) and native Mods quick link already exist.
+  // V8 must NOT inject a second Palworld button: duplicate observers cause menu flicker.
   const profile=$('cmdRenterProfile');
-  if(profile){
-   const area=profile.querySelector('.cmdrp-sidebar');
-   if(area){
-    // This is NOT a top-level duplicate Mods navigation item.
-    const create=$('cmdrpCreate');
-    const host=create?.parentElement===area?area:null;
-    if(host&&!$('cmdV8PalworldProfile')){
-      const b=document.createElement('button');b.id='cmdV8PalworldProfile';
-      b.type='button';b.textContent='Palworld · Voir les mods Steam';
-      b.title='Catalogue officiel consultable, même si aucun serveur Palworld n’est relié.';
-      b.onclick=palworld;b.className='cmd-v8-palworld-profile';
-      create.before(b);
-    }
-   }
-  }
-  const mods=$('cmdMods');
-  if(mods&&!$('cmdV8Palworld')){
-   const b=document.createElement('button');b.id='cmdV8Palworld';b.type='button';
-   b.textContent='Palworld · Ouvrir le Steam Workshop officiel';b.addEventListener('click',palworld);
-   const tools=mods.querySelector('.cmdv-toolbar')||mods.querySelector('.cmdv-head');
-   if(tools)tools.after(b);else mods.prepend(b);
+  const native=profile?.querySelector('#cmdrpPalworldWorkshop,#cmdrpPalworldOpenV6');
+  if(native){
+   const selected=$('cmdrpSelect')?.selectedOptions?.[0];
+   const name=(selected?.dataset.cmdGame||selected?.textContent||'');
+   const available=/\\bpalworld\\b/i.test(name)||!selected;
+   if(native.hidden!==!available)native.hidden=!available;
+   if(native.disabled!==!available)native.disabled=!available;
   }
  }
  function labelCatalog(){
