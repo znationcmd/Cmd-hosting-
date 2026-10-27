@@ -1,0 +1,41 @@
+name: CMD Hosting — snapshot live FS25 public assets
+on:
+  push:
+    paths:
+      - '.github/workflows/cmd-hosting-fs25-live-snapshot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - name: Back up publicly served scripts and compare against GitHub
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p backup
+          origin="https://cmd-hosting-web-production.up.railway.app"
+          for name in mod-auto-detect.js mod-v2-ui.js; do
+            curl --fail --show-error --silent --location --retry 4 --retry-delay 2 --max-time 45 "${origin}/${name}" -o "backup/${name}"
+            test "$(wc -c < "backup/${name}")" -gt 1500
+            echo "LIVE FILE: ${name}"
+            sha256sum "backup/${name}" "web/public/${name}"
+            if cmp -s "backup/${name}" "web/public/${name}"; then
+              echo "EQUAL-TO-GITHUB: yes"
+            else
+              echo "EQUAL-TO-GITHUB: no"
+            fi
+          done
+          curl --fail --show-error --silent --location --retry 3 --max-time 45 "$origin/" -o backup/index.html
+          grep -o 'mod-auto-detect.js[^"'\''< ]*' backup/index.html | head -3 || true
+          grep -o 'mod-v2-ui.js[^"'\''< ]*' backup/index.html | head -3 || true
+      - name: Store public-script backup before production changes
+        uses: actions/upload-artifact@v4
+        with:
+          name: CMDHosting-FS25-Before-Production-Backup
+          path: backup/
+          retention-days: 30
+          if-no-files-found: error
