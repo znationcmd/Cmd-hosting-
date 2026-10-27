@@ -21,7 +21,7 @@ jobs:
             sleep 8
           done
           node --check /tmp/cmd-live.js
-          node -e "const s=require('fs').readFileSync('/tmp/cmd-live.js','utf8');const p=require('fs').readFileSync('/tmp/cmd-catalog.json','utf8');const cat=JSON.parse(p);console.log('Live catalogue entries:',(cat.games||[]).length);console.log('Live script bytes:',Buffer.byteLength(s));console.log('Palworld fixed:',s.includes('cmdrpRailwayPalworld'));console.log('Mobile compact:',s.includes('cmdRailwayCssV10'));if((cat.games||[]).length<100||!s.includes('cmdrpRailwayPalworld')||!s.includes('cmdRailwayCssV10'))process.exit(3)"
+          node -e "const s=require('fs').readFileSync('/tmp/cmd-live.js','utf8');const p=require('fs').readFileSync('/tmp/cmd-catalog.json','utf8');const cat=JSON.parse(p);console.log('Live catalogue entries:',(cat.games||[]).length);console.log('Live script bytes:',Buffer.byteLength(s));console.log('Palworld fixed:',s.includes('cmdrpRailwayPalworld'));console.log('Mobile compact:',s.includes('cmdRailwayCssV10')||s.includes('cmdRailwayCssV11'));if((cat.games||[]).length<100||!s.includes('cmdrpRailwayPalworld')||(!s.includes('cmdRailwayCssV10')&&!s.includes('cmdRailwayCssV11')))process.exit(3)"
           node -e "const s=require('fs').readFileSync('/tmp/cmd-live.js','utf8');console.log('CMD v11 live markers',s.includes('cmdRailwayCssV11'),s.includes('cmdrpRailwayPalworld'));if(!s.includes('cmdRailwayCssV11')||!s.includes('cmdrpRailwayPalworld'))process.exit(8)"
           curl -LfsS --max-time 20 -o /tmp/hosting-status.json "${base}/api/status"
           echo 'CMD Hosting public routes responded; no sessions, credentials or user data fetched.'
