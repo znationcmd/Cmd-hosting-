@@ -16,7 +16,66 @@ select.closest('.cmdv-toolbar')?.after(info);
  fs25Link.style.cssText='color:#fff;font-weight:750;text-align:center;padding:12px;border:1px solid #a2caff;border-radius:9px;background:linear-gradient(110deg,#277ab5,#694eaa);text-decoration:none';
  const fs25Help=document.createElement('small');
  fs25Help.textContent='Mods compatibles FS25, cartes, véhicules et bâtiments. Consultation sans PC connecté. Les fichiers ZIP ne sont installés que sur un serveur FS25 réellement présent.';
- fs25Panel.append(fs25Title,fs25Link,fs25Help);info.after(fs25Panel);
+ fs25Panel.append(fs25Title,fs25Link,fs25Help);
+  // The production Mods module is still the older build; give FS25 a complete
+  // usable official search WITHOUT its own API or a connected machine.
+  const searchForm=document.createElement('form');
+  searchForm.style.cssText='display:flex;flex-wrap:wrap;gap:7px;align-items:center';
+  const searchInput=document.createElement('input');searchInput.type='search';
+  searchInput.placeholder='Rechercher mod, tracteur, carte, bâtiment…';
+  searchInput.setAttribute('aria-label','Chercher un mod Farming Simulator 25 sur GIANTS');
+  searchInput.maxLength=75;searchInput.style.cssText='min-width:150px;flex:1 1 190px;min-height:43px;padding:8px';
+  const searchButton=document.createElement('button');searchButton.type='submit';
+  searchButton.textContent='Chercher sur ModHub GIANTS';
+  searchForm.append(searchInput,searchButton);
+  const fs25Url=term=>'https://www.farming-simulator.com/mods.php?'+new URLSearchParams({
+   lang:'fr',title:'fs2025',platform:'pc',...(term?{searchMod:term}:{})
+  }).toString();
+  searchForm.addEventListener('submit',e=>{
+   e.preventDefault();
+   const term=searchInput.value.trim();
+   window.open(fs25Url(term),'_blank','noopener,noreferrer');
+  });
+  const links=document.createElement('div');links.style.cssText='display:flex;gap:6px;flex-wrap:wrap';
+  for(const category of ['Tracteurs','Cartes','Camions','Véhicules','Bâtiments','John Deere']){
+   const link=document.createElement('a');link.href=fs25Url(category);
+   link.target='_blank';link.rel='noopener noreferrer';link.textContent=category;
+   link.style.cssText='color:#e1eaff;border:1px solid #7695c4;border-radius:7px;padding:7px 9px;font-size:12px;text-decoration:none';
+   links.append(link);
+  }
+  fs25Panel.append(searchForm,links);
+  info.after(fs25Panel);
+  // Pairing is intentionally through the existing account UI, not through unauthenticated polling.
+  const pair=document.createElement('div');pair.id='cmdFS25PcPairLive';
+  pair.style.cssText='display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:8px 0 12px;padding:10px;border:1px solid #685f96;border-radius:10px;background:#211f40';
+  const pairState=document.createElement('span');pairState.style.cssText='flex:1 1 220px;font:12px/1.5 system-ui;color:#e2e6fa';
+  pairState.textContent='Vérification du raccordement de ton compte…';
+  const pairButton=document.createElement('button');pairButton.type='button';
+  pairButton.textContent='Associer mon PC';
+  pairButton.addEventListener('click',()=>{
+   if(typeof window.show==='function')window.show('machines');
+   else location.hash='#machines';
+  });
+  pair.append(pairState,pairButton);fs25Panel.after(pair);
+  async function checkPc(){
+   try{
+    const response=await fetch('/api/pc/status',{credentials:'include',cache:'no-store'});
+    if(response.status===401||response.status===403){
+     pairState.textContent='Connecte-toi à ton compte CMD Hosting pour associer le PC.';
+     pairButton.hidden=false;return;
+    }
+    if(!response.ok)throw Error('status');
+    const body=await response.json();
+    const online=body.machine?.online===true;
+    const count=Array.isArray(body.machine?.servers)?body.machine.servers.length:0;
+    pairState.textContent=online?'PC raccordé à ton compte · '+count+' serveur(s) détecté(s).':
+     body.machine?'PC associé mais agent Windows hors ligne. Vérifie Mes machines.':
+      'Aucune machine associée à ce compte. Ouvre Mes machines, récupère le code puis valide sur le PC.';
+    pairButton.hidden=online;
+   }catch{pairState.textContent='Statut du PC indisponible : ouvre Mes machines pour vérifier.';pairButton.hidden=false}
+  }
+  void checkPc();
+  setInterval(()=>{if(!document.hidden&&!c.classList.contains('hide'))void checkPc()},30000);
  const toggleFS25=on=>{
   fs25Panel.hidden=!on;
   fs25Panel.style.display=on?'grid':'none';
