@@ -463,6 +463,7 @@ async function action(req,res,url){
   if(data.confirmStopped!==true)throw bad(400,'Arrête le serveur et confirme avant de modifier les mods.');
   if(typeof data.packageName!=='string'||!/^[A-Za-z0-9_.-]{1,100}$/.test(data.packageName)||typeof data.enabled!=='boolean')
    throw bad(400,'PackageName ou activation invalide.');
+  if(process.platform!=='win32')throw bad(422,'Les mods serveur Palworld Steam Workshop sont pris en charge sur Windows uniquement.');
   const executable=await pathChecked(instance.root,'PalServer.exe');
   if(!(await lstat(executable)).isFile())throw bad(409,'PalServer.exe absent.');
   if(gameProcessesRunning())throw bad(409,'Un serveur dédié est actif sur ce PC. Arrête-le avant de modifier les mods.');
