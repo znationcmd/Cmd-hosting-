@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Read-only check of actual public Railway service. No credentials or writes.
- * Frontend is served by the original Railway app; V11 live compatibility script is
+ * Frontend is served by the original Railway app; V12 live compatibility script is
  * deployed as a public env-backed asset, not the currently unused GitHub HTML/CSS.
  */
 import {readFile} from 'node:fs/promises';
@@ -28,15 +28,15 @@ try{
  if(index.status!==200)errors++;
  const [publicJS,expected]=await Promise.all([
   get('/catalog-compat.js?v=20261027-live11'),
-  readFile(new URL('../diagnostics/production-catalog-compat-20261027-v11.js',import.meta.url),'utf8')
+  readFile(new URL('../diagnostics/production-catalog-compat-20261027-v12.js',import.meta.url),'utf8')
  ]);
  const match=publicJS.status===200&&sha(publicJS.body)===sha(expected);
- console.log('V11 RAILWAY ASSET '+publicJS.status+' deployed='+sha(publicJS.body)+' expected='+sha(expected)+' exact_match='+match);
+ console.log('V12 RAILWAY ASSET '+publicJS.status+' deployed='+sha(publicJS.body)+' expected='+sha(expected)+' exact_match='+match);
  if(!match)errors++;
- for(const flag of ['__CMD_HOSTING_RAILWAY_V11__','cmdRailwayCssV11','cmdrpRailwayPalworld','cmdCatalogSection']){
+ for(const flag of ['__cmdHostingRailwayV12','cmdRailwayCssV12','cmdrpRailwayPalworld','cmdCatalogSection']){
   const ok=publicJS.body.includes(flag);console.log('UI FEATURE '+flag+'='+ok);if(!ok)errors++;
  }
- for(const flag of ['__cmdHostingRailwayV10','cmdRailwayCssV10']){
+ for(const flag of ['__cmdHostingRailwayV10','cmdRailwayCssV10','__CMD_HOSTING_RAILWAY_V11__','cmdRailwayCssV11']){
   const absent=!publicJS.body.includes(flag);console.log('REMOVED V10 '+flag+'='+absent);if(!absent)errors++;
  }
  const catalog=await get('/api/catalog');
@@ -44,5 +44,5 @@ try{
  console.log('CATALOGUE '+catalog.status+' games='+count);
  if(catalog.status!==200||count<100)errors++;
  if(errors){console.error('CHECK FAILED: '+errors+' issues — frontend not confirmed live.');process.exitCode=2}
- else console.log('SUCCESS: V11 frontend deployed in actual Railway public asset; 100+ game API listings still available.');
+ else console.log('SUCCESS: V12 frontend deployed in actual Railway public asset; 100+ game API listings still available.');
 }catch(e){console.error('NETWORK CHECK FAILED: '+e.message);process.exitCode=3}
