@@ -41,7 +41,7 @@ test('runtime: duplicates hidden ONLY in main menu; Palworld shortcut only on se
  });
  const redundant=navLink('Jeux et décors HD'),globalMods=navLink('Mods & Workshop'),account=navLink('Mon compte');
  const nav={querySelectorAll:()=>[redundant,globalMods,account]};
- const palworld={textContent:'Palworld · Steam Workshop',dataset:{},hidden:false,disabled:false,setAttribute(){}};
+ const palworld={id:'cmdrpPalworldWorkshop',textContent:'Palworld · Steam Workshop',dataset:{},hidden:false,disabled:false,setAttribute(){}};
  const nativeMods={textContent:'Mods',dataset:{},hidden:false,title:''};
  const side={querySelectorAll:()=>[palworld],querySelector:()=>null};
  const profile={querySelector:s=>s==='.cmdrp-sidebar'?side:null};
