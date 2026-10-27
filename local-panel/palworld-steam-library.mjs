@@ -62,6 +62,17 @@ export async function importSteamPalworldMod({workshopId,serverRoot}){
  const from=path.join(base,workshopId),to=path.join(destRoot,workshopId);
  try{await lstat(to);throw Error('Ce mod existe déjà sur le serveur : aucune écriture ni remplacement')}
  catch(e){if(e.code!=='ENOENT')throw e}
+ // Reject a second Workshop ID for a PackageName already present on the server.
+ for(const entry of (await readdir(destRoot,{withFileTypes:true})).slice(0,500)){
+  if(!entry.isDirectory()||entry.isSymbolicLink()||entry.name.startsWith('.'))continue;
+  try{
+   const infoFile=path.join(destRoot,entry.name,'Info.json');
+   const infoSt=await lstat(infoFile);
+   if(!infoSt.isFile()||infoSt.isSymbolicLink()||infoSt.size>32768)continue;
+   const existing=JSON.parse(await readFile(infoFile,'utf8'));
+   if(existing.PackageName===mod.packageName)throw Error('Ce PackageName est déjà importé sur ce serveur');
+  }catch(e){if(e.message==='Ce PackageName est déjà importé sur ce serveur')throw e}
+ }
  // Only stage from a pre-existing, Steam-downloaded folder; abort for symlinks or oversized packages.
  let files=0,bytes=0;
  async function validate(folder){
