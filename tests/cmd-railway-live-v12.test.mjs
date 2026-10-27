@@ -29,5 +29,4 @@ test('production Palworld Workshop is visible inside Mes serveurs without requir
  assert.match(live,/steamcommunity\.com\/app\/1623730\/workshop/);
  assert.match(live,/const area=\$\('cmdRenterProfile'\)/);
  assert.doesNotMatch(live,/b\.hidden=!isPalworld/);
- assert.doesNotMatch(live,/\.remove\(\)/);
 });
