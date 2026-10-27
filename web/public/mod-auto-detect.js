@@ -62,12 +62,15 @@ select.closest('.cmdv-toolbar')?.after(info);
     const response=await fetch('/api/pc/status',{credentials:'include',cache:'no-store'});
     if(response.status===401||response.status===403){
      pairState.textContent='Connecte-toi à ton compte CMD Hosting pour associer le PC.';
+     const badge=c.querySelector('.cmdv-wait');if(badge)badge.textContent='Connexion au compte requise';
      pairButton.hidden=false;return;
     }
     if(!response.ok)throw Error('status');
     const body=await response.json();
     const online=body.machine?.online===true;
     const count=Array.isArray(body.machine?.servers)?body.machine.servers.length:0;
+    const badge=c.querySelector('.cmdv-wait');
+    if(badge)badge.textContent=online?'PC connecté · '+count+' serveur(s)':body.machine?'PC hors ligne':'PC non associé au compte';
     pairState.textContent=online?'PC raccordé à ton compte · '+count+' serveur(s) détecté(s).':
      body.machine?'PC associé mais agent Windows hors ligne. Vérifie Mes machines.':
       'Aucune machine associée à ce compte. Ouvre Mes machines, récupère le code puis valide sur le PC.';
@@ -103,12 +106,15 @@ finally{loading=false}
 }
 async function update(){
 const id=select.value,game=cache.get(id),num=++revision;
- toggleFS25(id==='__fs25_modhub__');
+ const selectedLabel=select.selectedOptions?.[0]?.textContent||'';
+ const labelFs25=/\b(?:fs[ -]?25|farming\s*simulator\s*(?:25|2025))\b/i.test(selectedLabel);
+ toggleFS25(id==='__fs25_modhub__'||labelFs25);
 if(!id){status('Choisis un serveur : CMD Hosting détectera automatiquement le jeu et le catalogue de mods correspondant.');return}
 if(!game){
   if(id==='__fs25_modhub__'){status('FS25 · ModHub GIANTS officiel accessible même sans machine raccordée.');return}
   if(id==='__palworld_workshop__'){status('Palworld · Steam Workshop officiel accessible même sans machine raccordée.');return}
-  status('Identification du jeu en cours…');return}
+  if(labelFs25){status('Farming Simulator 25 · ModHub GIANTS accessible même sans machine raccordée.');return}
+   status('Identification du jeu en cours…');return}
 const name=game.game_name||game.game_key,provider=getSource(game.game_key||'');
  const isFs25=/\b(?:fs[ -]?25|farming\s*simulator\s*(?:25|2025))\b/i.test([game.game_name,game.game_key,game.display_name,game.name].filter(Boolean).join(' '));
  toggleFS25(isFs25||provider===gameSources.fs25);
