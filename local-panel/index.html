@@ -87,6 +87,12 @@
  <p>Seuls les mods réellement trouvés dans <code>Mods/Workshop</code> sont indiqués comme installés. Un mod doit aussi être compatible serveur Windows et activé dans <code>PalModSettings.ini</code>.</p>
  <div class="tools"><a href="https://steamcommunity.com/app/1623730/workshop/" target="_blank" rel="noopener noreferrer">Ouvrir le Workshop officiel Palworld</a><a href="https://docs.palworldgame.com/settings-and-operation/mod/" target="_blank" rel="noopener noreferrer">Guide officiel d'installation</a></div>
  <p id="palworldWorkshopStatus" class="muted" role="status"></p><div id="palworldModList" class="serverList"></div>
+ <details class="upload" id="palworldSteamImport"><summary>Importer mes mods Steam téléchargés sur ce PC</summary>
+ <p>Les mods doivent d’abord être téléchargés dans Steam (Palworld, Workshop). CMD Hosting peut ensuite copier les dossiers autorisés vers ton vrai serveur Windows, sans les télécharger à nouveau et sans démarrer le jeu.</p>
+ <p class="muted">L’import n’active pas automatiquement les mods. Vérifie tes sauvegardes de monde avant l’opération, puis active le mod au-dessus et redémarre PalServer.</p>
+ <button type="button" class="quiet" id="palworldScanSteam">Actualiser mes téléchargements Steam</button>
+ <p id="palworldSteamStatus" class="muted" role="status"></p><div id="palworldSteamList" class="serverList"></div>
+ </details>
  </section>
  <section id="maps" class="card" hidden><div class="blockTitle"><div><span class="eyebrow">DAYZ PC</span><h2>Carte / mission installée</h2></div></div><p>Seules les missions réellement présentes dans <code>mpmissions</code> sont proposées. Arrête le serveur avant un changement.</p><label>Mission disponible<select id="mapSelect"></select></label><div class="mapActions"><button id="applyMap" class="primary">Appliquer à serverDZ.cfg avec sauvegarde</button><span id="mapCurrent"></span></div></section>
 <section id="editor" class="card" hidden><div class="blockTitle"><div><span class="eyebrow">ÉDITION DE CONFIGURATION</span><h2 id="editingPath">Configuration</h2></div><div class="tools"><button id="downloadEditor" class="quiet">↓ Télécharger</button><button id="closeEditor" class="quiet">Fermer</button></div></div>
