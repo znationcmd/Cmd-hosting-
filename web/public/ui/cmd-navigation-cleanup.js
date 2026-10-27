@@ -43,6 +43,7 @@
   queueMicrotask(()=>{scheduled=false;clean();});
  };
  function openFullCatalog(event){
+  if(window.__CMD_SERVER_FIRST_V12__)return;
   const nav=event.target?.closest?.('[data-page="jeux"],[href="#jeux"]');
   if(!nav||!isGlobalNav(nav)||!document.getElementById('cmdCatalogSection'))return;
   if(typeof window.show!=='function')return;
