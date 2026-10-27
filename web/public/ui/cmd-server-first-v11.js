@@ -103,7 +103,7 @@ function profileTools(){
   b.setAttribute('aria-hidden',String(b.hidden));
  }
  if(primary){
-  primary.textContent='Palworld · Steam Workshop';
+  if(primary.textContent!=='Palworld · Steam Workshop')primary.textContent='Palworld · Steam Workshop';
   primary.title='Consulter le Workshop officiel de Palworld. L’installation sur le serveur Windows nécessite des fichiers réels et des mods compatibles.';
   primary.hidden=!chosen;primary.disabled=!chosen;
   primary.dataset.cmdProfilePalworld='1';
