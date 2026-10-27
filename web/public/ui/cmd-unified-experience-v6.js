@@ -34,6 +34,7 @@
   }
  }
  function installPalworld(){
+  if(window.__CMD_SERVER_FIRST_V12__)return;
   const profile=document.getElementById('cmdRenterProfile');
   const side=profile?.querySelector('.cmdrp-sidebar');
   if(side){
