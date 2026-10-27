@@ -1,0 +1,109 @@
+/* CMD Hosting v11 — authoritative server-first responsive layout.
+   Replaces V8/V9/V10 overrides; designed for iPhone Safari and desktop browsers.
+   No actual server/data changes. */
+html body [data-cmd-nav-suppressed="1"],
+html body [data-cmd-v10-hide="1"]{display:none!important}
+html body #jeux[data-cmd-legacy-preview="1"]{display:none!important}
+html body #cmdRenterProfile #cmdrpOnlyMods,
+html body #cmdRenterProfile #cmdrpPalworldWorkshop:not([hidden]),
+html body #cmdRenterProfile #cmdrpAlwaysPalworld:not([hidden]),
+html body #cmdRenterProfile #cmdrpSettings button[data-cmd-profile-mods="1"]{
+  box-sizing:border-box!important;white-space:normal!important;
+  color:#edf6ff!important;line-height:1.4!important;min-height:44px!important;
+  overflow-wrap:anywhere!important;padding:9px 12px!important;
+  background:linear-gradient(120deg,#1f6fa2,#4d3b9d)!important;
+  border:1px solid #8eafff!important;border-radius:10px!important
+}
+html body #cmdRenterProfile #cmdrpOnlyMods[hidden],
+html body #cmdRenterProfile #cmdrpPalworldWorkshop[hidden],
+html body #cmdRenterProfile #cmdrpAlwaysPalworld[hidden]{display:none!important}
+html body #cmdCatalogSection,
+html body #cmdRenterProfile,#cmdRenterProfile .cmdrp-sidebar,
+html body #cmdMods{max-width:100%!important;min-width:0!important;overflow-wrap:anywhere!important}
+html body #cmdCatalogSection #cmdShopGrid{
+  display:grid!important;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))!important;
+  align-items:stretch!important;gap:14px!important;
+}
+html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card{
+  box-sizing:border-box!important;display:flex!important;flex-direction:column!important;
+  min-width:0!important;max-width:100%!important;overflow:hidden!important;padding:0!important;
+  height:auto!important;max-height:none!important;transform:none!important;
+}
+html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card>.cmd-shop-cover{
+  position:relative!important;inset:auto!important;width:100%!important;
+  min-height:0!important;height:116px!important;max-height:116px!important;
+  overflow:hidden!important;flex:none!important
+}
+html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card>.cmd-shop-cover>img{
+  position:static!important;display:block!important;width:100%!important;height:100%!important;
+  max-height:116px!important;max-width:100%!important;min-height:0!important;
+  object-fit:cover!important;object-position:center!important;aspect-ratio:auto!important;
+  transform:none!important;float:none!important
+}
+html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card>.cmd-shop-text{
+  display:flex!important;flex-direction:column!important;gap:5px!important;
+  min-width:0!important;width:100%!important;padding:11px!important;
+  height:auto!important;max-height:none!important;min-height:94px!important
+}
+html body #cmdCatalogSection #cmdShopGrid .cmd-shop-name{
+  font-size:14px!important;line-height:1.3!important;overflow-wrap:anywhere!important;
+  color:#fff!important;white-space:normal!important;min-height:0!important
+}
+html body #cmdCatalogSection #cmdShopGrid .cmd-shop-tags,
+html body #cmdCatalogSection #cmdShopGrid .cmd-shop-state{font-size:11px!important;line-height:1.35!important}
+html body #cmdCatalogSection .cmd-shop-feature{
+  height:170px!important;max-height:170px!important;min-height:0!important
+}
+html body #cmdCatalogSection .cmd-shop-feature-content{padding:18px!important}
+html body #cmdCatalogSection .cmd-shop-feature h3{font-size:23px!important}
+html body #cmdCatalogSection .cmd-shop-top{margin-bottom:12px!important}
+@media(max-width:800px){
+ html,body{max-width:100%!important;overflow-x:clip!important}
+ html body #cmdCatalogSection #cmdShopGrid{
+  grid-template-columns:minmax(0,1fr)!important;gap:9px!important;max-width:100%!important
+ }
+ html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card{
+  display:grid!important;grid-template-columns:94px minmax(0,1fr)!important;
+  grid-auto-flow:row!important;align-items:center!important;gap:10px!important;
+  min-height:96px!important;max-height:125px!important;padding:9px!important;
+  width:100%!important;min-width:0!important;max-width:100%!important
+ }
+ html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card>.cmd-shop-cover{
+  position:static!important;grid-column:1!important;grid-row:1!important;
+  width:94px!important;min-width:94px!important;max-width:94px!important;
+  height:76px!important;min-height:0!important;max-height:76px!important;
+  overflow:hidden!important;border-radius:8px!important
+ }
+ html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card>.cmd-shop-cover>img{
+  display:block!important;position:static!important;width:94px!important;height:76px!important;
+  max-height:76px!important;max-width:94px!important;object-fit:cover!important
+ }
+ html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card>.cmd-shop-text{
+  grid-column:2!important;grid-row:1!important;display:flex!important;flex-direction:column!important;
+  justify-content:center!important;align-items:flex-start!important;min-height:0!important;
+  max-height:112px!important;height:auto!important;gap:4px!important;
+  min-width:0!important;width:100%!important;padding:3px!important;overflow:hidden!important
+ }
+ html body #cmdCatalogSection #cmdShopGrid .cmd-shop-name{
+  font-size:14px!important;line-height:1.22!important;overflow-wrap:anywhere!important
+ }
+ html body #cmdCatalogSection .cmd-shop-feature{height:128px!important;max-height:128px!important}
+ html body #cmdCatalogSection .cmd-shop-feature-content{padding:12px!important}
+ html body #cmdCatalogSection .cmd-shop-feature h3{font-size:18px!important;line-height:1.2!important}
+ html body #cmdCatalogSection .cmd-shop-feature p{font-size:10px!important;line-height:1.35!important}
+ html body #cmdRenterProfile .cmdrp-layout{display:block!important;min-width:0!important}
+ html body #cmdRenterProfile .cmdrp-sidebar,
+ html body #cmdRenterProfile .cmdrp-main{padding:12px!important;max-width:100%!important}
+ html body #cmdRenterProfile #cmdrpSettings,
+ html body #cmdRenterProfile #cmdrpAdmin{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html body #cmdRenterProfile .cmdrp-banner{min-height:105px!important}
+ html body #cmdMods .cmdv-toolbar{flex-wrap:wrap!important;min-width:0!important}
+ html body #cmdMods .cmdv-toolbar label,
+ html body #cmdMods .cmdv-toolbar select{min-width:0!important;max-width:100%!important}
+}
+@media(max-width:360px){
+ html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card{grid-template-columns:80px minmax(0,1fr)!important}
+ html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card>.cmd-shop-cover{
+  width:80px!important;min-width:80px!important;max-width:80px!important}
+ html body #cmdCatalogSection #cmdShopGrid>.cmd-shop-card>.cmd-shop-cover>img{width:80px!important;max-width:80px!important}
+}
