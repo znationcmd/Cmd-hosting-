@@ -66,7 +66,7 @@ function profileControls(){
  const selected=$('cmdrpSelect')?.selectedOptions?.[0];
  // Keep the original Mods button for game-aware DayZ, ARK, Arma and FS25 support.
  const native=[...profile.querySelectorAll('#cmdrpSettings button')].find(x=>normalize(x.textContent)==='mods'||normalize(x.textContent)==='mods & workshop');
- if(native){native.hidden=false;native.dataset.cmdProfileMods='1';native.textContent='Mods & Workshop';}
+ if(native){native.hidden=false;native.dataset.cmdProfileMods='1';if(native.textContent!=='Mods & Workshop')native.textContent='Mods & Workshop';}
  let button=$('cmdrpPalworldWorkshop')||$('cmdrpAlwaysPalworld')||$('cmdrpPalworldOpenV6');
  if(!button){
   button=document.createElement('button');button.type='button';button.id='cmdrpPalworldWorkshop';
@@ -75,7 +75,8 @@ function profileControls(){
  }
  // A visible Palworld shortcut even when no Palworld server is registered yet.
  // No fake Palworld server is added to the list.
- button.textContent=helpText()?'Palworld · Workshop officiel':'Explorer les mods Palworld';
+ const label=helpText()?'Palworld · Workshop officiel':'Explorer les mods Palworld';
+ if(button.textContent!==label)button.textContent=label;
  button.hidden=false;button.disabled=false;button.dataset.cmdProfilePalworld='1';
  button.setAttribute('aria-hidden','false');
  if(!button.dataset.cmdV12Bound){
@@ -89,9 +90,10 @@ function profileControls(){
  }
  let note=$('cmdrpV12Help');
  if(!note){note=document.createElement('p');note.id='cmdrpV12Help';note.className='cmdrp-prepared-help';button.after(note)}
- note.textContent=helpText()
+ const message=helpText()
    ?'Steam Workshop officiel Palworld. Le serveur Windows doit contenir des mods compatibles dans Mods/Workshop et Mods/PalModSettings.ini.'
    :'Le Workshop Palworld est consultable sans serveur associé. Aucun mod ni serveur n’est installé automatiquement.';
+ if(note.textContent!==message)note.textContent=message;
  // Do not claim any prepared configurations are live.
  const status=$('cmdrpStatus');
  if(status?.textContent?.includes('0 serveur'))status.title='Les configurations enregistrées sont distinctes des serveurs réellement installés sur la machine.';
