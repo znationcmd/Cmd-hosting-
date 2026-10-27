@@ -297,7 +297,17 @@ if(!list().some(v=>v.id===key))key=list()[0]?.id||'';draw();$('cmdrpStatus').tex
 function open(){page(pid);if($('cmdTitle'))$('cmdTitle').textContent='Profil loueur';history.replaceState(null,'','#'+pid);load()}
 $('cmdrpSelect').onchange=e=>{key=e.target.value;tab=cats[0];draw()};$('cmdrpServers').onclick=()=>{tab=cats[0];draw()};$('cmdrpStore').onclick=shop;$('cmdrpCreate').onclick=shop;$('cmdrpReload').onclick=load;
 function nav(parent,label,klass){if(!parent)return;let b=btn(label,open);b.dataset.page=pid;if(klass)b.className=klass;parent.prepend(b)}
-// Profile is reached through Mes serveurs; remove its duplicate global menu entry.
+// One control center only: Mods, game switch and decorative game pages live inside Mes serveurs.
+ const duplicatedMenuLabels=new Set(['mods & workshop','jeux et décors hd','jeux et decors hd','changer de jeu']);
+ function hideRedundantNavigation(){
+  for(const item of document.querySelectorAll('nav button, aside button, [role="navigation"] button')){
+   if(item.closest('#cmdRenterProfile,#cmdMods,#hostingPanel'))continue;
+   const title=(item.textContent||'').replace(/^[^a-zA-ZÀ-ÿ]+/,'').trim().toLocaleLowerCase('fr');
+   if(duplicatedMenuLabels.has(title)){item.hidden=true;item.setAttribute('aria-hidden','true');}
+  }
+ }
+ hideRedundantNavigation();
+ // Profile is reached through Mes serveurs; remove its duplicate global menu entry.
 nav($('cmdPrimary'),'Mes serveurs','cmd-nav');
 let account=$('compte')||$('account')||$('monCompte');if(account)nav(account,'👤 Gérer mes serveurs','ghost');
 if(location.hash==='#'+pid)open();
