@@ -27,7 +27,7 @@ try{
  console.log('PUBLIC WEBSITE '+index.status+' bytes='+Buffer.byteLength(index.body));
  if(index.status!==200)errors++;
  const [publicJS,expected]=await Promise.all([
-  get('/catalog-compat.js?v=20261027-live11'),
+  get('/catalog-compat.js?v=20261027-live12'),
   readFile(new URL('../diagnostics/production-catalog-compat-20261027-v12.js',import.meta.url),'utf8')
  ]);
  const match=publicJS.status===200&&sha(publicJS.body)===sha(expected);
