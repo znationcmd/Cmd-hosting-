@@ -9,6 +9,19 @@ const style=document.createElement('style');
 style.textContent='#cmdMods{color:#eaf6ff;max-width:1400px;margin:auto}#cmdMods h2,#cmdMods h3{color:#f0f9ff;margin:0}#cmdMods h2{font-size:clamp(24px,3vw,33px)}#cmdMods h3{font-size:18px}#cmdMods button{border-radius:7px;background:#176998;border:1px solid #3389bc;color:white;padding:9px 13px;font:600 12px system-ui;cursor:pointer;min-height:38px}#cmdMods button:disabled{opacity:.48;cursor:default}#cmdMods label{color:#bfd9e8;font:600 12px system-ui}#cmdMods select,#cmdMods input:not([type=checkbox]){box-sizing:border-box;display:block;width:100%;min-width:0;max-width:100%;background:#09192a;color:white;border:1px solid #4a6780;border-radius:7px;min-height:40px;margin-top:7px;padding:8px 10px}#cmdMods small,#cvProviderName{color:#7acefd;letter-spacing:.09em;font:700 10px system-ui}.cmdv-head,.cmdv-flex{display:flex;gap:15px;align-items:flex-start;justify-content:space-between}.cmdv-head p,.cmdv-sub{color:#b1c4d4;font:12px/1.6 system-ui;margin:5px 0}.cmdv-wait,.cmdv-label{border-radius:30px;padding:6px 10px;border:1px solid #6a6947;color:#f4d08a;white-space:nowrap;font:11px system-ui}.cmdv-toolbar{display:flex;flex-wrap:wrap;gap:13px;align-items:end;margin:20px 0 14px}.cmdv-toolbar label{flex:1 1 190px}.cmdv-toolbar label:first-child{flex:2 1 250px}.cmdv-alert{padding:12px 15px;background:#143248;border-left:3px solid #7bc6ed;font:12px/1.5 system-ui;margin:0 0 15px}.cmdv-block{border-radius:10px;border:1px solid #385770;background:#102439;padding:17px;margin:15px 0}.cmdv-active{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0}.cmdv-active-item{border:1px solid #48657b;border-radius:8px;background:#1a3449;padding:8px 9px;display:flex;align-items:center;gap:9px;max-width:100%}.cmdv-active-item strong{font-size:12px;overflow-wrap:anywhere;display:block}.cmdv-active-item small{color:#aac3d0;font:10px system-ui}.cmdv-active-item button{min-height:26px!important;padding:4px 9px!important;background:#3a3344!important;border-color:#674d60!important}.cmdv-muted{color:#abc4d7;font:12px/1.5 system-ui}#cvOfficial{color:#7fd4fc;white-space:nowrap;font:12px system-ui}.cmdv-tabs{display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid #39566b;padding:10px 0;margin:16px 0}.cmdv-tabs button{background:transparent!important;border-color:transparent!important;color:#aec7d9!important;font-size:11px!important;min-height:36px!important;padding:8px 11px!important}.cmdv-tabs button.active{background:#155d89!important;color:white!important;border-color:#378fbf!important}.cmdv-search{display:flex;gap:10px}.cmdv-search input{flex:1;margin:0!important}.cmdv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:13px}.cmdv-card{background:#173047;border:1px solid #3c5b74;border-radius:9px;display:flex;flex-direction:column;overflow:hidden}.cmdv-card:hover{border-color:#68b4e1}.cmdv-poster{aspect-ratio:16/8.5;background:linear-gradient(120deg,#234b6f,#0b2940);display:flex;align-items:center;justify-content:center;font-size:30px}.cmdv-poster img{width:100%;height:100%;object-fit:cover;display:block}.cmdv-cardbody{padding:11px;display:flex;flex:1;flex-direction:column;gap:8px}.cmdv-cardbody h4{font:700 13px/1.4 system-ui;color:#f3f9ff;margin:0}.cmdv-cardbody p{font:11px/1.5 system-ui;color:#b3cbda;margin:0;max-height:50px;overflow:hidden}.cmdv-cardbody small{color:#9dc4d5;letter-spacing:0!important;font:10px system-ui!important}.cmdv-pill{font:10px system-ui;background:#294a63;border-radius:5px;color:#d8edfc;padding:4px 6px;align-self:start}.cmdv-pill.pay{color:#ffe1aa;background:#55402b}.cmdv-cardbuttons{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:auto}.cmdv-cardbuttons a{color:#8fd5f9;font:11px system-ui}.cmdv-cardbuttons button{min-height:32px!important;padding:7px 10px!important}.cmdv-pages{display:flex;justify-content:center;align-items:center;gap:15px;margin:17px auto;color:#b5d5e4;font:12px system-ui}.cmdv-pages[hidden]{display:none}.cmdv-details{border-top:1px solid #365470;margin-top:18px;padding-top:14px}.cmdv-details summary{font:600 13px system-ui;color:#cdeaff;cursor:pointer}.cmdv-manual,.cmdv-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:15px}.cmdv-check{display:flex;align-items:center;gap:9px;margin:10px 0}.cmdv-check input{width:17px;height:17px;accent-color:#3ca6df}.cmdv-foot{font:11px/1.6 system-ui;color:#92afc4;margin:10px 0 27px}@media(max-width:740px){.cmdv-head,.cmdv-flex{display:block}.cmdv-wait,.cmdv-label{display:inline-block;margin-top:8px}.cmdv-grid{grid-template-columns:repeat(auto-fill,minmax(145px,1fr))}.cmdv-manual,.cmdv-settings{grid-template-columns:1fr}.cmdv-tabs button{padding:7px!important}}';
 document.head.append(style);
 const $=id=>document.getElementById(id);
+ const pcTools=document.createElement('div');
+ pcTools.id='cvPCPairHelp';
+ pcTools.style.cssText='display:none;align-items:center;gap:9px;flex-wrap:wrap;margin:7px 0 12px;padding:10px 12px;border-radius:9px;border:1px solid #8173bc;background:#211c42;color:#d7d4f4';
+ const pcHelpText=document.createElement('span');
+ pcHelpText.style.cssText='font:12px/1.5 system-ui;flex:1 1 200px';
+ const pcHelpButton=document.createElement('button');pcHelpButton.type='button';
+ pcHelpButton.textContent='Associer mon PC';
+ pcHelpButton.onclick=()=>{
+  if(typeof window.show==='function')window.show('machines');
+  else{location.hash='#machines';document.getElementById('machines')?.classList.remove('hide')}
+ };
+ pcTools.append(pcHelpText,pcHelpButton);
+ panel.querySelector('.cmdv-head')?.after(pcTools);
 const sourceLabel={arma:'Arma Reforger · Bohemia Workshop',curseforge:'CurseForge',steam:'Steam Workshop',fs25:'FS25 · ModHub officiel GIANTS'};
 
 const palworldQuickStyle=document.createElement('style');palworldQuickStyle.textContent=
@@ -41,13 +54,18 @@ async function refreshMachineBadge(force=false){
   const online=machine?.online===true;
   const total=Array.isArray(machine?.servers)?machine.servers.length:0;
   badge.textContent=online?'PC connecté · '+total+' serveur'+(total!==1?'s':''):
-   machine?'PC hors ligne':'État du PC indisponible';
+   machine?'PC hors ligne ou non associé':'PC non associé au compte';
+  pcTools.style.display=online?'none':'flex';
+  pcHelpText.textContent=machine?'Le PC existe dans le compte, mais son agent est hors ligne. Ouvre Mes machines pour reconnecter.':
+   'Aucune machine Windows associée à ton compte. Ouvre Mes machines pour obtenir le code de liaison et valide-le sur le PC.';
   badge.dataset.machineState=online?'online':machine?'offline':'unknown';
   badge.title=online?'Agent Windows détecté par CMD Hosting. Mods installés uniquement après confirmation.':
    'Consulter Mes machines pour vérifier le statut de l’agent Windows.';
  }catch{
   badge.textContent='Connexion PC : état indisponible';
   badge.dataset.machineState='unknown';
+  pcTools.style.display='flex';
+  pcHelpText.textContent='Connexion au compte indisponible. Ouvre Mes machines après connexion.';
  }
 }
 setInterval(()=>{if(!panel.classList.contains('hide')&&!document.hidden)void refreshMachineBadge()},30000);
