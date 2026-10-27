@@ -6,8 +6,8 @@ const info=document.createElement('div');info.id='cvAutoGame';info.setAttribute(
 select.closest('.cmdv-toolbar')?.after(info);
 let cache=new Map(),loading=false,revision=0,loaded=false;
 const status=msg=>info.textContent=msg;
-const gameSources={arma:'Workshop Bohemia (Arma Reforger)',ark:'CurseForge (ARK: Survival Ascended)',dayz:'Steam Workshop (DayZ PC)',palworld:'Steam Workshop officiel (Palworld · serveur Windows)'};
-const getSource=g=>g.startsWith('g-arma-reforger')||g==='arma'?gameSources.arma:g.startsWith('g-ark-survival-ascended')||g==='ark'?gameSources.ark:g==='dayz'||g==='g-dayz'?gameSources.dayz:g==='palworld'||g.startsWith('g-palworld')?gameSources.palworld:'';
+const gameSources={arma:'Workshop Bohemia (Arma Reforger)',ark:'CurseForge (ARK: Survival Ascended)',dayz:'Steam Workshop (DayZ PC)',palworld:'Steam Workshop officiel (Palworld · serveur Windows)',fs25:'ModHub officiel GIANTS (Farming Simulator 25)'};
+const getSource=g=>g.startsWith('g-arma-reforger')||g==='arma'?gameSources.arma:g.startsWith('g-ark-survival-ascended')||g==='ark'?gameSources.ark:g==='dayz'||g==='g-dayz'?gameSources.dayz:g==='palworld'||g.startsWith('g-palworld')?gameSources.palworld:/^(?:g-)?(?:fs25|farming-simulator-25|farming-simulator-2025)$/.test(g)?gameSources.fs25:'';
 const imageAlt=()=>{};
 async function loadLabels(){
 if(loading)return;loading=true;try{
@@ -26,9 +26,14 @@ finally{loading=false}
 async function update(){
 const id=select.value,game=cache.get(id),num=++revision;
 if(!id){status('Choisis un serveur : CMD Hosting détectera automatiquement le jeu et le catalogue de mods correspondant.');return}
-if(!game){status('Identification du jeu en cours…');return}
+if(!game){
+  if(id==='__fs25_modhub__'){status('FS25 · ModHub GIANTS officiel accessible même sans machine raccordée.');return}
+  if(id==='__palworld_workshop__'){status('Palworld · Steam Workshop officiel accessible même sans machine raccordée.');return}
+  status('Identification du jeu en cours…');return}
 const name=game.game_name||game.game_key,provider=getSource(game.game_key||'');
+ const isFs25=/\b(?:fs[ -]?25|farming\s*simulator\s*(?:25|2025))\b/i.test([game.game_name,game.game_key,game.display_name,game.name].filter(Boolean).join(' '));
  if(provider===gameSources.palworld){status('Jeu détecté : Palworld · Steam Workshop officiel disponible. Seuls les mods compatibles avec le serveur dédié Windows peuvent être activés dans PalModSettings.ini.');return}
+ if(isFs25||provider===gameSources.fs25){status('Jeu détecté : Farming Simulator 25 · ModHub officiel GIANTS accessible ci-dessous, même sans machine reliée. Les ZIP restent à installer sur le serveur dédié FS25.');return}
 status('Jeu détecté : '+name+' · Vérification des mods…');
 try{
 const r=await fetch('/api/mods?gameId='+encodeURIComponent(id),{credentials:'include',cache:'no-store'});
