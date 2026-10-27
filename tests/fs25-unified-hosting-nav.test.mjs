@@ -38,7 +38,7 @@ test('image heights capped on mobile screens and front-end cache revision increm
  assert.match(css,/cmd-shop-cover img/);
  assert.match(css,/height:112px!important/);
  assert.match(css,/max-width:740px/);
- assert.match(html,/mod-v2-ui\.js\?v=20261026-fs25-8/);
+ assert.match(html,/mod-v2-ui\.js\?v=20261027-fs25-12/);
  assert.match(html,/catalog-ui\.js\?v=20261026-menu-4/);
 });
 test('no loss of official DayZ and ARK provider search behavior',()=>{
