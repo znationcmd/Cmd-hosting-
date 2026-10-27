@@ -1,0 +1,42 @@
+name: CMD Hosting - Backup running public frontend before safe UI deployment
+on:
+  push:
+    paths:
+      - '.github/workflows/cmd-capture-production-js.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Snapshot only PUBLIC unauthenticated JavaScript (never credentials)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p diagnostics
+          url='https://cmd-hosting-web-production.up.railway.app/catalog-compat.js'
+          curl --fail --show-error --location --max-time 30 --retry 3 \
+            --header 'Accept: text/javascript' \
+            "$url" -o diagnostics/production-catalog-compat-20261027.js
+          test "$(wc -c < diagnostics/production-catalog-compat-20261027.js)" -gt 15000
+          head -c 128 diagnostics/production-catalog-compat-20261027.js | grep -q '(function'
+          node --check diagnostics/production-catalog-compat-20261027.js
+          sha256sum diagnostics/production-catalog-compat-20261027.js
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CMDHosting-BACKUP-Production-Catalog-JS-20261027
+          path: diagnostics/production-catalog-compat-20261027.js
+          retention-days: 90
+      - name: Commit read-only public asset snapshot to source control
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "CMD Hosting CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add diagnostics/production-catalog-compat-20261027.js
+          git commit -m "backup(hosting): preserve actual public production catalog script before V11" || exit 0
+          git push origin HEAD:main
