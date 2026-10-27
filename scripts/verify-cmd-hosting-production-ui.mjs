@@ -9,9 +9,15 @@ import {createHash} from 'node:crypto';
 const base='https://cmd-hosting-web-production.up.railway.app';
 async function get(route){
  const ctrl=new AbortController(),t=setTimeout(()=>ctrl.abort(),18000);
- try{const r=await fetch(base+route,{signal:ctrl.signal,redirect:'follow',
-  headers:{'Accept':'text/html,text/javascript,application/json'},cache:'no-store'});
-  return {status:r.status,body:await r.text(),type:r.headers.get('content-type')||''}}
+ try{let last;
+  for(let attempt=0;attempt<4;attempt++){
+   if(attempt)await new Promise(done=>setTimeout(done,1500*attempt));
+   const r=await fetch(base+route,{signal:ctrl.signal,redirect:'follow',
+    headers:{'Accept':'text/html,text/javascript,application/json'},cache:'no-store'});
+   last={status:r.status,body:await r.text(),type:r.headers.get('content-type')||''};
+   if(r.status!==502&&r.status!==503)break;
+  }
+  return last}
  finally{clearTimeout(t)}
 }
 const sha=x=>createHash('sha256').update(x).digest('hex').slice(0,16);
