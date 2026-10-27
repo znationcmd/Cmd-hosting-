@@ -55,7 +55,7 @@ test('runtime: duplicates hidden ONLY in main menu; Palworld shortcut only on se
  };
  const listeners={};
  const ctx={
-  window:{},document:{readyState:'complete',body:{},getElementById:id=>map[id]||null,
+  window:{addEventListener(){}},document:{readyState:'complete',body:{},getElementById:id=>map[id]||null,
    querySelectorAll:()=>[nav],addEventListener:(k,cb)=>{listeners[k]=cb}},
   location:{hash:''},history:{replaceState(){}},requestAnimationFrame:cb=>cb(),
   MutationObserver:undefined,URL,console
