@@ -4,6 +4,25 @@ const c=document.getElementById('cmdMods'),select=document.getElementById('cvSer
 if(!c||!select||document.getElementById('cvAutoGame'))return;
 const info=document.createElement('div');info.id='cvAutoGame';info.setAttribute('role','status');info.style.cssText='width:100%;color:#b9d5e7;background:#18384e;border:1px solid #355e79;border-radius:8px;padding:10px 13px;font:12px/1.5 system-ui;margin:3px 0 12px';
 select.closest('.cmdv-toolbar')?.after(info);
+ const fs25Panel=document.createElement('div');
+ fs25Panel.id='cmdFS25ModHubDirect';
+ fs25Panel.hidden=true;
+ fs25Panel.style.cssText='display:none;gap:8px;margin:6px 0 14px;padding:13px;border:1px solid #659bcc;border-radius:12px;background:linear-gradient(115deg,#193a59,#2a2454)';
+ const fs25Title=document.createElement('strong');
+ fs25Title.textContent='Farming Simulator 25 · ModHub officiel';
+ const fs25Link=document.createElement('a');
+ fs25Link.href='https://www.farming-simulator.com/mods.php?lang=fr&title=fs2025&platform=pc';
+ fs25Link.target='_blank';fs25Link.rel='noopener noreferrer';fs25Link.textContent='Voir tous les mods FS25 sur GIANTS ↗';
+ fs25Link.style.cssText='color:#fff;font-weight:750;text-align:center;padding:12px;border:1px solid #a2caff;border-radius:9px;background:linear-gradient(110deg,#277ab5,#694eaa);text-decoration:none';
+ const fs25Help=document.createElement('small');
+ fs25Help.textContent='Mods compatibles FS25, cartes, véhicules et bâtiments. Consultation sans PC connecté. Les fichiers ZIP ne sont installés que sur un serveur FS25 réellement présent.';
+ fs25Panel.append(fs25Title,fs25Link,fs25Help);info.after(fs25Panel);
+ const toggleFS25=on=>{
+  fs25Panel.hidden=!on;
+  fs25Panel.style.display=on?'grid':'none';
+  const redundant=document.getElementById('cmdOtherGamesModsLink');
+  if(redundant)redundant.hidden=on;
+ };
 let cache=new Map(),loading=false,revision=0,loaded=false;
 const status=msg=>info.textContent=msg;
 const gameSources={arma:'Workshop Bohemia (Arma Reforger)',ark:'CurseForge (ARK: Survival Ascended)',dayz:'Steam Workshop (DayZ PC)',palworld:'Steam Workshop officiel (Palworld · serveur Windows)',fs25:'ModHub officiel GIANTS (Farming Simulator 25)'};
@@ -25,6 +44,7 @@ finally{loading=false}
 }
 async function update(){
 const id=select.value,game=cache.get(id),num=++revision;
+ toggleFS25(id==='__fs25_modhub__');
 if(!id){status('Choisis un serveur : CMD Hosting détectera automatiquement le jeu et le catalogue de mods correspondant.');return}
 if(!game){
   if(id==='__fs25_modhub__'){status('FS25 · ModHub GIANTS officiel accessible même sans machine raccordée.');return}
@@ -32,6 +52,7 @@ if(!game){
   status('Identification du jeu en cours…');return}
 const name=game.game_name||game.game_key,provider=getSource(game.game_key||'');
  const isFs25=/\b(?:fs[ -]?25|farming\s*simulator\s*(?:25|2025))\b/i.test([game.game_name,game.game_key,game.display_name,game.name].filter(Boolean).join(' '));
+ toggleFS25(isFs25||provider===gameSources.fs25);
  if(provider===gameSources.palworld){status('Jeu détecté : Palworld · Steam Workshop officiel disponible. Seuls les mods compatibles avec le serveur dédié Windows peuvent être activés dans PalModSettings.ini.');return}
  if(isFs25||provider===gameSources.fs25){status('Jeu détecté : Farming Simulator 25 · ModHub officiel GIANTS accessible ci-dessous, même sans machine reliée. Les ZIP restent à installer sur le serveur dédié FS25.');return}
 status('Jeu détecté : '+name+' · Vérification des mods…');
@@ -198,6 +219,8 @@ loadLabels();
   anchor.title="Catalogue de mods multi-jeux; aucune installation automatique sans autorisation";
   anchor.style.cssText="display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;margin:8px 0;border:1.5px solid #9cc9ff;border-radius:13px;background:linear-gradient(145deg,#2986ce,#7852c1);color:#fff;text-decoration:none;font:750 13px system-ui;box-shadow:inset 0 2px #ffffff4d,0 7px 19px #080c2699,0 0 12px #7c78ff66";
   (root.querySelector(".cmdv-toolbar")||root.querySelector(".cmdv-head")||root).appendChild(anchor);
+   const selected=root.querySelector('#cvServer')?.selectedOptions?.[0]?.textContent||'';
+   anchor.hidden=/\b(?:fs[ -]?25|farming\s*simulator\s*(?:25|2025))\b/i.test(selected)||root.querySelector('#cvServer')?.value==='__fs25_modhub__';
  }
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",addMultiGameLink,{once:true});
  else addMultiGameLink();
