@@ -34,6 +34,11 @@ try{
   const listed=index.body.includes(route.split('/').pop());
   const equal=result.status===200 && sha(result.body)===sha(local);
   console.log(route+' HTTP '+result.status+' | in_HTML='+listed+' | deployed='+sha(result.body)+' | GitHub='+sha(local)+' | match='+equal);
+  if(route==='/catalog-compat.js'){
+   const backup=await readFile(new URL('../diagnostics/production-catalog-compat-20261026.js',import.meta.url),'utf8');
+   console.log('PUBLIC JAVASCRIPT BACKUP SHA256='+sha(backup)+' | matches deployed='+ (sha(backup)===sha(result.body)) + ' | backed-up bytes='+Buffer.byteLength(backup));
+  }
+
   if(!equal||!listed){
    differences++;
    console.error('NOT DEPLOYED: GitHub frontend differs from Railway at '+route+'. Backend has NOT been overwritten.');
