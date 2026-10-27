@@ -65,6 +65,7 @@ function openSelectedMods(){
  $('cmdrpStatus').textContent='Le gestionnaire Mods de ce serveur est indisponible sur cette version.';
 }
 function profileTools(){
+ if(window.__CMD_SERVER_FIRST_V12__)return;
  const panel=$('cmdRenterProfile'),sidebar=panel?.querySelector('.cmdrp-sidebar');
  if(!sidebar)return;
  const active=!!$('cmdrpSelect')?.selectedOptions?.[0];
