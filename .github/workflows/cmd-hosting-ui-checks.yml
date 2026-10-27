@@ -20,6 +20,7 @@ on:
       - "tests/cmd-server-first-v9.test.mjs"
       - "tests/cmd-live-mobile-palworld-v10.test.mjs"
       - "tests/cmd-server-first-v11.test.mjs"
+      - "tests/cmd-server-first-v12.test.mjs"
       - "tests/anomalia-nasdara-catalog.test.mjs"
       - "scripts/recover-hosting-public.mjs"
       - ".github/workflows/cmd-hosting-ui-checks.yml"
@@ -41,6 +42,7 @@ on:
       - "tests/cmd-server-first-v9.test.mjs"
       - "tests/cmd-live-mobile-palworld-v10.test.mjs"
       - "tests/cmd-server-first-v11.test.mjs"
+      - "tests/cmd-server-first-v12.test.mjs"
       - "tests/anomalia-nasdara-catalog.test.mjs"
       - "scripts/recover-hosting-public.mjs"
       - ".github/workflows/cmd-hosting-ui-checks.yml"
@@ -57,8 +59,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Validate current V11 server-first UX, legacy preserved safety and mobile catalog
-        run: node --test tests/cmd-server-first-v11.test.mjs tests/premium-ui.test.mjs tests/restored-web.test.mjs tests/anomalia-nasdara-catalog.test.mjs tests/anomalia-workshop-bridge.test.mjs tests/anomalia-catalog.test.mjs
+      - name: Validate V11 and final V12 server-first UX, mobile catalog and legacy safety
+        run: node --test tests/cmd-server-first-v11.test.mjs tests/cmd-server-first-v12.test.mjs tests/premium-ui.test.mjs tests/restored-web.test.mjs tests/anomalia-nasdara-catalog.test.mjs tests/anomalia-workshop-bridge.test.mjs tests/anomalia-catalog.test.mjs
       - name: Verify FS25 official ModHub and real PC pairing flow
         run: node --test tests/fs25-modhub-v12.test.mjs tests/fs25-modhub-search-v8.test.mjs tests/fs25-pc-connection-v11.test.mjs tests/fs25-unified-hosting-nav.test.mjs
       - name: Parse mobile catalogue, workshop and navigation scripts
@@ -73,6 +75,7 @@ jobs:
           node --check web/public/ui/cmd-server-first-v9.js
           node --check web/public/ui/cmd-live-mobile-palworld-v10.js
           node --check web/public/ui/cmd-server-first-v11.js
+          node --check web/public/ui/cmd-server-first-v12.js
           node --check web/public/catalog-ui.js
       - name: Parse public-source recovery script
         run: node --check scripts/recover-hosting-public.mjs
