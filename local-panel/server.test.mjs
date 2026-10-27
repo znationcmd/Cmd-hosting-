@@ -232,3 +232,54 @@ test('Palworld Workshop lists ONLY actual Info.json files on Windows host; no im
  const other=await call('/api/palworld/workshop?id='+id((response.data.servers.find(g=>g.game==='dayz')).id));
  assert.equal(other.status,422);
 });
+
+
+test('Palworld can toggle compatible Workshop mods in the real INI with backup; never claims runtime loading',async()=>{
+ const pal=join(root,'palworldToggles','palworld');
+ const dir=join(pal,'Mods','Workshop');
+ await mkdir(join(dir,'100'),{recursive:true});
+ await mkdir(join(dir,'200'),{recursive:true});
+ await writeFile(join(pal,'PalServer.exe'),'STUB LOCAL ONLY');
+ await writeFile(join(dir,'100','Info.json'),JSON.stringify({PackageName:'FarmingQuivern',InstallRules:[{IsServer:true}]}));
+ await writeFile(join(dir,'200','Info.json'),JSON.stringify({PackageName:'ClientOnly',InstallRules:[{IsServer:false}]}));
+ const ini=join(pal,'Mods','PalModSettings.ini');
+ await writeFile(ini,'[PalModSettings]\r\nbGlobalEnableMod=false\r\nWorkshopRootDir=C:\\Steam\\Palworld\r\n[Other]\r\nKeepMe=1\r\n');
+ const list=(await call('/api/servers')).data.servers;
+ const palserver=list.find(x=>x.game==='palworld'&&x.root===pal);
+ assert.ok(palserver);
+ const route='/api/palworld/workshop?id='+id(palserver.id);
+ const put=(data)=>call(route,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});
+ let result=await put({packageName:'FarmingQuivern',enabled:true});
+ assert.equal(result.status,400);
+ result=await put({packageName:'ClientOnly',enabled:true,confirmStopped:true});
+ assert.equal(result.status,422);
+ result=await put({packageName:'../outside',enabled:true,confirmStopped:true});
+ assert.equal(result.status,400);
+ if(process.platform!=='win32'){
+  result=await put({packageName:'FarmingQuivern',enabled:true,confirmStopped:true});
+  assert.equal(result.status,422);
+  assert.doesNotMatch(await readFile(ini,'utf8'),/ActiveModList=FarmingQuivern/);
+  return;
+ }
+ result=await put({packageName:'FarmingQuivern',enabled:true,confirmStopped:true});
+ assert.equal(result.status,200);
+ assert.equal(result.data.loadedVerified,false);
+ assert.equal(result.data.restartRequired,true);
+ assert.equal(result.data.backupCreated,true);
+ let text=await readFile(ini,'utf8');
+ assert.match(text,/ActiveModList=FarmingQuivern/);
+ assert.match(text,/bGlobalEnableMod=true/);
+ assert.match(text,/WorkshopRootDir=C:\\Steam\\Palworld/);
+ assert.match(text,/\[Other\]\r\nKeepMe=1/);
+ result=await put({packageName:'FarmingQuivern',enabled:true,confirmStopped:true});
+ assert.equal(result.status,200);
+ assert.equal(result.data.configUpdated,false);
+ result=await put({packageName:'FarmingQuivern',enabled:false,confirmStopped:true});
+ assert.equal(result.status,200);
+ text=await readFile(ini,'utf8');
+ assert.doesNotMatch(text,/ActiveModList=FarmingQuivern/);
+ assert.match(text,/bGlobalEnableMod=false/);
+ const backups=await readdir(join(state,'backups',palserver.id,'Mods'));
+ assert.ok(backups.includes('PalModSettings.ini')===false); // backups stored with timestamp suffix
+ assert.ok(backups.some(name=>name.startsWith('PalModSettings.ini.')&&name.endsWith('.bak')));
+});

@@ -10,6 +10,7 @@ import {spawn} from 'node:child_process';
 import {PROFILES,knownProfile,profileChecks,prepareProfile} from './game-profiles.mjs';
 import {lifetimeRegistry,GAME_SUGGESTIONS} from './persistent-profiles.mjs';
 import {gameProcessesRunning} from './exclusive-game-lock.mjs';
+import {togglePalworldModSettings} from './palworld-mod-settings.mjs';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {readFile,readdir,writeFile,rename,mkdir,lstat,realpath,copyFile,open,stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
@@ -455,6 +456,43 @@ async function action(req,res,url){
    enabledGlobal,workshop:'https://steamcommunity.com/app/1623730/workshop/',
    publisherGuide:'https://docs.palworldgame.com/settings-and-operation/mod/',
    note:'Seuls les vrais dossiers Mods/Workshop/Info.json sont affichés. Windows dédié requis pour les mods serveur.'});
+ }
+ if(route==='/api/palworld/workshop'&&method==='POST'){
+  if(instance.game!=='palworld')throw bad(422,'Choisis un véritable serveur Palworld.');
+  const data=await jsonBody(req,4096);
+  if(data.confirmStopped!==true)throw bad(400,'Arrête le serveur et confirme avant de modifier les mods.');
+  if(typeof data.packageName!=='string'||!/^[A-Za-z0-9_.-]{1,100}$/.test(data.packageName)||typeof data.enabled!=='boolean')
+   throw bad(400,'PackageName ou activation invalide.');
+  if(process.platform!=='win32')throw bad(422,'Les mods serveur Palworld Steam Workshop sont pris en charge sur Windows uniquement.');
+  const executable=await pathChecked(instance.root,'PalServer.exe');
+  if(!(await lstat(executable)).isFile())throw bad(409,'PalServer.exe absent.');
+  if(gameProcessesRunning())throw bad(409,'Un serveur dédié est actif sur ce PC. Arrête-le avant de modifier les mods.');
+  let found=0,compatible=false;
+  const root=await pathChecked(instance.root,'Mods/Workshop',{dir:true});
+  for(const entry of (await readdir(root,{withFileTypes:true})).slice(0,500)){
+   if(!entry.isDirectory()||entry.isSymbolicLink()||!/^[A-Za-z0-9_.-]{1,150}$/.test(entry.name))continue;
+   try{
+    const info=await pathChecked(instance.root,'Mods/Workshop/'+entry.name+'/Info.json');
+    const statInfo=await lstat(info);if(!statInfo.isFile()||statInfo.size>32768)continue;
+    const parsed=JSON.parse(await readFile(info,'utf8'));
+    if(parsed.PackageName!==data.packageName)continue;
+    found++;if(Array.isArray(parsed.InstallRules)&&parsed.InstallRules.some(rule=>rule?.IsServer===true))compatible=true;
+   }catch(e){if(e.status===403)throw e}
+  }
+  if(found!==1)throw bad(409,found?'PackageName dupliqué : corrige les dossiers Workshop.':'Mod absent : importe son dossier Workshop avec Info.json.');
+  if(data.enabled&&!compatible)throw bad(422,'Ce mod ne déclare pas IsServer=true : activation sur serveur refusée.');
+  const settingsPath='Mods/PalModSettings.ini';
+  let old;
+  try{old=await readFile(await pathChecked(instance.root,settingsPath),'utf8')}
+  catch(e){if(e.code==='ENOENT')throw bad(409,'Démarre PalServer une première fois pour générer PalModSettings.ini, puis arrête-le.');throw e}
+  let result;
+  try{result=togglePalworldModSettings(old,data.packageName,data.enabled)}
+  catch(e){throw bad(409,e.message)}
+  if(result.changed)await atomicSave(instance,settingsPath,result.content);
+  return reply(res,200,{ok:true,packageName:data.packageName,enabled:data.enabled,
+   activePackageNames:result.activePackageNames,backupCreated:result.changed,
+   configUpdated:result.changed,restartRequired:true,gameStarted:false,loadedVerified:false,
+   note:'PalModSettings.ini mis à jour. Seul un redémarrage réel du serveur Windows et la vérification des journaux confirment le chargement.'});
  }
  if(route==='/api/files'&&method==='GET'){
   const folder=await pathChecked(instance.root,rel,{dir:true});

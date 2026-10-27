@@ -108,7 +108,7 @@ const OTHER_GAME_MOD_PROVIDERS=[
 [/^Rust$/i,"Rust","local","https://umod.org/games/rust",0,"Plugins uMod/Oxide seulement si le chargeur est présent."],
 [/^Satisfactory$/i,"Satisfactory","local","https://ficsit.app/",0,"Contrôler SML, le jeu et le support serveur dédié."],
 [/^V Rising$/i,"V Rising","thunderstore-guided","https://thunderstore.io/c/v-rising/",0,"Chargeur et version du serveur à contrôler avant import."],
-[/^Palworld$/i,"Palworld","local","https://steamcommunity.com/app/1623730/workshop/",1623730,"Workshop Palworld officiel. Mods serveur Windows uniquement : Mods/Workshop/<dossier>/Info.json et Mods/PalModSettings.ini ActiveModList=PackageName. Installation et support client/console non garantis."],
+[/^Palworld$/i,"Palworld","steam","https://steamcommunity.com/app/1623730/workshop/",1623730,"Workshop Palworld officiel. Mods serveur Windows uniquement : Mods/Workshop/<dossier>/Info.json et Mods/PalModSettings.ini ActiveModList=PackageName. Installation et support client/console non garantis."],
 [/^Core Keeper$/i,"Core Keeper","local","https://mod.io/",0,"Support mod et serveur à vérifier avec l'éditeur."],
 [/^Enshrouded$/i,"Enshrouded","publisher-review","https://enshrouded.com/",0,"Aucune intégration de mods serveur validée sans accord/support éditeur."],
 [/^Farming Simulator 19$/i,"Farming Simulator 19","modhub-native","https://www.farming-simulator.com/mods.php",0,"ModHub FS19 natif, archives ZIP conformes à la version serveur."],
@@ -146,10 +146,10 @@ const title=String(game||"").trim().slice(0,120),p=String(platform||"pc").trim()
 if(/^(?:DayZ|Arma(?:\s|$|-)|ARK(?::|\s|-))/i.test(title))return {game:title,platform:p,eligible:false,provider:"existing",reason:"existing_provider_retained",autoInstall:false};
 const item=OTHER_GAME_MOD_PROVIDERS.find(r=>r[0].test(title));
 if(!item)return {game:title,platform:p,eligible:false,provider:"review",reason:"publisher_mod_support_not_verified",autoInstall:false};
-const allowed=["pc","windows","linux","steam"].includes(p)&&item[2]!=="publisher-review"&&item[2]!=="workforge-local";
+const allowed=["pc","windows","linux","steam"].includes(p)&&item[2]!=="publisher-review"&&item[2]!=="workforge-local"&&!(item[1]==="Palworld"&&p==="linux");
 return {game:title,platform:p,eligible:allowed,provider:item[2],officialName:item[1],officialUrl:item[3],
 steamAppId:item[4]||null,note:item[5],autoInstall:false,installStatus:"requires_authorized_host_agent_and_backup",
-reason:allowed?"catalogue_only":item[2]==="workforge-local"?"workforge_game_loader_not_verified":"console_mod_support_not_verified"};
+reason:allowed?"catalogue_only":item[1]==="Palworld"&&p==="linux"?"palworld_server_mods_windows_only":item[2]==="workforge-local"?"workforge_game_loader_not_verified":"console_mod_support_not_verified"};
 }
 async function otherGameModLookup(profile,q,page,origin){
 if(!profile.eligible)return answer({error:profile.reason,profile},422,origin);
@@ -176,9 +176,10 @@ const hits=(d.results||[]).filter(x=>!q||(String(x.title||"")+" "+String(x.name|
 return answer({profile,items:hits.map(x=>({id:x.name,title:x.title||x.name,description:x.summary,version:x.latest_release?.version||null,url:"https://mods.factorio.com/mod/"+encodeURIComponent(x.name)})),page,mode:"recent_page_filter",note:"Le filtre ne cherche que dans cette page de 50 mods; ouvrir le portail pour une recherche globale.",autoInstall:false},200,origin);
 }
 if(!Bun.env.STEAM_WEB_API_KEY)return answer({error:"steam_web_api_key_required",profile},503,origin);
-if(!q)return answer({error:"search_query_required"},400,origin);
+if(!q&&profile.game!=="Palworld")return answer({error:"search_query_required"},400,origin);
 const appid=profile.steamAppId;
-const opts=new URLSearchParams({key:Bun.env.STEAM_WEB_API_KEY,query_type:"12",appid:String(appid),creator_appid:String(appid),search_text:q,page:String(page),numperpage:"20",return_short_description:"true",return_previews:"true"});
+const opts=new URLSearchParams({key:Bun.env.STEAM_WEB_API_KEY,query_type:q?"12":"0",appid:String(appid),creator_appid:String(appid),page:String(page),numperpage:"20",return_short_description:"true",return_previews:"true"});
+if(q)opts.set("search_text",q);
 const d=await upstream("https://api.steampowered.com/IPublishedFileService/QueryFiles/v1/?"+opts,{},"other:steam:"+appid+":"+q.toLowerCase()+":"+page);
 const items=(d.response?.publishedfiledetails||[]).filter(x=>Number(x.consumer_app_id||x.creator_app_id)===appid).map(x=>({id:String(x.publishedfileid),title:x.title,description:String(x.short_description||"").slice(0,240),url:"https://steamcommunity.com/sharedfiles/filedetails/?id="+encodeURIComponent(x.publishedfileid),imageUrl:x.preview_url||null}));
 return answer({profile,items,page,total:d.response?.total||0,mode:"catalogue",autoInstall:false},200,origin);

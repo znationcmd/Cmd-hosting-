@@ -141,3 +141,45 @@ test('FS25 mobile page actually submits to genuine GIANTS ModHub without auto-in
  expect(empty.status).toBe(303);
  expect(empty.headers.get('location')).toBe('/mods/fs25');
 });
+
+test('Palworld: real Steam Workshop discovery, strict Windows eligibility and no fake installation',async()=>{
+ const pal=await call('/api/mods/games/profile?game=Palworld&platform=pc');
+ expect(pal.r.status).toBe(200);
+ expect(pal.data.provider).toBe('steam');
+ expect(pal.data.steamAppId).toBe(1623730);
+ expect(pal.data.autoInstall).toBe(false);
+ const linux=await call('/api/mods/games/profile?game=Palworld&platform=linux');
+ expect(linux.data.eligible).toBe(false);
+ expect(linux.data.reason).toBe('palworld_server_mods_windows_only');
+ const xbox=await call('/api/mods/games/profile?game=Palworld&platform=xbox');
+ expect(xbox.data.eligible).toBe(false);
+ const priorFetch=globalThis.fetch,priorKey=Bun.env.STEAM_WEB_API_KEY;
+ Bun.env.STEAM_WEB_API_KEY='TEST_KEY_ONLY';
+ let upstreamUrl='';
+ try{
+  globalThis.fetch=(async(input:any)=>{
+   upstreamUrl=String(input);
+   return new Response(JSON.stringify({response:{total:1,publishedfiledetails:[{
+     publishedfileid:'1234567',title:'Verified provider listing',short_description:'Real provider metadata',
+     consumer_app_id:1623730,preview_url:'https://steamcommunity.com/img.webp'
+   }]}}),{status:200});
+  }) as typeof fetch;
+  const found=await call('/api/mods/games/search?game=Palworld&platform=pc&q=FarmingQuivern');
+  expect(found.r.status).toBe(200);
+  expect(found.data.items.length).toBe(1);
+  expect(found.data.items[0].id).toBe('1234567');
+  expect(found.data.items[0].url).toBe('https://steamcommunity.com/sharedfiles/filedetails/?id=1234567');
+  expect(found.data.autoInstall).toBe(false);
+  const upstream=new URL(upstreamUrl);
+  expect(upstream.origin).toBe('https://api.steampowered.com');
+  expect(upstream.searchParams.get('appid')).toBe('1623730');
+  expect(upstream.searchParams.get('search_text')).toBe('FarmingQuivern');
+  const catalogue=await call('/api/mods/games/search?game=Palworld&platform=pc&q=');
+  expect(catalogue.r.status).toBe(200);
+  expect(new URL(upstreamUrl).searchParams.get('query_type')).toBe('0');
+ }finally{
+  globalThis.fetch=priorFetch;
+  if(priorKey===undefined)delete Bun.env.STEAM_WEB_API_KEY;
+  else Bun.env.STEAM_WEB_API_KEY=priorKey;
+ }
+});

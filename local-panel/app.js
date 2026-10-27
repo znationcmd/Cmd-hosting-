@@ -112,8 +112,25 @@ async function refreshPalworld(){
  for(const mod of result.installedMods){
   const row=element('article','serverItem');
   row.append(element('strong','',mod.packageName),
-    element('small','',mod.serverCompatible?(mod.enabled?'Compatible serveur · activé':'Compatible serveur · inactif'):
+    element('small','',mod.serverCompatible?(mod.enabled?'Compatible serveur · activé dans INI (chargement non vérifié)':'Compatible serveur · inactif'):
       'Mod non confirmé compatible avec un serveur dédié'));
+  if(mod.serverCompatible){
+   const toggle=element('button','quiet',mod.enabled?'Désactiver':'Activer');
+   toggle.type='button';
+   toggle.onclick=()=>safe(async()=>{
+    const verb=mod.enabled?'Désactiver':'Activer';
+    if(!confirm(verb+' '+mod.packageName+' ? Arrête le serveur avant l’opération. Une sauvegarde de PalModSettings.ini sera conservée.'))return;
+    toggle.disabled=true;
+    try{
+     const result=await api('/api/palworld/workshop?id='+encodeURIComponent(current.id),{
+      method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({packageName:mod.packageName,enabled:!mod.enabled,confirmStopped:true})
+     });
+     notice(result.note);await refreshPalworld();
+    }finally{toggle.disabled=false}
+   });
+   row.append(toggle);
+  }
   list.append(row);
  }
 }
