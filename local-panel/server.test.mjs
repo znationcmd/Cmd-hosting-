@@ -283,3 +283,68 @@ test('Palworld can toggle compatible Workshop mods in the real INI with backup; 
  assert.ok(backups.includes('PalModSettings.ini')===false); // backups stored with timestamp suffix
  assert.ok(backups.some(name=>name.startsWith('PalModSettings.ini.')&&name.endsWith('.bak')));
 });
+
+
+test('Palworld imports subscribed Steam Workshop folders, never arbitrary ZIPs or imagined server mods',async()=>{
+ const steam=join(base,'SteamLibrary','steamapps','workshop','content','1623730');
+ const source=join(steam,'123456789');
+ const target=join(root,'palworldImport','palworld');
+ await mkdir(source,{recursive:true});
+ await mkdir(join(target,'Mods','Workshop'),{recursive:true});
+ await writeFile(join(target,'PalServer.exe'),'TEST STUB');
+ await writeFile(join(target,'Mods','PalModSettings.ini'),'[PalModSettings]\nbGlobalEnableMod=false\n');
+ await writeFile(join(source,'Info.json'),JSON.stringify({PackageName:'FarmingQuivern',Version:'1.0.0',InstallRules:[{IsServer:true}]}));
+ await writeFile(join(source,'content.pak'),'TEST WORKSHOP PAYLOAD');
+ const prior=process.env.CMD_PALWORLD_STEAM_WORKSHOP_DIR;
+ process.env.CMD_PALWORLD_STEAM_WORKSHOP_DIR=steam;
+ try{
+  const registered=(await call('/api/servers')).data.servers.find(x=>x.game==='palworld'&&x.root===target);
+  assert.ok(registered);
+  const serverId=id(registered.id);
+  const catalogue=await call('/api/palworld/steam-library?id='+serverId);
+  assert.equal(catalogue.status,200);
+  assert.equal(catalogue.data.mods.length,1);
+  assert.equal(catalogue.data.mods[0].serverCompatible,true);
+  assert.equal(catalogue.data.downloadNotPerformed,true);
+  const route='/api/palworld/import?id='+serverId;
+  const post=data=>call(route,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});
+  let response=await post({workshopId:'123456789'});
+  assert.equal(response.status,400);
+  response=await post({workshopId:'../private',confirmStopped:true});
+  assert.equal(response.status,400);
+  response=await post({workshopId:'123456789',confirmStopped:true});
+  if(process.platform==='win32'){
+   assert.equal(response.status,201,JSON.stringify(response.data));
+   assert.equal(response.data.loadedVerified,false);
+   assert.equal(response.data.enabled,false);
+   assert.equal(await readFile(join(target,'Mods','Workshop','123456789','content.pak'),'utf8'),'TEST WORKSHOP PAYLOAD');
+   assert.equal(await readFile(join(target,'Mods','PalModSettings.ini'),'utf8'),'[PalModSettings]\nbGlobalEnableMod=false\n');
+   const duplicate=await post({workshopId:'123456789',confirmStopped:true});
+   assert.equal(duplicate.status,409);
+  }else{
+   assert.equal(response.status,422);
+   assert.equal((await readdir(join(target,'Mods','Workshop'))).length,0);
+  }
+  const unauth=await call(route,{method:'POST',auth:'',headers:{'content-type':'application/json'},
+   body:JSON.stringify({workshopId:'123456789',confirmStopped:true})});
+  assert.equal(unauth.status,401);
+  const wrongGame=(await call('/api/servers')).data.servers.find(x=>x.game==='dayz');
+  const cross=await call('/api/palworld/steam-library?id='+id(wrongGame.id));
+  assert.equal(cross.status,422);
+ }finally{
+  if(prior===undefined)delete process.env.CMD_PALWORLD_STEAM_WORKSHOP_DIR;
+  else process.env.CMD_PALWORLD_STEAM_WORKSHOP_DIR=prior;
+ }
+});
+test('Palworld local import controls are attached to the actual server profile, not a global fake server',async()=>{
+ const [html,ui]=await Promise.all([
+  readFile(new URL('./index.html',import.meta.url),'utf8'),
+  readFile(new URL('./app.js',import.meta.url),'utf8')
+ ]);
+ assert.match(html,/id="palworldSteamImport"/);
+ assert.match(html,/id="palworldSteamList"/);
+ assert.match(ui,/api\/palworld\/steam-library/);
+ assert.match(ui,/api\/palworld\/import/);
+ assert.match(ui,/confirmStopped:true/);
+ assert.match(ui,/refreshPalworldSteam/);
+});

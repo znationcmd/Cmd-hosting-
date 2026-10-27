@@ -6,7 +6,7 @@ Application **autonome** à lancer directement sur la machine qui héberge les v
 
 Par défaut, l'application lit les installations réelles sous `C:\CMD-Servers`. Elle cherche jusqu'à trois niveaux les exécutables officiels DayZ PC, ARK ASA/ASE, Arma Reforger/3, 7DTD, Palworld et Satisfactory. Exemple : `C:\CMD-Servers\cmd-dayz-personnel\dayz\` (installateur personnel DayZ existant). Une installation est **détectée** uniquement lorsqu'un exécutable correspondant existe; ceci **ne prouve pas** qu'elle est complète, en cours de fonctionnement ou joignable depuis Internet.
 
-Dans `Mes serveurs`, cliquer sur le serveur pour ouvrir **son vrai répertoire** : dossiers, fichiers, configurations, téléchargements. Les fichiers texte de configuration (`.cfg`, `.ini`, `.xml`, `.json`, `.c`, etc.) peuvent être édités après confirmation que le serveur est arrêté. Les anciennes versions sont archivées séparément sous `~/.cmdhosting/files-panel/backups`; aucun dossier de partie n'est supprimé. Les fichiers binaires peuvent être téléchargés mais non modifiés arbitrairement par le navigateur; la copie des gros mods nécessite un canal de transfert autorisé distinct.
+Dans `Mes serveurs`, cliquer sur le serveur pour ouvrir **son vrai répertoire** : dossiers, fichiers, configurations, téléchargements. Les fichiers texte de configuration (`.cfg`, `.ini`, `.xml`, `.json`, `.c`, etc.) peuvent être édités après confirmation que le serveur est arrêté. Les anciennes versions sont archivées séparément sous `~/.cmdhosting/files-panel/backups`; aucun dossier de partie n'est supprimé. Les fichiers binaires peuvent être téléchargés mais non modifiés arbitrairement par le navigateur. Pour Palworld Windows, l’import contrôlé de mods déjà téléchargés par Steam est disponible dans le panneau, sans accepter de ZIP ni de commandes arbitraires.
 
 Pour DayZ, le panneau liste les **missions installées** dans `mpmissions`, vérifie les fichiers `init.c` et `db/types.xml`, puis peut modifier **uniquement** la valeur `template` du fichier `serverDZ.cfg`, avec sauvegarde. Il n'installe ni Chernarus, ni Livonia, ni Sakhal par simple sélection : les contenus officiels ou autorisés doivent réellement se trouver sur le disque.
 
@@ -52,3 +52,18 @@ Si l'écran indique zéro **serveur installé**, cela n'efface pas les cinq **pr
 Pour un serveur Palworld Windows détecté, ouvre « Mes serveurs » et sélectionne Palworld. Le panneau montre « Mods de mon serveur » et propose le [Workshop Steam Palworld](https://steamcommunity.com/app/1623730/workshop/) et le [guide officiel](https://docs.palworldgame.com/settings-and-operation/mod/). Les mods réellement présents dans `Mods/Workshop/<dossier>/Info.json` sont détectés et comparés aux `ActiveModList` de `Mods/PalModSettings.ini`, sans téléchargement fictif.
 
 Les mods Palworld dédiés sont actuellement pris en charge sur les serveurs Windows uniquement, lorsqu'un mod possède des règles `IsServer: true`. Sauvegarder avant modification et redémarrer correctement le serveur pour les charger.
+
+
+#### Importer réellement un mod Palworld depuis Steam
+
+1. Sur le **PC Windows qui héberge PalServer.exe**, s'abonner au mod sur le [Workshop Palworld](https://steamcommunity.com/app/1623730/workshop/) et laisser Steam le télécharger. Vérifier sa fiche, ses dépendances et son support serveur.
+2. Démarrer PalServer une première fois pour générer le fichier PalModSettings.ini, puis **arrêter le serveur**. Conserver une sauvegarde récupérable de la partie dans Pal/Saved/SaveGames.
+3. Dans CMD Hosting local → **Mes serveurs → serveur Palworld → Mods de mon serveur → Importer mes mods Steam**, cliquer **Actualiser mes téléchargements Steam**. Seuls les dossiers téléchargés avec Info.json et une règle IsServer:true sont importables.
+4. Cliquer **Importer dans Mods/Workshop** : le panneau copie les vrais fichiers dans Mods/Workshop/<WorkshopId>/ et bloque les liens symboliques, PackageName déjà présent et archives excessives. Aucun téléchargement en arrière-plan par le panneau.
+5. Cliquer **Activer** pour préparer ActiveModList=<PackageName> et bGlobalEnableMod=true dans Mods/PalModSettings.ini avec sauvegarde du fichier précédent. Redémarrer PalServer puis vérifier ses journaux et Mods/ManagedMods. Le panneau ne prétend pas que le mod est chargé sans confirmation.
+
+Par défaut, Steam est cherché dans C:\Program Files (x86)\Steam\steamapps\workshop\content\1623730. Si Steam se trouve sur un autre disque, définir **avant le lancement du panneau** la variable d'environnement **CMD_PALWORLD_STEAM_WORKSHOP_DIR** vers le véritable dossier steamapps\workshop\content\1623730, par exemple D:\SteamLibrary\steamapps\workshop\content\1623730.
+
+L'import n'est réalisable que lorsqu'un hôte local Windows possède les fichiers Steam et le serveur. Le site Railway seul ne peut pas accéder aux disques de ce PC. Le mod peut exiger une copie côté client, et peut endommager la sauvegarde : vérifier les droits et sauvegarder avant modification.
+
+**Périmètre Nitrado** : recherche du Workshop, import de dossiers Steam déjà téléchargés, inventaire des mods et activation INI fonctionnent dans ce panneau local. L'hébergement 24/7, le provisionnement des serveurs, les backups/restaurations complets, le contrôle de processus distant et le statut réseau restent à confirmer sur de vraies machines. Aucun profil simplement enregistré ne doit être compté comme un serveur actif.

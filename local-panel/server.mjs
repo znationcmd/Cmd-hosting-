@@ -11,6 +11,7 @@ import {PROFILES,knownProfile,profileChecks,prepareProfile} from './game-profile
 import {lifetimeRegistry,GAME_SUGGESTIONS} from './persistent-profiles.mjs';
 import {gameProcessesRunning} from './exclusive-game-lock.mjs';
 import {togglePalworldModSettings} from './palworld-mod-settings.mjs';
+import {listSteamPalworldMods,importSteamPalworldMod} from './palworld-steam-library.mjs';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
 import {readFile,readdir,writeFile,rename,mkdir,lstat,realpath,copyFile,open,stat} from 'node:fs/promises';
 import {createReadStream} from 'node:fs';
@@ -456,6 +457,35 @@ async function action(req,res,url){
    enabledGlobal,workshop:'https://steamcommunity.com/app/1623730/workshop/',
    publisherGuide:'https://docs.palworldgame.com/settings-and-operation/mod/',
    note:'Seuls les vrais dossiers Mods/Workshop/Info.json sont affichés. Windows dédié requis pour les mods serveur.'});
+ }
+ if(route==='/api/palworld/steam-library'&&method==='GET'){
+  if(instance.game!=='palworld')throw bad(422,'Choisis ton serveur Palworld.');
+  const library=await listSteamPalworldMods();
+  return reply(res,200,{game:'palworld',...library,
+   windowsServerModsOnly:true,installedNotImplied:true,downloadNotPerformed:true});
+ }
+ if(route==='/api/palworld/import'&&method==='POST'){
+  if(instance.game!=='palworld')throw bad(422,'Choisis ton serveur Palworld.');
+  const data=await jsonBody(req,4096);
+  if(data.confirmStopped!==true)throw bad(400,'Arrête le serveur avant l’import et confirme.');
+  if(typeof data.workshopId!=='string'||!/^[1-9][0-9]{0,19}$/.test(data.workshopId))
+   throw bad(400,'Identifiant Steam Workshop invalide');
+  if(process.platform!=='win32')throw bad(422,'Import des mods serveur Palworld réservé à Windows.');
+  const binary=await pathChecked(instance.root,'PalServer.exe');
+  if(!(await lstat(binary)).isFile())throw bad(409,'Fichiers PalServer.exe absents');
+  if(gameProcessesRunning())throw bad(409,'Un serveur dédié est en cours d’exécution sur ce PC.');
+  // Never create a fake PalServer installation. Only create Workshop under genuine Mods/.
+  await pathChecked(instance.root,'Mods',{dir:true});
+  try{await pathChecked(instance.root,'Mods/Workshop',{dir:true})}
+  catch(e){
+   if(e.code!=='ENOENT')throw e;
+   await mkdir(path.join(instance.root,'Mods','Workshop'));
+  }
+  let imported;
+  try{imported=await importSteamPalworldMod({workshopId:data.workshopId,serverRoot:instance.root})}
+  catch(e){throw bad(409,e.message)}
+  return reply(res,201,{ok:true,...imported,source:'local_subscribed_steam_workshop',
+   backupOfWorldNotCreated:true,serverRunningVerified:false,gameStarted:false});
  }
  if(route==='/api/palworld/workshop'&&method==='POST'){
   if(instance.game!=='palworld')throw bad(422,'Choisis un véritable serveur Palworld.');

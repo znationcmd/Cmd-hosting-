@@ -135,6 +135,49 @@ async function refreshPalworld(){
  }
 }
 $('palworldRefresh').onclick=()=>safe(refreshPalworld);
+
+async function refreshPalworldSteam(){
+ if(!current||current.game!=='palworld')return;
+ const list=$('palworldSteamList');list.replaceChildren();
+ $('palworldSteamStatus').textContent='Recherche de tes fichiers Steam Workshop…';
+ const id=encodeURIComponent(current.id);
+ const [library,installed]=await Promise.all([
+  api('/api/palworld/steam-library?id='+id),
+  api('/api/palworld/workshop?id='+id)
+ ]);
+ const existing=new Set((installed.installedMods||[]).map(m=>m.folder));
+ $('palworldSteamStatus').textContent=(library.note||'')+
+  (library.available?' · '+library.mods.length+' dossier(s) Steam trouvé(s)':'');
+ if(!library.mods.length){
+  list.append(element('p','empty','Aucun mod téléchargé dans la bibliothèque Steam sur ce PC. Abonne-toi au Workshop depuis Steam et lance le téléchargement.'));
+  return;
+ }
+ for(const mod of library.mods){
+  const card=element('article','serverItem');
+  card.append(element('strong','',mod.packageName),
+   element('small','',
+     'Steam #'+mod.workshopId+(mod.version?' · version '+mod.version:'')+' · '+
+     (existing.has(mod.workshopId)?'Déjà importé':mod.serverCompatible?'Compatible serveur · import possible':'Mod client uniquement · import serveur refusé')));
+  const button=element('button','quiet',existing.has(mod.workshopId)?'Déjà sur le serveur':'Importer dans Mods/Workshop');
+  button.type='button';button.disabled=existing.has(mod.workshopId)||!mod.serverCompatible;
+  button.onclick=()=>safe(async()=>{
+   if(!confirm('Importer '+mod.packageName+' depuis ta bibliothèque Steam ? Le serveur doit être arrêté. Vérifie la sauvegarde du monde avant de modifier les mods.'))return;
+   button.disabled=true;
+   try{
+    const result=await api('/api/palworld/import?id='+id,{
+     method:'POST',headers:{'content-type':'application/json'},
+     body:JSON.stringify({workshopId:mod.workshopId,confirmStopped:true})
+    });
+    notice(result.note);await refreshPalworld();await refreshPalworldSteam();
+   }finally{button.disabled=false}
+  });
+  card.append(button);list.append(card);
+ }
+}
+$('palworldScanSteam').onclick=()=>safe(refreshPalworldSteam);
+$('palworldSteamImport').addEventListener('toggle',()=>{
+ if($('palworldSteamImport').open&&current?.game==='palworld')void safe(refreshPalworldSteam);
+});
 async function refreshMaps(){
  const r=await api('/api/maps?id='+encodeURIComponent(current.id));
  const select=$('mapSelect');select.replaceChildren();
