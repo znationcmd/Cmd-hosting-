@@ -178,6 +178,7 @@
    if(event.target?.id==='cmdrpSelect')profileShortcut();
   });
   document.addEventListener('click',event=>{
+    if(window.__CMD_SERVER_FIRST_V12__)return;
     const el=event.target?.closest?.('[data-page="jeux"],[href="#jeux"]');
     if(!el||!el.closest('#cmdSidebar,#cmdPrimary,#cmdOriginalNav'))return;
     if(!$('cmdCatalogSection'))return;
