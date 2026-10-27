@@ -104,6 +104,7 @@
   else window.open('https://www.farming-simulator.com/mods.php?title=fs2025','_blank','noopener,noreferrer');
  }
  function profileShortcut(){
+  if(window.__CMD_SERVER_FIRST_V12__)return;
   const root=$('cmdRenterProfile');
   if(!root)return;
   const sidebar=root.querySelector('.cmdrp-sidebar');
