@@ -95,7 +95,7 @@ window.CMDHostingOpenPalworldWorkshop=()=>{
  game=null;mods=[];rights=[];activeList();
  if(![...$('cvServer').options].some(o=>o.value==='__palworld_workshop__'))
   $('cvServer').add(new Option('Palworld · Workshop officiel (sans serveur)','__palworld_workshop__'));
- $('cvServer').value='__palworld_workshop__';$('cvSearch').value='';
+ $('cvServer').value='__palworld_workshop__';$('cvSearch').value='';term='';page=1;
  sessionStorage.setItem('cvServer','__palworld_workshop__');
  palworldBrowser();
 };
@@ -144,7 +144,8 @@ function palworldBrowser(){
  const description=document.createElement('p');
  description.textContent='Workshop officiel disponible pour la version Steam. Un serveur dédié Windows peut charger les mods compatibles depuis Mods/Workshop et Mods/PalModSettings.ini.';
  const actions=document.createElement('div');actions.className='cmdv-cardbuttons';
- const official=link(palworldSteamWorkshop,'Parcourir le Workshop Palworld ↗');
+ const palworldSearchUrl=term?palworldWorkshopBrowse+'&searchtext='+encodeURIComponent(term):palworldSteamWorkshop;
+  const official=link(palworldSearchUrl,'Parcourir le Workshop Palworld ↗');
  const doc=link('https://docs.palworldgame.com/settings-and-operation/mod/','Guide officiel serveur ↗');
  actions.append(official,doc);
  const instructions=document.createElement('p');
@@ -153,7 +154,7 @@ function palworldBrowser(){
  card.append(body);results.append(card);
  $('cvCatalogTitle').textContent='Palworld — Steam Workshop officiel';
  $('cvProviderName').textContent='WORKSHOP STEAM · PALWORLD';
- $('cvOfficial').hidden=false;$('cvOfficial').href=palworldSteamWorkshop;
+ $('cvOfficial').hidden=false;$('cvOfficial').href=palworldSearchUrl;
  $('cvOfficial').textContent='Ouvrir Workshop Palworld ↗';
  $('cvDescription').textContent='Les mods Steam Workshop doivent être compatibles avec les serveurs Windows. Aucun mod n’est téléchargé ou installé tant que le PC n’est pas associé.';
  $('cvResultsCount').textContent='Catalogue officiel Steam · installation à vérifier sur la machine';
@@ -163,7 +164,47 @@ function palworldBrowser(){
  $('cvSearchForm').querySelector('button').textContent='⌕ Chercher sur Steam';
  $('cvMode').closest('label').hidden=true;
  panel.querySelectorAll('.cmdv-tabs').forEach(el=>el.hidden=true);
- say('Palworld : Workshop officiel accessible. Source serveur disponible sous Windows uniquement. Le profil ne prouve pas que les mods sont installés.');
+  say('Palworld : recherche Steam en cours. Les résultats sont des fiches Workshop, pas des mods installés.');
+ void palworldResults();
+}
+let palworldSearchToken=0;
+async function palworldResults(){
+ const requestToken=++palworldSearchToken;
+ const params=new URLSearchParams({game:'Palworld',platform:'pc',q:term,page:String(page)});
+ const box=$('cvResults');
+ try{
+  const response=await fetch('https://cmd-hosting-mods-api-production.up.railway.app/api/mods/games/search?'+params,{
+   credentials:'omit',cache:'no-store',signal:AbortSignal.timeout(18000)});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw Error(data.error==='steam_web_api_key_required'?'Recherche indisponible : clé API Steam absente.':data.error==='rate_limited'?'Trop de recherches en cours.':'Catalogue Steam temporairement indisponible (HTTP '+response.status+').');
+  if(!palworldProfile||requestToken!==palworldSearchToken)return;
+  let shown=0;
+  for(const item of data.items||[]){
+   if(!/^https:\/\/steamcommunity\.com\/sharedfiles\/filedetails\/\?id=\d+$/.test(String(item.url||'')))continue;
+   const card=document.createElement('article');card.className='cmdv-card cmdv-palworld-result';
+   const art=document.createElement('div');art.className='cmdv-poster';
+   if(/^https:\/\//.test(String(item.imageUrl||''))){
+    const img=document.createElement('img');img.src=item.imageUrl;img.alt=String(item.title||'Mod Palworld');img.loading='lazy';img.referrerPolicy='no-referrer';img.onerror=()=>{img.remove();art.textContent='🧩'};art.append(img)
+   }else art.textContent='🧩';
+   const body=document.createElement('div');body.className='cmdv-cardbody';
+   const title=document.createElement('h4');title.textContent=String(item.title||'Mod Palworld');body.append(title);
+   if(item.description){const summary=document.createElement('p');summary.textContent=String(item.description).slice(0,280);body.append(summary)}
+   const check=document.createElement('small');check.textContent='Fiche Steam · compatibilité serveur Windows à vérifier dans Info.json · NON INSTALLÉ';body.append(check);
+   const actions=document.createElement('div');actions.className='cmdv-cardbuttons';actions.append(link(item.url,'Consulter sur Steam ↗'));body.append(actions);
+   card.append(art,body);box.append(card);shown++;
+  }
+  const total=Number(data.total)||0;
+  $('cvResultsCount').textContent=shown+' fiche(s) Steam affichée(s) · '+total+' résultats annoncés · page '+page;
+  const hasMore=total>page*20;
+  $('cvPages').hidden=page===1&&!hasMore;$('cvPrev').disabled=page<=1;$('cvNext').disabled=!hasMore;
+  $('cvPageNum').textContent='Page '+page;
+  say(shown?'Palworld : fiches officielles Steam chargées. Installation non effectuée. Seuls les mods IsServer peuvent être activés sur un serveur Windows réel.':'Aucun résultat Steam pour cette recherche. Consulte le Workshop officiel.');
+ }catch(e){
+  if(!palworldProfile||requestToken!==palworldSearchToken)return;
+  $('cvPages').hidden=true;
+  $('cvResultsCount').textContent='Steam Workshop · consultation officielle disponible';
+  say((e?.message||'Recherche Steam indisponible.')+' Tu peux toujours utiliser le lien Workshop officiel ci-dessus.');
+ }
 }
 function activeList(){const box=$('cvActive');box.replaceChildren();$('cvActiveCount').textContent=String(mods.length);
 if(!mods.length){const p=document.createElement('p');p.className='cmdv-muted';p.textContent='Aucun mod ajouté. Utilise la recherche ci-dessous.';box.append(p);return}
@@ -241,16 +282,13 @@ $('cvSearchForm').onsubmit=e=>{
   fs25Browser();return;
  }
  if(palworldProfile){
-  const destination=term?palworldWorkshopBrowse+'&searchtext='+encodeURIComponent(term):palworldWorkshopBrowse;
-  const a=document.createElement('a');a.href=destination;a.target='_blank';a.rel='noopener noreferrer';
-  a.style.display='none';document.body.append(a);a.click();a.remove();
   palworldBrowser();return;
  }
  searchMods();
 };
 for(const b of panel.querySelectorAll('.cmdv-tabs button'))b.onclick=()=>{sort=b.dataset.sort;page=1;for(const other of panel.querySelectorAll('.cmdv-tabs button'))other.classList.toggle('active',other===b);searchMods()};
-$('cvPrev').onclick=()=>{if(page>1){page--;searchMods()}};
-$('cvNext').onclick=()=>{page++;searchMods()};
+$('cvPrev').onclick=()=>{if(page>1){page--;if(palworldProfile)palworldBrowser();else searchMods()}};
+$('cvNext').onclick=()=>{page++;if(palworldProfile)palworldBrowser();else searchMods()};
 $('cvManualForm').onsubmit=async e=>{e.preventDefault();if(!game||!provider)return;let id=$('cvId').value.trim();if(provider==='steam'){const m=id.match(/[?&]id=(\d+)/);if(m)id=m[1]}if(provider==='curseforge'){const m=id.match(/\/(\d{2,12})(?:\/|[?#]|$)/);if(m)id=m[1]}if(fs25Profile){say('FS25 : installe les fichiers ZIP officiels dans le gestionnaire de fichiers du serveur. Ce formulaire n’est pas un installateur ModHub.');return;}if(palworldProfile){say('Palworld : installe les mods compatibles depuis Steam sur Windows, puis configure PalModSettings.ini avec le PackageName officiel. L’ajout par ID dans CMD Hosting n’est pas encore relié au PC.');return;}const button=$('cvManualForm').querySelector('button');button.disabled=true;try{const result=await post('/api/mods',{gameId:game.id,provider,itemId:id,title:$('cvName').value.trim(),appId:provider==='steam'?Number($('cvApp').value):null,version:'',autoUpdate:true,required:true});if(result.modId&&mode==='premium')await post('/api/mods/access',{modId:result.modId,category:'premium',purchaseDeclared:$('cvPurchased').checked});$('cvId').value='';$('cvName').value='';$('cvPurchased').checked=false;await config();say('Mod enregistré. Licences premium non vérifiées.')}catch(e){say(e.message)}finally{button.disabled=false}};
 $('cvSaveSettings').onclick=async()=>{if(!game)return;try{await post('/api/mods/preferences',{gameId:game.id,enabled:$('cvAuto').checked,backupBeforeUpdate:$('cvBackup').checked,frequencyMinutes:Number($('cvInterval').value)});say('Préférences sauvegardées. Installation inactive jusqu’à la mise en service.')}catch(e){say(e.message)}};
 $('cvSteamConnect').onclick=async()=>{try{const d=await post('/api/mods/steam/start',{});location.assign(d.url)}catch(e){say(e.message)}};
