@@ -16,7 +16,7 @@ test('v12 is loaded last and does not replace authentication or API routes',()=>
 test('one catalogue works even if dynamic data is absent, not a blank screen',()=>{
  assert.match(js,/cmdShopGrid>\.cmd-shop-card/);
  assert.match(js,/const target=full&&hasCards\?full:old\|\|full/);
- assert.match(js,/data-cmd-nav-suppressed/);
+ assert.match(js,/cmdNavSuppressed/);
  assert.match(js,/SAFE/gi);
  assert.match(js,/const safeAreas/);
  assert.match(js,/suppressGlobalDuplicates/);
