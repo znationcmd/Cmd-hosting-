@@ -255,6 +255,12 @@ test('Palworld can toggle compatible Workshop mods in the real INI with backup; 
  assert.equal(result.status,422);
  result=await put({packageName:'../outside',enabled:true,confirmStopped:true});
  assert.equal(result.status,400);
+ if(process.platform!=='win32'){
+  result=await put({packageName:'FarmingQuivern',enabled:true,confirmStopped:true});
+  assert.equal(result.status,422);
+  assert.doesNotMatch(await readFile(ini,'utf8'),/ActiveModList=FarmingQuivern/);
+  return;
+ }
  result=await put({packageName:'FarmingQuivern',enabled:true,confirmStopped:true});
  assert.equal(result.status,200);
  assert.equal(result.data.loadedVerified,false);
