@@ -1,0 +1,29 @@
+name: CMD Hosting - Verify live FS25 page and site health
+on:
+  push:
+    paths: ['.github/workflows/cmd-fs25-live-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Confirm actual Railway HTML, JS and API
+        shell: bash
+        run: |
+          set -euo pipefail
+          base=https://cmd-hosting-web-production.up.railway.app
+          for path in / /api/status /mod-auto-detect.js /mod-v2-ui.js; do
+            code=$(curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 --max-time 45 -o /tmp/fs25-check -w '%{http_code}' "$base$path")
+            echo "$path -> HTTP $code"
+            test "$code" = "200"
+            if [[ "$path" == "/mod-auto-detect.js" ]]; then
+              echo "mod-auto-detect size: $(wc -c </tmp/fs25-check)"
+              grep -q 'cmdFS25ModHubDirect' /tmp/fs25-check
+              grep -q 'cmdFS25PcPairLive' /tmp/fs25-check
+              grep -q 'Chercher sur ModHub GIANTS' /tmp/fs25-check
+              echo "FS25 live ModHub + PC pairing: VERIFIED"
+            fi
+          done
