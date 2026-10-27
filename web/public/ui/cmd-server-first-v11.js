@@ -129,6 +129,7 @@ function queue(){
  requestAnimationFrame(()=>{waiting=false;refresh()});
 }
 function handleNavigation(event){
+ if(window.__CMD_SERVER_FIRST_V12__)return;
  const link=event.target?.closest?.('[data-page="jeux"],[href="#jeux"],#cmdv7Catalog');
  if(!link||!link.closest(NAV_ROOTS)||!$('cmdCatalogSection'))return;
  event.preventDefault();event.stopImmediatePropagation();showFullCatalog();
