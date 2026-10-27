@@ -26,13 +26,41 @@ const fs25BrowseUrl=q=>q?'https://www.farming-simulator.com/mods.php?'+new URLSe
 const fs25QuickSearches=['Tracteurs','Cartes','Camions','John Deere','Véhicules','Bâtiments'];
 const isFs25=p=>/\bfs[ -]?25\b|farming\s*simulator\s*25|farming.simulator.2025/i.test([p?.game_key,p?.display_name,p?.game_name,p?.server_label,p?.name].filter(Boolean).join(' '));
 function say(v){$('cvStatus').textContent=v}
+// Share the same live host status used by Mes machines and Mes serveurs.
+// A disconnected badge was previously hardcoded and never refreshed.
+let lastMachineCheck=0;
+async function refreshMachineBadge(force=false){
+ if(!force&&Date.now()-lastMachineCheck<15000)return;
+ lastMachineCheck=Date.now();
+ const badge=panel.querySelector('.cmdv-wait');
+ try{
+  const r=await fetch('/api/pc/status',{credentials:'include',cache:'no-store'});
+  if(!r.ok)throw Error('HTTP '+r.status);
+  const d=await r.json();
+  const machine=d?.machine;
+  const online=machine?.online===true;
+  const total=Array.isArray(machine?.servers)?machine.servers.length:0;
+  badge.textContent=online?'PC connecté · '+total+' serveur'+(total!==1?'s':''):
+   machine?'PC hors ligne':'État du PC indisponible';
+  badge.dataset.machineState=online?'online':machine?'offline':'unknown';
+  badge.title=online?'Agent Windows détecté par CMD Hosting. Mods installés uniquement après confirmation.':
+   'Consulter Mes machines pour vérifier le statut de l’agent Windows.';
+ }catch{
+  badge.textContent='Connexion PC : état indisponible';
+  badge.dataset.machineState='unknown';
+ }
+}
+setInterval(()=>{if(!panel.classList.contains('hide')&&!document.hidden)void refreshMachineBadge()},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!panel.classList.contains('hide'))void refreshMachineBadge(true)});
+
 async function fetchJson(path,opts={}){const r=await fetch(path,{credentials:'include',cache:'no-store',...opts});let d={};try{d=await r.json()}catch{}if(!r.ok){const e=new Error(d.message||'Indisponible');e.browseUrl=d.browseUrl;throw e}return d}
 function post(path,data){return fetchJson(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)})}
 function officialUrl(){return palworldProfile?palworldSteamWorkshop:provider==='fs25'?officialFs25Url:provider==='arma'?'https://reforger.armaplatform.com/workshop':provider==='curseforge'&&['ark','g-ark-survival-ascended'].includes(game?.game_key)?'https://www.curseforge.com/ark-survival-ascended':provider==='curseforge'?'https://www.curseforge.com/minecraft':provider==='steam'?'https://steamcommunity.com/workshop/browse/?appid='+steamAppId:''}
 function link(href,label){const a=document.createElement('a');a.href=href;a.textContent=label;a.target='_blank';a.rel='noopener noreferrer';return a}
-function enter(){if(typeof show==='function')show('cmdMods');else document.querySelectorAll('.page').forEach(x=>x.classList.add('hide'));panel.classList.remove('hide');location.hash='cmdMods';loadServers()}
+function enter(){if(typeof show==='function')show('cmdMods');else document.querySelectorAll('.page').forEach(x=>x.classList.add('hide'));panel.classList.remove('hide');location.hash='cmdMods';void refreshMachineBadge(true);loadServers()}
 window.CMDHostingOpenMods=enter;
 window.CMDHostingOpenFS25ModHub=()=>{
+ void refreshMachineBadge(true);
  if(typeof show==='function')show('cmdMods');
  else{document.querySelectorAll('.page').forEach(x=>x.classList.add('hide'));panel.classList.remove('hide')}
  fs25Profile=true;palworldProfile=false;provider='fs25';game=null;mods=[];rights=[];term='';
@@ -43,6 +71,7 @@ window.CMDHostingOpenFS25ModHub=()=>{
  activeList();fs25Browser();
 };
 window.CMDHostingOpenPalworldWorkshop=()=>{
+ void refreshMachineBadge(true);
  if(typeof show==='function')show('cmdMods');else {document.querySelectorAll('.page').forEach(p=>p.classList.add('hide'));panel.classList.remove('hide')}
  palworldProfile=true;fs25Profile=false;provider='steam';steamAppId=1623730;
  game=null;mods=[];rights=[];activeList();
