@@ -15,3 +15,13 @@ coverage/
 .DS_Store
 *.sqlite
 *.db
+
+# CMD — fichiers de travail locaux (jamais de suppression de fichiers suivis)
+test-results/
+playwright-report/
+*.tmp
+*.swp
+*.swo
+*.bak
+*.orig
+*.sqlite3
