@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {allowed,validate} from './updater.mjs';
+import {allowed,validate,checkAndApply} from './updater.mjs';
 test('only approved app code paths may be updated, never server saves or arbitrary paths',()=>{
  for(const name of ['local-panel/server.mjs','local-panel/updater.mjs','local-panel/index.html','dayz-worlds/manager.mjs','asa-astraeos/manifest.json','DEMARRER-CMD-HOSTING-FICHIERS.cmd'])
   assert.equal(allowed(name),true,name);
@@ -36,4 +36,22 @@ test('Windows launchers check updates before starting the local panel without de
  assert.match(code,/backup|previous/);
  assert.match(code,/sha256/);
  assert.doesNotMatch(code,/CMD-Servers\\.*(?:rm|unlink)/);
+});
+
+test('same version marker still checks file integrity and repairs damaged files',async()=>{
+ const commit='b'.repeat(40);
+ let checked=0;
+ const repaired=await checkAndApply({
+  readPublished:async()=>({commit}),
+  readInstalled:async()=>commit,
+  applyManifest:async manifest=>{assert.equal(manifest.commit,commit);checked++;return {updated:true,files:1}}
+ });
+ assert.equal(checked,1);
+ assert.deepEqual(repaired,{updated:true,files:1});
+ const unchanged=await checkAndApply({
+  readPublished:async()=>({commit}),
+  readInstalled:async()=>commit,
+  applyManifest:async()=>({updated:false,files:0})
+ });
+ assert.deepEqual(unchanged,{updated:false,files:0,reason:'a-jour'});
 });
