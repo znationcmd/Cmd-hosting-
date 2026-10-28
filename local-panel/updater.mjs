@@ -123,10 +123,15 @@ export async function apply(manifest){
   return {files:pending.length,updated:true};
  }finally{await rm(work,{recursive:true,force:true}).catch(()=>{})}
 }
-export async function checkAndApply(){
- const rel=await published();
- if((await oldCommit())===rel.commit)return {updated:false,files:0,reason:'a-jour'};
- return apply(rel);
+// Always verify the installed file hashes, even when the release commit is unchanged.
+// Otherwise a partially interrupted update or local file corruption can remain broken
+// forever while the version marker still says "up to date".
+export async function checkAndApply({readPublished=published,readInstalled=oldCommit,applyManifest=apply}={}){
+ const rel=await readPublished();
+ const previous=await readInstalled();
+ const result=await applyManifest(rel);
+ if(!result.updated&&previous===rel.commit)return {...result,reason:'a-jour'};
+ return result;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  try{
