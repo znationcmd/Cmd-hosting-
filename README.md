@@ -90,3 +90,15 @@ Une sauvegarde des pages et scripts **publics** est préparée par [le workflow 
 Le dossier [`web/public/`](web/public/) contient maintenant une copie de la page principale et de ses ressources publiques, automatiquement récupérées depuis Railway et contrôlées avant import. La copie est stylisée avec [le thème Premium CMD 16K](web/public/ui/premium-16k.css) et [ses icônes SVG](web/public/ui/premium-16k.js). La copie originale sans cette couche graphique reste dans [la branche de sauvegarde](https://github.com/znationcmd/Cmd-hosting-/tree/recovery/cmd-hosting-public-ui-20261017).
 
 Les **13 fichiers JS** de l'interface copiés ont été vérifiés syntaxiquement, et les références locales de la page sont présentes. Les tests de régression sont dans [`tests/restored-web.test.mjs`](tests/restored-web.test.mjs). Cette restauration constitue **le frontend public uniquement**. La fonction Bun backend, les données clients, la base PostgreSQL et les variables d'environnement ne sont pas migrées ; n'utilisez pas le dossier statique comme remplacement direct du service Railway en production. La source backend doit être récupérée de manière fiable avant le basculement.
+
+## Diagnostic du PC hôte — 14 novembre 2026
+
+Le panneau Web CMD Hosting ne crée pas à lui seul de serveur de jeu. Le contrôleur web reçoit des requêtes de l'agent PC, mais l'agent V5 et le **Rental Worker V2** sont deux programmes distincts. Le workflow de location exige aussi l'autorisation de l'éditeur, les reçus de paiement vérifiés et une association sécurisée de la machine.
+
+Le lanceur [Installer-CMDHosting-PC.cmd](scripts/Installer-CMDHosting-PC.cmd) permet sur le **PC hôte Windows** de :
+
+- diagnostiquer sans modifier les fichiers du jeu (option 1) ;
+- installer/associer le Rental Worker V2 avec consentement explicite (option 2) ;
+- lancer une seule interrogation de la file de travail autorisée (option 3).
+
+Il télécharge une révision GitHub fixe du worker, vérifie la présence de marqueurs attendus et n'installe aucun jeu sans action du propriétaire. Le diagnostic distingue l'agent V5, le worker planifié, le token machine, SteamCMD et l'API cloud. Il ne garantit **ni provisionnement automatique activé dans le Dashboard, ni lancement des exécutables de serveurs**. Le code backend complet de la fonction web Railway n'est pas disponible dans ce dépôt ; la liaison produit reste à finaliser et à tester sur Windows. Ne jamais publier ni envoyer le code d'association ou le token machine.
