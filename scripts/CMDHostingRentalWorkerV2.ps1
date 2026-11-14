@@ -214,16 +214,360 @@ function Sync-ManagedDayZ([string]$installationRoot,[string]$steamExe){
 }
 
 if($Diagnose){
- Write-Host 'CMD Hosting Rental Worker V2 — lecture seule'
- Write-Host ('Tache Windows : '+$(if(Get-ScheduledTask -TaskName $task -ErrorAction SilentlyContinue){'existante'}else{'absente'}))
- Write-Host ('Association V5 : '+(!!(Existing-Node)))
- Write-Host ('Jeton de machine : '+(Test-Path -LiteralPath $secretFile))
- Write-Host ('Config locale : '+(Test-Path -LiteralPath $settings))
+ Write-Host 'CMD Hosting Rental Worker V2 — diagnostic en lecture seule'
+ $scheduled=Get-ScheduledTask -TaskName $task -ErrorAction SilentlyContinue
+ $workerExists=Test-Path -LiteralPath $worker -PathType Leaf
+ $settingsExists=Test-Path -LiteralPath $settings -PathType Leaf
+ $paired=(Test-Path -LiteralPath $secretFile -PathType Leaf) -or (Test-Path -LiteralPath $portableToken -PathType Leaf)
+ $node=Existing-Node
+ $steamPresent=$false
+ $steamMessage='non trouve'
+ try{$steamPath=Get-Steam;$steamPresent=$true;$steamMessage=$steamPath}catch{$steamMessage=$_.Exception.Message}
+ $rootStatus='non configure'
+ $ownerTerms=$false
+ $agentId=''
+ $configValid=$false
+ if($settingsExists){
+  try{
+   $local=Json $settings
+   $agentId=[string]$local.agentId
+   $ownerTerms=$local.ownerPublisherTermsApproved -eq $true
+   $null=Valid-Root ([string]$local.installRoot)
+   $rootStatus=[string]$local.installRoot
+   $configValid=($agentId -match '^host-[a-f0-9-]{36}
+ $steam=Get-Steam
+ $root=Valid-Root 'C:\CMD-Servers'
+ One-Time-Pair
+ $id=New-AgentId
+ $node=Existing-Node
+ if(!$node){$node=$id}
+ $local=@{agentId=$id;nodeId=$node;installRoot=$root;steamCmdPath=$steam;
+  ownerPublisherTermsApproved=$false;contentVersion='2.0'}
+ Write-Host 'Autoriser seulement les futures locations PC verifiees et sous reserve des conditions editeurs ?'
+ $ok=Read-Host 'Entrer O pour accepter'
+ if($ok -notin @('O','o','Oui','oui')){throw 'Publisher license terms not approved.'}
+ $local.ownerPublisherTermsApproved=$true
+ [IO.File]::WriteAllText($settings,(ConvertTo-Json $local)+[Environment]::NewLine,([Text.UTF8Encoding]::new($false)))
+ if($PSCommandPath -ne $worker){Copy-Item -LiteralPath $PSCommandPath -Destination $worker -ErrorAction Stop}
+ $exe=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+ $a=New-ScheduledTaskAction -Execute $exe -Argument ('-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+$worker+'" -Once')
+ $atLogon=New-ScheduledTaskTrigger -AtLogOn -User ([Security.Principal.WindowsIdentity]::GetCurrent().Name)
+ $every10=New-ScheduledTaskTrigger -Once -At ((Get-Date).AddMinutes(2)) -RepetitionInterval (New-TimeSpan -Minutes 10) -RepetitionDuration (New-TimeSpan -Days 3650)
+ $principal=New-ScheduledTaskPrincipal -UserId ([Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Limited
+ $options=New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 7)
+ Register-ScheduledTask -TaskName $task -Action $a -Trigger @($atLogon,$every10) -Principal $principal -Settings $options -Description 'Isolated verified paid PC rentals only'|Out-Null
+ Write-Log ('Worker installed. Owner must authorize agent '+$id+' for rental node '+$node+' in cloud.')
+ exit 0
+}
+if(!$Once){throw 'Use -Install, -Diagnose, or -Once.'}
+$lock=$null;$job=$null;$conf=$null
+try{$lock=[IO.File]::Open((Join-Path $home 'worker.lock'),'OpenOrCreate','ReadWrite','None')}
+catch{Write-Log 'Worker already running; no duplicate started.';exit 0}
+try{
+ $conf=Json $settings
+ if($conf.ownerPublisherTermsApproved -ne $true){throw 'Publisher terms not approved.'}
+ $root=Valid-Root ([string]$conf.installRoot)
+ $steam=[string]$conf.steamCmdPath
+ if([IO.Path]::GetFileName($steam) -ine 'steamcmd.exe' -or !(Test-Path -LiteralPath $steam -PathType Leaf)){throw 'SteamCMD missing.'}
+ $ramGB=[math]::Round([double](Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB,1)
+ $diskGB=[math]::Round([double](Get-PSDrive -Name $root.Substring(0,1)).Free/1GB,1)
+ Send-MachineHeartbeat ([string]$conf.agentId)
+ Sync-ManagedDayZ $root $steam
+ $heart=Api '/v1/agents/heartbeat' @{
+   agentId=[string]$conf.agentId;role='host';version='rental-worker-v2.1';serverCount=0}
+ if(!$heart.heartbeatAccepted){throw 'CMD Hosting cloud did not acknowledge this authorized machine.'}
+ $reply=Api '/v1/provisioning/agent/claim' @{nodeId=[string]$conf.nodeId}
+ if(!$reply.ok -or !$reply.job){Write-Log 'No authorized paid rental work available.';exit 0}
+ $job=$reply.job
+ $names=@{dayz='DayZ';'ark-asa'='ARK Ascended';'ark-survival-ascended'='ARK Ascended';'arma-reforger'='Arma Reforger';'7dtd'='7 Days to Die'}
+ $key=[string]$job.gameKey
+ if(!$names.ContainsKey($key)){throw 'Game not allowed on Windows rental worker.'}
+ if($job.platform -notin @('pc','crossplay') -or [string]$job.action -ne 'install_steamcmd_in_isolated_rental_directory'){throw 'Invalid job platform or command.'}
+ $serverId=[string]$job.serverId
+ if($serverId -notmatch '^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$'){throw 'Invalid server identifier.'}
+ $slots=[int]$job.slots
+ if($slots -lt 1 -or $slots -gt 200){throw 'Invalid rental slot count.'}
+ if($ramGB -lt [double]$job.minimumRamGB){throw 'Not enough RAM for this game. Future dedicated server required.'}
+ if($diskGB -lt [double]$job.minimumFreeGB){throw 'Not enough disk space for this game.'}
+ $slug=@{dayz='dayz';'ark-asa'='ark-asa';'ark-survival-ascended'='ark-asa';'arma-reforger'='arma-reforger';'7dtd'='7dtd'}[$key]
+ $folder=Join-Path (Join-Path $root $serverId) $slug
+ if((Test-Path -LiteralPath $folder) -and @(Get-ChildItem -LiteralPath $folder -Force).Count){throw 'Files already present; refusing to overwrite a rental.'}
+ $installScript=Download-Official 'Install-CMDGameServer.ps1' ($cloud+'/downloads/game-installer.ps1') 'AcceptPublisherTerms'
+ & $installScript -Game $names[$key] -ServerId $serverId -InstallRoot $root -SteamCmdPath $steam -Install -AcceptPublisherTerms
+ if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'Official installer returned an error.'}
+ $exe=Join-Path $folder ([string]$job.expectedExecutable).Replace('/','\')
+ if(!(Test-Path -LiteralPath $exe -PathType Leaf)){throw 'Binary verification failed.'}
+ $validation=Json (Join-Path $folder 'cmdhosting-steam-validation.json')
+ if($validation.schema -cne 'cmd-hosting/steam-validation-v1' -or $validation.steamValidated -ne $true -or [string]$validation.appId -cne [string]$job.steamAppId -or [int]$validation.manifestStateFlags -ne 4){throw 'Complete Steam file validation receipt missing or wrong game.'}
+ $manifest=Join-Path (Join-Path $folder 'steamapps') ('appmanifest_'+[string]$validation.appId+'.acf')
+ if((Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToLowerInvariant() -cne [string]$validation.manifestSha256){throw 'Steam manifest changed after validation.'}
+ $canon=if($key -eq 'ark-survival-ascended'){'ark-asa'}else{$key}
+ Json-New (Join-Path $folder '.cmdhosting-initial-install.json') @{
+  serverId=$serverId;gameKey=$canon;binaryVerified=$true;contentPrepared=$false;jobId=[string]$job.jobId}
+ $contentScript=Download-Official 'Configure-CMDGameContent.ps1' ($cloud+'/downloads/game-content.ps1') 'cmdhosting-content-pending'
+ $mapId=[string]$job.mapId
+ if(!$mapId){throw 'Cloud returned no validated game map.'}
+ $ids=@($job.modIds|Where-Object {$_})
+ $approved=($job.publisherEntitlementApproved -eq $true)
+ & $contentScript -GameKey $canon -ServerId $serverId -ServerRoot $folder -MapId $mapId -ModIds $ids -Slots $slots -Apply -PublisherEntitlementApproved:$approved
+ $initial=Json (Join-Path $folder '.cmdhosting-initial-install.json')
+ if($initial.contentPrepared -ne $true){throw 'Map content was not prepared.'}
+ $args=''
+ if($canon -eq 'dayz' -and $ids.Count){$args=Install-DayZMods $folder $ids $steam $exe}
+ if($canon -eq 'ark-asa'){
+  $data=Json (Join-Path $folder 'cmdhosting-launch.json')
+  $args=@($data.arguments) -join ' '
+ }
+ $registered=Register-NewRental $folder $canon $serverId $args
+ Write-Log ('New server registry status: '+$registered)
+ $report=Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='content_prepared';fileVerification=$validation}
+ if(!$report.ok){throw 'Cloud did not confirm game/map content preparation.'}
+ Write-Log ('Binaries and initial map prepared for '+$canon+'. Server startup and external connectivity not yet verified.')
+}catch{
+ Write-Log ('Rental requires attention: '+$_.Exception.Message)
+ if($job -and $job.jobId -and $conf){
+  try{[void](Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='needs_attention'})}catch{}
+ }
+ exit 1
+}finally{if($lock){$lock.Dispose()}}
+) -and
+     ([string]$local.nodeId -match '^[A-Za-z0-9][A-Za-z0-9._:-]{2,110}
+ $steam=Get-Steam
+ $root=Valid-Root 'C:\CMD-Servers'
+ One-Time-Pair
+ $id=New-AgentId
+ $node=Existing-Node
+ if(!$node){$node=$id}
+ $local=@{agentId=$id;nodeId=$node;installRoot=$root;steamCmdPath=$steam;
+  ownerPublisherTermsApproved=$false;contentVersion='2.0'}
+ Write-Host 'Autoriser seulement les futures locations PC verifiees et sous reserve des conditions editeurs ?'
+ $ok=Read-Host 'Entrer O pour accepter'
+ if($ok -notin @('O','o','Oui','oui')){throw 'Publisher license terms not approved.'}
+ $local.ownerPublisherTermsApproved=$true
+ [IO.File]::WriteAllText($settings,(ConvertTo-Json $local)+[Environment]::NewLine,([Text.UTF8Encoding]::new($false)))
+ if($PSCommandPath -ne $worker){Copy-Item -LiteralPath $PSCommandPath -Destination $worker -ErrorAction Stop}
+ $exe=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+ $a=New-ScheduledTaskAction -Execute $exe -Argument ('-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+$worker+'" -Once')
+ $atLogon=New-ScheduledTaskTrigger -AtLogOn -User ([Security.Principal.WindowsIdentity]::GetCurrent().Name)
+ $every10=New-ScheduledTaskTrigger -Once -At ((Get-Date).AddMinutes(2)) -RepetitionInterval (New-TimeSpan -Minutes 10) -RepetitionDuration (New-TimeSpan -Days 3650)
+ $principal=New-ScheduledTaskPrincipal -UserId ([Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Limited
+ $options=New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 7)
+ Register-ScheduledTask -TaskName $task -Action $a -Trigger @($atLogon,$every10) -Principal $principal -Settings $options -Description 'Isolated verified paid PC rentals only'|Out-Null
+ Write-Log ('Worker installed. Owner must authorize agent '+$id+' for rental node '+$node+' in cloud.')
+ exit 0
+}
+if(!$Once){throw 'Use -Install, -Diagnose, or -Once.'}
+$lock=$null;$job=$null;$conf=$null
+try{$lock=[IO.File]::Open((Join-Path $home 'worker.lock'),'OpenOrCreate','ReadWrite','None')}
+catch{Write-Log 'Worker already running; no duplicate started.';exit 0}
+try{
+ $conf=Json $settings
+ if($conf.ownerPublisherTermsApproved -ne $true){throw 'Publisher terms not approved.'}
+ $root=Valid-Root ([string]$conf.installRoot)
+ $steam=[string]$conf.steamCmdPath
+ if([IO.Path]::GetFileName($steam) -ine 'steamcmd.exe' -or !(Test-Path -LiteralPath $steam -PathType Leaf)){throw 'SteamCMD missing.'}
+ $ramGB=[math]::Round([double](Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB,1)
+ $diskGB=[math]::Round([double](Get-PSDrive -Name $root.Substring(0,1)).Free/1GB,1)
+ Send-MachineHeartbeat ([string]$conf.agentId)
+ Sync-ManagedDayZ $root $steam
+ $heart=Api '/v1/agents/heartbeat' @{
+   agentId=[string]$conf.agentId;role='host';version='rental-worker-v2.1';serverCount=0}
+ if(!$heart.heartbeatAccepted){throw 'CMD Hosting cloud did not acknowledge this authorized machine.'}
+ $reply=Api '/v1/provisioning/agent/claim' @{nodeId=[string]$conf.nodeId}
+ if(!$reply.ok -or !$reply.job){Write-Log 'No authorized paid rental work available.';exit 0}
+ $job=$reply.job
+ $names=@{dayz='DayZ';'ark-asa'='ARK Ascended';'ark-survival-ascended'='ARK Ascended';'arma-reforger'='Arma Reforger';'7dtd'='7 Days to Die'}
+ $key=[string]$job.gameKey
+ if(!$names.ContainsKey($key)){throw 'Game not allowed on Windows rental worker.'}
+ if($job.platform -notin @('pc','crossplay') -or [string]$job.action -ne 'install_steamcmd_in_isolated_rental_directory'){throw 'Invalid job platform or command.'}
+ $serverId=[string]$job.serverId
+ if($serverId -notmatch '^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$'){throw 'Invalid server identifier.'}
+ $slots=[int]$job.slots
+ if($slots -lt 1 -or $slots -gt 200){throw 'Invalid rental slot count.'}
+ if($ramGB -lt [double]$job.minimumRamGB){throw 'Not enough RAM for this game. Future dedicated server required.'}
+ if($diskGB -lt [double]$job.minimumFreeGB){throw 'Not enough disk space for this game.'}
+ $slug=@{dayz='dayz';'ark-asa'='ark-asa';'ark-survival-ascended'='ark-asa';'arma-reforger'='arma-reforger';'7dtd'='7dtd'}[$key]
+ $folder=Join-Path (Join-Path $root $serverId) $slug
+ if((Test-Path -LiteralPath $folder) -and @(Get-ChildItem -LiteralPath $folder -Force).Count){throw 'Files already present; refusing to overwrite a rental.'}
+ $installScript=Download-Official 'Install-CMDGameServer.ps1' ($cloud+'/downloads/game-installer.ps1') 'AcceptPublisherTerms'
+ & $installScript -Game $names[$key] -ServerId $serverId -InstallRoot $root -SteamCmdPath $steam -Install -AcceptPublisherTerms
+ if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'Official installer returned an error.'}
+ $exe=Join-Path $folder ([string]$job.expectedExecutable).Replace('/','\')
+ if(!(Test-Path -LiteralPath $exe -PathType Leaf)){throw 'Binary verification failed.'}
+ $validation=Json (Join-Path $folder 'cmdhosting-steam-validation.json')
+ if($validation.schema -cne 'cmd-hosting/steam-validation-v1' -or $validation.steamValidated -ne $true -or [string]$validation.appId -cne [string]$job.steamAppId -or [int]$validation.manifestStateFlags -ne 4){throw 'Complete Steam file validation receipt missing or wrong game.'}
+ $manifest=Join-Path (Join-Path $folder 'steamapps') ('appmanifest_'+[string]$validation.appId+'.acf')
+ if((Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToLowerInvariant() -cne [string]$validation.manifestSha256){throw 'Steam manifest changed after validation.'}
+ $canon=if($key -eq 'ark-survival-ascended'){'ark-asa'}else{$key}
+ Json-New (Join-Path $folder '.cmdhosting-initial-install.json') @{
+  serverId=$serverId;gameKey=$canon;binaryVerified=$true;contentPrepared=$false;jobId=[string]$job.jobId}
+ $contentScript=Download-Official 'Configure-CMDGameContent.ps1' ($cloud+'/downloads/game-content.ps1') 'cmdhosting-content-pending'
+ $mapId=[string]$job.mapId
+ if(!$mapId){throw 'Cloud returned no validated game map.'}
+ $ids=@($job.modIds|Where-Object {$_})
+ $approved=($job.publisherEntitlementApproved -eq $true)
+ & $contentScript -GameKey $canon -ServerId $serverId -ServerRoot $folder -MapId $mapId -ModIds $ids -Slots $slots -Apply -PublisherEntitlementApproved:$approved
+ $initial=Json (Join-Path $folder '.cmdhosting-initial-install.json')
+ if($initial.contentPrepared -ne $true){throw 'Map content was not prepared.'}
+ $args=''
+ if($canon -eq 'dayz' -and $ids.Count){$args=Install-DayZMods $folder $ids $steam $exe}
+ if($canon -eq 'ark-asa'){
+  $data=Json (Join-Path $folder 'cmdhosting-launch.json')
+  $args=@($data.arguments) -join ' '
+ }
+ $registered=Register-NewRental $folder $canon $serverId $args
+ Write-Log ('New server registry status: '+$registered)
+ $report=Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='content_prepared';fileVerification=$validation}
+ if(!$report.ok){throw 'Cloud did not confirm game/map content preparation.'}
+ Write-Log ('Binaries and initial map prepared for '+$canon+'. Server startup and external connectivity not yet verified.')
+}catch{
+ Write-Log ('Rental requires attention: '+$_.Exception.Message)
+ if($job -and $job.jobId -and $conf){
+  try{[void](Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='needs_attention'})}catch{}
+ }
+ exit 1
+}finally{if($lock){$lock.Dispose()}}
+) -and
+     $ownerTerms -and (Test-Path -LiteralPath ([string]$local.steamCmdPath) -PathType Leaf)
+   if(!$node){$node=[string]$local.nodeId}
+  }catch{$rootStatus='configuration invalide : '+$_.Exception.Message}
+ }
+ $cloudOnline=$false
+ try{
+  $test=Invoke-WebRequest -UseBasicParsing -Uri ($cloud+'/health') -Method Get -TimeoutSec 15
+  $cloudOnline=$test.StatusCode -eq 200
+ }catch{}
+ $ready=!!$scheduled -and $workerExists -and $paired -and $configValid -and $steamPresent -and $cloudOnline
+ Write-Host ('Agent V5 reconnu : '+[bool](Existing-Node))
+ Write-Host ('Worker planifie : '+[bool]$scheduled)
+ Write-Host ('Script local present : '+$workerExists)
+ Write-Host ('Configuration worker : '+$settingsExists+' ; valide : '+$configValid)
+ Write-Host ('Autorisation editeur : '+$ownerTerms)
+ Write-Host ('Jeton machine protege : '+$paired)
+ Write-Host ('Identifiant machine (non secret) : '+$node)
+ Write-Host ('Identifiant worker (non secret) : '+$agentId)
+ Write-Host ('SteamCMD : '+$steamMessage)
+ Write-Host ('Racine des futures locations : '+$rootStatus)
+ Write-Host ('Cloud API accessible : '+$cloudOnline)
+ Write-Host ('Worker local pret : '+$ready)
+ Write-Host 'Attention : pret signifie seulement agent installe. Aucun serveur ni location payee ne sont prouves actifs.'
+ if(!$ready){Write-Host 'ACTION : installer/reparer le worker sur le PC, puis lancer -Once. Ne pas modifier les locations existantes.';exit 2}
  exit 0
 }
 if($Install){
  if(Get-ScheduledTask -TaskName $task -ErrorAction SilentlyContinue){
-  Write-Log 'Worker task already exists. Refusing duplicate registration.'
+  $workerExists=Test-Path -LiteralPath $worker -PathType Leaf
+  $settingsExists=Test-Path -LiteralPath $settings -PathType Leaf
+  $paired=(Test-Path -LiteralPath $secretFile -PathType Leaf) -or (Test-Path -LiteralPath $portableToken -PathType Leaf)
+  $valid=$false
+  if($settingsExists){
+   try{
+    $existing=Json $settings
+    $valid=($existing.ownerPublisherTermsApproved -eq $true) -and
+      ([string]$existing.agentId -match '^host-[a-f0-9-]{36}
+ $steam=Get-Steam
+ $root=Valid-Root 'C:\CMD-Servers'
+ One-Time-Pair
+ $id=New-AgentId
+ $node=Existing-Node
+ if(!$node){$node=$id}
+ $local=@{agentId=$id;nodeId=$node;installRoot=$root;steamCmdPath=$steam;
+  ownerPublisherTermsApproved=$false;contentVersion='2.0'}
+ Write-Host 'Autoriser seulement les futures locations PC verifiees et sous reserve des conditions editeurs ?'
+ $ok=Read-Host 'Entrer O pour accepter'
+ if($ok -notin @('O','o','Oui','oui')){throw 'Publisher license terms not approved.'}
+ $local.ownerPublisherTermsApproved=$true
+ [IO.File]::WriteAllText($settings,(ConvertTo-Json $local)+[Environment]::NewLine,([Text.UTF8Encoding]::new($false)))
+ if($PSCommandPath -ne $worker){Copy-Item -LiteralPath $PSCommandPath -Destination $worker -ErrorAction Stop}
+ $exe=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+ $a=New-ScheduledTaskAction -Execute $exe -Argument ('-NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "'+$worker+'" -Once')
+ $atLogon=New-ScheduledTaskTrigger -AtLogOn -User ([Security.Principal.WindowsIdentity]::GetCurrent().Name)
+ $every10=New-ScheduledTaskTrigger -Once -At ((Get-Date).AddMinutes(2)) -RepetitionInterval (New-TimeSpan -Minutes 10) -RepetitionDuration (New-TimeSpan -Days 3650)
+ $principal=New-ScheduledTaskPrincipal -UserId ([Security.Principal.WindowsIdentity]::GetCurrent().Name) -LogonType Interactive -RunLevel Limited
+ $options=New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 7)
+ Register-ScheduledTask -TaskName $task -Action $a -Trigger @($atLogon,$every10) -Principal $principal -Settings $options -Description 'Isolated verified paid PC rentals only'|Out-Null
+ Write-Log ('Worker installed. Owner must authorize agent '+$id+' for rental node '+$node+' in cloud.')
+ exit 0
+}
+if(!$Once){throw 'Use -Install, -Diagnose, or -Once.'}
+$lock=$null;$job=$null;$conf=$null
+try{$lock=[IO.File]::Open((Join-Path $home 'worker.lock'),'OpenOrCreate','ReadWrite','None')}
+catch{Write-Log 'Worker already running; no duplicate started.';exit 0}
+try{
+ $conf=Json $settings
+ if($conf.ownerPublisherTermsApproved -ne $true){throw 'Publisher terms not approved.'}
+ $root=Valid-Root ([string]$conf.installRoot)
+ $steam=[string]$conf.steamCmdPath
+ if([IO.Path]::GetFileName($steam) -ine 'steamcmd.exe' -or !(Test-Path -LiteralPath $steam -PathType Leaf)){throw 'SteamCMD missing.'}
+ $ramGB=[math]::Round([double](Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory/1GB,1)
+ $diskGB=[math]::Round([double](Get-PSDrive -Name $root.Substring(0,1)).Free/1GB,1)
+ Send-MachineHeartbeat ([string]$conf.agentId)
+ Sync-ManagedDayZ $root $steam
+ $heart=Api '/v1/agents/heartbeat' @{
+   agentId=[string]$conf.agentId;role='host';version='rental-worker-v2.1';serverCount=0}
+ if(!$heart.heartbeatAccepted){throw 'CMD Hosting cloud did not acknowledge this authorized machine.'}
+ $reply=Api '/v1/provisioning/agent/claim' @{nodeId=[string]$conf.nodeId}
+ if(!$reply.ok -or !$reply.job){Write-Log 'No authorized paid rental work available.';exit 0}
+ $job=$reply.job
+ $names=@{dayz='DayZ';'ark-asa'='ARK Ascended';'ark-survival-ascended'='ARK Ascended';'arma-reforger'='Arma Reforger';'7dtd'='7 Days to Die'}
+ $key=[string]$job.gameKey
+ if(!$names.ContainsKey($key)){throw 'Game not allowed on Windows rental worker.'}
+ if($job.platform -notin @('pc','crossplay') -or [string]$job.action -ne 'install_steamcmd_in_isolated_rental_directory'){throw 'Invalid job platform or command.'}
+ $serverId=[string]$job.serverId
+ if($serverId -notmatch '^[A-Za-z0-9][A-Za-z0-9_-]{2,63}$'){throw 'Invalid server identifier.'}
+ $slots=[int]$job.slots
+ if($slots -lt 1 -or $slots -gt 200){throw 'Invalid rental slot count.'}
+ if($ramGB -lt [double]$job.minimumRamGB){throw 'Not enough RAM for this game. Future dedicated server required.'}
+ if($diskGB -lt [double]$job.minimumFreeGB){throw 'Not enough disk space for this game.'}
+ $slug=@{dayz='dayz';'ark-asa'='ark-asa';'ark-survival-ascended'='ark-asa';'arma-reforger'='arma-reforger';'7dtd'='7dtd'}[$key]
+ $folder=Join-Path (Join-Path $root $serverId) $slug
+ if((Test-Path -LiteralPath $folder) -and @(Get-ChildItem -LiteralPath $folder -Force).Count){throw 'Files already present; refusing to overwrite a rental.'}
+ $installScript=Download-Official 'Install-CMDGameServer.ps1' ($cloud+'/downloads/game-installer.ps1') 'AcceptPublisherTerms'
+ & $installScript -Game $names[$key] -ServerId $serverId -InstallRoot $root -SteamCmdPath $steam -Install -AcceptPublisherTerms
+ if($LASTEXITCODE -and $LASTEXITCODE -ne 0){throw 'Official installer returned an error.'}
+ $exe=Join-Path $folder ([string]$job.expectedExecutable).Replace('/','\')
+ if(!(Test-Path -LiteralPath $exe -PathType Leaf)){throw 'Binary verification failed.'}
+ $validation=Json (Join-Path $folder 'cmdhosting-steam-validation.json')
+ if($validation.schema -cne 'cmd-hosting/steam-validation-v1' -or $validation.steamValidated -ne $true -or [string]$validation.appId -cne [string]$job.steamAppId -or [int]$validation.manifestStateFlags -ne 4){throw 'Complete Steam file validation receipt missing or wrong game.'}
+ $manifest=Join-Path (Join-Path $folder 'steamapps') ('appmanifest_'+[string]$validation.appId+'.acf')
+ if((Get-FileHash -LiteralPath $manifest -Algorithm SHA256).Hash.ToLowerInvariant() -cne [string]$validation.manifestSha256){throw 'Steam manifest changed after validation.'}
+ $canon=if($key -eq 'ark-survival-ascended'){'ark-asa'}else{$key}
+ Json-New (Join-Path $folder '.cmdhosting-initial-install.json') @{
+  serverId=$serverId;gameKey=$canon;binaryVerified=$true;contentPrepared=$false;jobId=[string]$job.jobId}
+ $contentScript=Download-Official 'Configure-CMDGameContent.ps1' ($cloud+'/downloads/game-content.ps1') 'cmdhosting-content-pending'
+ $mapId=[string]$job.mapId
+ if(!$mapId){throw 'Cloud returned no validated game map.'}
+ $ids=@($job.modIds|Where-Object {$_})
+ $approved=($job.publisherEntitlementApproved -eq $true)
+ & $contentScript -GameKey $canon -ServerId $serverId -ServerRoot $folder -MapId $mapId -ModIds $ids -Slots $slots -Apply -PublisherEntitlementApproved:$approved
+ $initial=Json (Join-Path $folder '.cmdhosting-initial-install.json')
+ if($initial.contentPrepared -ne $true){throw 'Map content was not prepared.'}
+ $args=''
+ if($canon -eq 'dayz' -and $ids.Count){$args=Install-DayZMods $folder $ids $steam $exe}
+ if($canon -eq 'ark-asa'){
+  $data=Json (Join-Path $folder 'cmdhosting-launch.json')
+  $args=@($data.arguments) -join ' '
+ }
+ $registered=Register-NewRental $folder $canon $serverId $args
+ Write-Log ('New server registry status: '+$registered)
+ $report=Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='content_prepared';fileVerification=$validation}
+ if(!$report.ok){throw 'Cloud did not confirm game/map content preparation.'}
+ Write-Log ('Binaries and initial map prepared for '+$canon+'. Server startup and external connectivity not yet verified.')
+}catch{
+ Write-Log ('Rental requires attention: '+$_.Exception.Message)
+ if($job -and $job.jobId -and $conf){
+  try{[void](Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='needs_attention'})}catch{}
+ }
+ exit 1
+}finally{if($lock){$lock.Dispose()}}
+) -and
+      (Test-Path -LiteralPath ([string]$existing.steamCmdPath) -PathType Leaf)
+   }catch{$valid=$false}
+  }
+  if(!$workerExists -or !$settingsExists -or !$paired -or !$valid){
+   throw 'Une tache Windows existe, mais le worker est incomplet. Lancez -Diagnose et corrigez les fichiers manquants ; aucune association ni location n a ete ecrasee.'
+  }
+  Write-Log 'Worker already configured; existing scheduled task preserved.'
   exit 0
  }
  $steam=Get-Steam
