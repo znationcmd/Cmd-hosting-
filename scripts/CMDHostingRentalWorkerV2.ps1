@@ -126,7 +126,18 @@ function Register-NewRental([string]$root,[string]$game,[string]$serverId,[strin
  $list=Json $file
  if(!$list.PSObject.Properties['servers']){throw 'Mod agent server list not recognized.'}
  $matches=@($list.servers|Where-Object {$_.id -eq $serverId})
- if($matches.Count){return 'existing-rental-entry-preserved'}
+ if($matches.Count){
+  if($matches.Count -ne 1){throw 'Duplicate server ID in runtime registry; refusing ambiguous registration.'}
+  $expected=@{dayz='DayZServer_x64.exe';'ark-asa'='ShooterGame\Binaries\Win64\ArkAscendedServer.exe';'arma-reforger'='ArmaReforgerServer.exe';'7dtd'='7DaysToDieServer.exe';palworld='PalServer.exe'}[$game]
+  if(!$expected){throw 'Unsupported game registry mapping.'}
+  $expectedExe=[IO.Path]::GetFullPath((Join-Path $root $expected))
+  $actualExe=[string]$matches[0].exe
+  if(!$actualExe -or !([IO.Path]::GetFullPath($actualExe)).Equals($expectedExe,[StringComparison]::OrdinalIgnoreCase)){
+   throw 'Existing server ID belongs to another executable; refusing to claim success.'
+  }
+  if($matches[0].cmdHostingRental -ne $true){throw 'Existing server ID is not an authorized CMD Hosting rental.'}
+  return 'existing-rental-entry-preserved'
+ }
  $exe=@{dayz='DayZServer_x64.exe';'ark-asa'='ShooterGame\Binaries\Win64\ArkAscendedServer.exe';'arma-reforger'='ArmaReforgerServer.exe';'7dtd'='7DaysToDieServer.exe';palworld='PalServer.exe'}[$game]
  if(!$exe){throw 'Unsupported game registry mapping.'}
  $entry=@{id=$serverId;exe=(Join-Path $root $exe);cwd=$root;args=$arguments;cmdHostingRental=$true}
