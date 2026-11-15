@@ -162,7 +162,7 @@ function Start-NewRental([string]$root,[string]$game,[string]$serverId,[string]$
  if([string]$initial.serverId -cne $serverId -or [string]$initial.gameKey -cne $game -or $initial.contentPrepared -ne $true){throw 'New rental marker invalid before startup.'}
  if($game -eq 'dayz'){
   if(!(Test-Path -LiteralPath (Join-Path $dir 'serverDZ.cfg') -PathType Leaf)){throw 'DayZ configuration missing.'}
-  $arguments='-config=serverDZ.cfg -profiles=profiles -dologs -adminlog -netlog'+$arguments
+  $arguments='-config=serverDZ.cfg -profiles=profiles -dologs -adminlog -netlog '+$arguments
  }elseif($game -eq 'ark-asa'){
   $launch=Json (Join-Path $dir 'cmdhosting-launch.json')
   if($launch.gameKey -cne 'ark-asa' -or $launch.publisherDownloadPending -eq $true){throw 'ARK map/mod content pending publisher download; startup deferred.'}
