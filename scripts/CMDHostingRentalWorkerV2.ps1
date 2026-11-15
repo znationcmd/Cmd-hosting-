@@ -149,6 +149,35 @@ function Register-NewRental([string]$root,[string]$game,[string]$serverId,[strin
  Move-Item -LiteralPath $tmp -Destination $file -Force
  return 'new-rental-added-with-backup'
 }
+# Start only newly provisioned, isolated Windows game servers.
+# Process liveness is not proof of internet connectivity or player joinability.
+function Start-NewRental([string]$root,[string]$game,[string]$serverId,[string]$arguments){
+ $exeRelative=@{dayz='DayZServer_x64.exe';'ark-asa'='ShooterGame\Binaries\Win64\ArkAscendedServer.exe'}[$game]
+ if(!$exeRelative){return 'startup-not-supported-for-game'}
+ $exe=[IO.Path]::GetFullPath((Join-Path $root $exeRelative))
+ $dir=[IO.Path]::GetFullPath($root).TrimEnd('\')
+ if(!$exe.StartsWith($dir+'\',[StringComparison]::OrdinalIgnoreCase)){throw 'Executable outside isolated rental.'}
+ if(!(Test-Path -LiteralPath $exe -PathType Leaf)){throw 'Executable missing before startup.'}
+ $initial=Json (Join-Path $dir '.cmdhosting-initial-install.json')
+ if([string]$initial.serverId -cne $serverId -or [string]$initial.gameKey -cne $game -or $initial.contentPrepared -ne $true){throw 'New rental marker invalid before startup.'}
+ if($game -eq 'dayz'){
+  if(!(Test-Path -LiteralPath (Join-Path $dir 'serverDZ.cfg') -PathType Leaf)){throw 'DayZ configuration missing.'}
+  $arguments='-config=serverDZ.cfg -profiles=profiles -dologs -adminlog -netlog'+$arguments
+ }elseif($game -eq 'ark-asa'){
+  $launch=Json (Join-Path $dir 'cmdhosting-launch.json')
+  if($launch.gameKey -cne 'ark-asa' -or $launch.publisherDownloadPending -eq $true){throw 'ARK map/mod content pending publisher download; startup deferred.'}
+  $arguments=@($launch.arguments) -join ' '
+ }
+ $existing=@(Get-CimInstance Win32_Process -Filter ("name='"+[IO.Path]::GetFileName($exe)+"'") -ErrorAction Stop | Where-Object {$_.ExecutablePath -and $_.ExecutablePath.Equals($exe,[StringComparison]::OrdinalIgnoreCase)})
+ if($existing.Count){throw 'This rental executable is already running; refusing duplicate startup.'}
+ $proc=Start-Process -FilePath $exe -ArgumentList $arguments -WorkingDirectory $dir -PassThru -ErrorAction Stop
+ Start-Sleep -Seconds 8
+ $proc.Refresh()
+ if($proc.HasExited){throw ('Game process exited during startup; exit code '+$proc.ExitCode)}
+ $status=@{schema='cmd-hosting/runtime-start-v1';serverId=$serverId;gameKey=$game;processId=$proc.Id;startedAt=(Get-Date).ToUniversalTime().ToString('o');processAliveAfter8Seconds=$true;networkVerified=$false;playerJoinVerified=$false}
+ Json-New (Join-Path $dir 'cmdhosting-runtime-start.json') $status
+ return 'process-started-network-unverified'
+}
 function Install-DayZMods([string]$gameRoot,[string[]]$ids,[string]$steamExe,[string]$serverExe){
  if(!$ids.Count){return ''}
  if(Get-Process -Name 'DayZServer_x64' -ErrorAction SilentlyContinue){throw 'DayZ running; Workshop updates deferred for player protection.'}
@@ -384,6 +413,8 @@ try{
  if($registered -ne 'new-rental-added-with-backup' -and $registered -ne 'existing-rental-entry-preserved'){
   throw ('Server binaries installed but Dashboard runtime registration failed: '+$registered+'. Check Mods Agent configuration before marking this rental ready.')
  }
+ $startup=Start-NewRental $folder $canon $serverId $args
+ Write-Log ('New rental startup status: '+$startup)
  $report=Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='content_prepared';fileVerification=$validation}
  if(!$report.ok){throw 'Cloud did not confirm game/map content preparation.'}
  Write-Log ('Binaries and initial map prepared for '+$canon+'. Server startup and external connectivity not yet verified.')
