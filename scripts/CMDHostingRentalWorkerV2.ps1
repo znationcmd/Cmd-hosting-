@@ -244,6 +244,24 @@ if($Diagnose){
  Write-Host ('Association machine : '+$paired)
  Write-Host ('SteamCMD disponible : '+$steamPresent)
  Write-Host ('Cloud accessible : '+$cloudReachable)
+ $runtimeRegistryReady=$false
+ $runtimeRegistryReason='Mods Agent non configure'
+ if(Test-Path -LiteralPath $modsSettings -PathType Leaf){
+  try{
+   $modcfg=Json $modsSettings
+   if($modcfg.PSObject.Properties['serversFile'] -and $modcfg.serversFile){
+    $serverListPath=[string]$modcfg.serversFile
+    if(Test-Path -LiteralPath $serverListPath -PathType Leaf){
+     $serverList=Json $serverListPath
+     if($serverList.PSObject.Properties['servers']){
+      $runtimeRegistryReady=$true
+      $runtimeRegistryReason='Registre des serveurs disponible'
+     }else{$runtimeRegistryReason='Format du registre non reconnu'}
+    }else{$runtimeRegistryReason='Fichier de registre introuvable'}
+   }else{$runtimeRegistryReason='Chemin du registre absent'}
+  }catch{$runtimeRegistryReason='Registre illisible ou invalide'}
+ }
+ Write-Host ('Registre de gestion des serveurs : '+$runtimeRegistryReady+' ('+$runtimeRegistryReason+')')
  Write-Host ('Worker pret a traiter une commande autorisee : '+$ready)
  if($node){Write-Host ('Node ID (non secret) : '+$node)}
  Write-Host 'Le diagnostic ne prouve ni location validee ni serveur de jeu demarre.'
