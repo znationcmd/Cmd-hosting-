@@ -352,6 +352,9 @@ try{
  }
  $registered=Register-NewRental $folder $canon $serverId $args
  Write-Log ('New server registry status: '+$registered)
+ if($registered -ne 'new-rental-added-with-backup' -and $registered -ne 'existing-rental-entry-preserved'){
+  throw ('Server binaries installed but Dashboard runtime registration failed: '+$registered+'. Check Mods Agent configuration before marking this rental ready.')
+ }
  $report=Api '/v1/provisioning/agent/report' @{nodeId=[string]$conf.nodeId;jobId=[string]$job.jobId;resultCode='content_prepared';fileVerification=$validation}
  if(!$report.ok){throw 'Cloud did not confirm game/map content preparation.'}
  Write-Log ('Binaries and initial map prepared for '+$canon+'. Server startup and external connectivity not yet verified.')
